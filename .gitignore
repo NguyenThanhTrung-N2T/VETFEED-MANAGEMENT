@@ -377,3 +377,5 @@ secrets.json
 # Environment files
 .env
 .env.*
+# Visual Studio user files
+*.slnx
