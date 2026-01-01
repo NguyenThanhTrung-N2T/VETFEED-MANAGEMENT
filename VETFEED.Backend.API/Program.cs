@@ -1,10 +1,17 @@
 ﻿using VETFEED.Backend.API.Data;
 using Microsoft.EntityFrameworkCore;
+using VETFEED.Backend.API.Repositories;
+using VETFEED.Backend.API.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
+
+// thêm các repo và service 
+builder.Services.AddScoped<IKhoHangRepository, KhoHangRepository>();
+builder.Services.AddScoped<IKhoHangService, KhoHangService>();
+
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
