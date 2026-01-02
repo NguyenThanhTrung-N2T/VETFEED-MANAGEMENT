@@ -50,6 +50,17 @@ namespace VETFEED.Backend.API.Data
             modelBuilder.Entity<CTPhieuTra>().ToTable("CTPhieuTra"); 
             modelBuilder.Entity<CongNo>().ToTable("CongNo");
 
+            // Áp dụng cho tất cả property kiểu decimal trong toàn bộ entity
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes()) 
+            { 
+                var decimalProps = entityType.GetProperties() 
+                    .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?)); 
+                foreach (var prop in decimalProps) { 
+                    // Mặc định decimal(18,2)
+                    prop.SetPrecision(18); prop.SetScale(2); 
+                } 
+            }
+
             // ===== Enum mapping (lưu dưới dạng string) =====
             modelBuilder.Entity<TaiKhoan>()
                 .Property(t => t.Role)
