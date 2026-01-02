@@ -9,5 +9,8 @@ namespace VETFEED.Backend.API.Services
 
         // lay tai khoan theo ma tai khoan 
         Task<TaiKhoanResponse?> GetTaiKhoanByIdAsync(Guid maTK);
+
+        // cap nhat tai khoan
+        Task<TaiKhoanResponse?> UpdateTaiKhoanAsync(Guid maTK, UpdateTaiKhoanRequest request);
     }
 }

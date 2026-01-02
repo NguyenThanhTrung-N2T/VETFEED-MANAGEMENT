@@ -25,6 +25,18 @@ namespace VETFEED.Backend.API.Repositories
             return await _context.TaiKhoans.AnyAsync(tk => tk.Email == email);
         }
 
+        // kiem tra ton tai email (loai tru tai khoan hien tai)
+        public async Task<bool> IsEmailExistAsync(string email, Guid excludeMaTK)
+        {
+            return await _context.TaiKhoans.AnyAsync(tk => tk.Email == email && tk.MaTK != excludeMaTK);
+        }
+
+        // kiem tra ton tai so dien thoai (loai tru tai khoan hien tai)
+        public async Task<bool> IsSoDienThoaiExistAsync(string sdt, Guid excludeMaTK)
+        {
+            return await _context.TaiKhoans.AnyAsync(tk => tk.SoDienThoai == sdt && tk.MaTK != excludeMaTK);
+        }
+
         // lay tai khoan theo ma tai khoan
         public async Task<TaiKhoanResponse?> GetTaiKhoanByIdAsync(Guid maTK)
         {
@@ -35,6 +47,7 @@ namespace VETFEED.Backend.API.Repositories
             }
             return MapToResponse(taiKhoan);
         }
+
 
         // tao tai khoan
         public async Task<TaiKhoanResponse> CreateTaiKhoanAsync(CreateTaiKhoanRequest request)
@@ -62,6 +75,49 @@ namespace VETFEED.Backend.API.Repositories
             }
         }
 
+        // cap nhat tai khoan
+        public async Task<TaiKhoanResponse?> UpdateTaiKhoanAsync(Guid maTK, UpdateTaiKhoanRequest request)
+        {
+            try
+            {
+                var taiKhoan = await _context.TaiKhoans.FindAsync(maTK);
+                if (taiKhoan == null)
+                {
+                    return null;
+                }
+
+                // cap nhat cac truong neu co du lieu
+                if (!string.IsNullOrWhiteSpace(request.Email))
+                {
+                    taiKhoan.Email = request.Email;
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.HoTen))
+                {
+                    taiKhoan.HoTen = request.HoTen;
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.SoDienThoai))
+                {
+                    taiKhoan.SoDienThoai = request.SoDienThoai;
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.AnhDaiDien))
+                {
+                    taiKhoan.AnhDaiDien = request.AnhDaiDien;
+                }
+
+                // luu thay doi
+                _context.TaiKhoans.Update(taiKhoan);
+                await _context.SaveChangesAsync();
+
+                return MapToResponse(taiKhoan);
+
+            } catch (Exception ex)
+            {
+                throw new Exception("Xảy ra lỗi khi cập nhật tài khoản !", ex);
+            }
+        }
 
         private TaiKhoanResponse MapToResponse(TaiKhoan taiKhoan)
         {

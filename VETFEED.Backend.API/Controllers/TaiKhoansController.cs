@@ -47,5 +47,28 @@ namespace VETFEED.Backend.API.Controllers
             }
             return CreatedAtRoute("GetTaiKhoanById", new { maTK = taiKhoan.MaTK }, taiKhoan);
         }
+
+        // PUT : api/taikhoans/{maTK} : cap nhat tai khoan
+        [HttpPut("{maTK}")]
+        public async Task<IActionResult> UpdateTaiKhoanAsync(Guid maTK, [FromBody] UpdateTaiKhoanRequest request)
+        {
+            // kiem tra dau vao
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Thông tin tài khoản không hợp lệ !");
+            }
+
+            // cap nhat tai khoan
+            var result = await _taiKhoanService.UpdateTaiKhoanAsync(maTK, request);
+            
+            // neu co loi
+            if (result == null)
+            {
+                return NotFound("Tài khoản không tồn tại !");
+            }
+
+            // thanh cong
+            return Ok(result);
+        }
     }
 }
