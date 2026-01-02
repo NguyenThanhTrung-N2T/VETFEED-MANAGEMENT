@@ -93,5 +93,24 @@ namespace VETFEED.Backend.API.Services
                 throw new Exception("Xảy ra lỗi khi cập nhật tài khoản !", ex);
             }
         }
+
+        // dang nhap tai khoan
+        public async Task<bool> Login(LoginRequest request)
+        {
+            // kiem tra tai khoan 
+            var taikhoan = await _taiKhoanRepo.IsEmailExistAsync(request.Email!);
+            if (!taikhoan)
+            {
+                return false;
+            }
+
+            return await _taiKhoanRepo.Login(request);
+        }
+
+        // lay tai khoan bang email
+        public async Task<TaiKhoanResponse?> GetTaiKhoanByEmailAsync(string email)
+        {
+            return await _taiKhoanRepo.GetTaiKhoanByEmailAsync(email);
+        }
     }
 }

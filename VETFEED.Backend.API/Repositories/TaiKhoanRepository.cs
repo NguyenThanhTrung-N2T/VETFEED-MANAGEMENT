@@ -119,6 +119,30 @@ namespace VETFEED.Backend.API.Repositories
             }
         }
 
+        // dang nhap tai khoan 
+        public async Task<bool> Login(LoginRequest request)
+        {
+            // lay tai khoan 
+            var taiKhoan = await _context.TaiKhoans.FirstOrDefaultAsync(tk => tk.Email == request.Email);
+            if(taiKhoan == null)
+            {
+                return false;
+            }
+
+            bool isValidPassword = BCrypt.Net.BCrypt.Verify(request.Password, taiKhoan.PasswordHash);
+            return isValidPassword;
+        }
+
+        public async Task<TaiKhoanResponse?> GetTaiKhoanByEmailAsync(string email)
+        {
+            var taikhoan = await _context.TaiKhoans.FirstOrDefaultAsync(tk => tk.Email == email);
+            if (taikhoan == null)
+            {
+                return null;
+            }
+            return MapToResponse(taikhoan);
+        }
+
         private TaiKhoanResponse MapToResponse(TaiKhoan taiKhoan)
         {
             return new TaiKhoanResponse

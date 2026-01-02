@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.KhoHang;
 using VETFEED.Backend.API.Services;
@@ -16,6 +17,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET: api/khohangs  : lấy tất cả kho hàng 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllKhoHangsAsync()
         {
@@ -26,6 +28,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET : api/khohangs/{maKho} : lấy kho hàng theo mã kho
+        [Authorize]
         [HttpGet("{maKho}", Name = "GetKhoHangById")]
         public async Task<IActionResult> GetKhoHangByIdAsync(Guid maKho)
         {
@@ -40,6 +43,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // POST : api/khohangs : thêm kho hàng
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> AddKhoHangAsync([FromBody] CreateKhoHangRequest request)
         {
@@ -55,6 +59,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // PUT : api/khohangs/{maKho} : cập nhật kho hàng 
+        [Authorize]
         [HttpPut("{maKho}")]
         public async Task<IActionResult> UpdateKhoHangAsync(Guid maKho, [FromBody] UpdateKhoHangRequest request)
         {
@@ -76,6 +81,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // DELETE : api/khohangs/{maKho} : xóa kho hàng 
+        [Authorize]
         [HttpDelete("{maKho}")]
         public async Task<IActionResult> DeleteKhoHangAsync(Guid maKho)
         {
@@ -91,6 +97,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // POST : api/khohangs/search
+        [Authorize]
         [HttpPost("search")]
         public async Task<IActionResult> SearchKhoHangAsync([FromBody] SearchKhoHangRequest request)
         {

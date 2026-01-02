@@ -23,5 +23,11 @@ namespace VETFEED.Backend.API.Repositories
 
         // cap nhat tai khoan
         Task<TaiKhoanResponse?> UpdateTaiKhoanAsync(Guid maTK, UpdateTaiKhoanRequest request);
+
+        // dang nhap tai khoan
+        Task<bool> Login(LoginRequest request);
+
+        // lay tai khoan bang email 
+        Task<TaiKhoanResponse?> GetTaiKhoanByEmailAsync(string email);
     }
 }
