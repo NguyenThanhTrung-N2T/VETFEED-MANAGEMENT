@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.TaiKhoan;
 using VETFEED.Backend.API.Services;
+using VETFEED.Backend.API.Utils;
 
 namespace VETFEED.Backend.API.Controllers
 {
@@ -12,12 +13,14 @@ namespace VETFEED.Backend.API.Controllers
         private readonly ITaiKhoanService _taiKhoanService;
         private readonly JwtService _jwtService;
         private readonly IConfiguration _config;
+        private readonly EmailService _emailService;
 
-        public TaiKhoansController(ITaiKhoanService taikhoanService, JwtService jwtService, IConfiguration config)
+        public TaiKhoansController(ITaiKhoanService taikhoanService, JwtService jwtService, IConfiguration config, EmailService emailService)
         {
             _taiKhoanService = taikhoanService;
             _jwtService = jwtService;
             _config = config;
+            _emailService = emailService;
         }
 
         // GET : api/taikhoans/{maTK} : lấy tài khoản theo mã
@@ -91,9 +94,9 @@ namespace VETFEED.Backend.API.Controllers
         // POST : api/taikhoans/logout : đăng xuất
         [Authorize]
         [HttpPost("logout")]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
-            Response.Cookies.Delete("jwt", new CookieOptions
+            Response.Cookies.Delete("AccessToken", new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
@@ -102,5 +105,84 @@ namespace VETFEED.Backend.API.Controllers
 
             return Ok(new { message = "Đã đăng xuất thành công!" });
         }
+
+        // POST : api/taikhoans/reset-password : cap nhat mat khau
+        [Authorize]
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] UpdatePasswordRequest request)
+        {
+            // kiem tra dau vao
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Email hoặc mật khẩu không đạt chuẩn !");
+            }
+            // cap nhat mat khau 
+            var result = await _taiKhoanService.UpdatePasswordAsync(request.Email!, request.Password!);
+            if (!result)
+            {
+                return NotFound("Email không tồn tại !");
+            }
+            return Ok("Cập nhật mật khẩu thành công !");
+        }
+
+        // POST : api/taikhoans/forgot-password : quên mật khẩu
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword ([FromBody] ForgotPasswordRequest request)
+        {
+            // kiem tra email ton tai
+            var user = await _taiKhoanService.GetTaiKhoanByEmailAsync(request.Email!); 
+            if (user == null) 
+            { 
+                return NotFound("Email không tồn tại trong hệ thống!"); 
+            }
+
+            // sinh password 
+            var newPassword = GenerateRandomPassword();
+            // cap nhat mat khau
+            var updated = await _taiKhoanService.UpdatePasswordAsync(request.Email!, newPassword); 
+            if (!updated) 
+            { 
+                return StatusCode(500, "Không thể cập nhật mật khẩu!"); 
+            }
+
+            // gui mat khau qua email
+            await _emailService.SendResetPasswordEmailAsync(request.Email!, newPassword);
+
+            return Ok("Mật khẩu mới đã được gửi qua email!");
+
+
+        }
+        private string GenerateRandomPassword(int length = 8)
+        {
+            if (length < 8)
+                throw new ArgumentException("Độ dài mật khẩu phải >= 8");
+
+            const string upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string lower = "abcdefghijklmnopqrstuvwxyz";
+            const string digits = "0123456789";
+            const string special = "@$!%*?&";
+            const string allChars = upper + lower + digits + special;
+
+            var random = new Random();
+
+            // Bắt buộc mỗi loại ký tự có ít nhất 1
+            var passwordChars = new List<char>
+    {
+        upper[random.Next(upper.Length)],
+        lower[random.Next(lower.Length)],
+        digits[random.Next(digits.Length)],
+        special[random.Next(special.Length)]
+    };
+
+            // Sinh thêm các ký tự ngẫu nhiên cho đủ độ dài
+            for (int i = passwordChars.Count; i < length; i++)
+            {
+                passwordChars.Add(allChars[random.Next(allChars.Length)]);
+            }
+
+            // Trộn ngẫu nhiên để không theo thứ tự cố định
+            return new string(passwordChars.OrderBy(x => random.Next()).ToArray());
+        }
+
     }
 }

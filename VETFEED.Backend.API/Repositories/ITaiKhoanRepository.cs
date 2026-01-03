@@ -29,5 +29,8 @@ namespace VETFEED.Backend.API.Repositories
 
         // lay tai khoan bang email 
         Task<TaiKhoanResponse?> GetTaiKhoanByEmailAsync(string email);
+
+        // cap nhat mat khau 
+        Task<bool> UpdatePasswordAsync(string email, string newPass);
     }
 }

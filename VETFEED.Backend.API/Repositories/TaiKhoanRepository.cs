@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Azure.Core;
+using Microsoft.EntityFrameworkCore;
 using VETFEED.Backend.API.Data;
 using VETFEED.Backend.API.DTOs.TaiKhoan;
 using VETFEED.Backend.API.Models;
@@ -133,6 +134,7 @@ namespace VETFEED.Backend.API.Repositories
             return isValidPassword;
         }
 
+        // lay tai khoan theo email
         public async Task<TaiKhoanResponse?> GetTaiKhoanByEmailAsync(string email)
         {
             var taikhoan = await _context.TaiKhoans.FirstOrDefaultAsync(tk => tk.Email == email);
@@ -142,6 +144,28 @@ namespace VETFEED.Backend.API.Repositories
             }
             return MapToResponse(taikhoan);
         }
+
+        // cap nhat mat khau
+        public async Task<bool> UpdatePasswordAsync(string email, string newPass)
+        {
+            try
+            {
+                var taikhoan = await _context.TaiKhoans.FirstOrDefaultAsync(tk => tk.Email == email);
+                if (taikhoan == null)
+                {
+                    return false;
+                }
+                // cap nhat mat khau 
+                taikhoan.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPass, workFactor: 12);
+                await _context.SaveChangesAsync();
+                return true;
+            } catch (Exception ex)
+            {
+                throw new Exception("Xảy ra lỗi khi cập nhật mật khẩu !", ex);
+            }
+        }
+
+
 
         private TaiKhoanResponse MapToResponse(TaiKhoan taiKhoan)
         {

@@ -112,5 +112,22 @@ namespace VETFEED.Backend.API.Services
         {
             return await _taiKhoanRepo.GetTaiKhoanByEmailAsync(email);
         }
+
+        // cap nhat mat khau 
+        public async Task<bool> UpdatePasswordAsync(string email, string newpass)
+        {
+            try
+            {
+                var taiKhoan = await _taiKhoanRepo.GetTaiKhoanByEmailAsync(email);
+                if(taiKhoan == null)
+                {
+                    return false;
+                }
+                return await _taiKhoanRepo.UpdatePasswordAsync(email, newpass);
+            } catch (Exception ex)
+            {
+                throw new Exception("Xảy ra lỗi khi cập nhật mật khẩu !", ex);
+            }
+        }
     }
 }
