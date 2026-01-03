@@ -370,7 +370,7 @@ FodyWeavers.xsd
 appsettings.Development.json
 appsettings.Production.json
 appsettings.Staging.json
-appsettings.json
+
 # User secrets (dotnet user-secrets)
 secrets.json
 
