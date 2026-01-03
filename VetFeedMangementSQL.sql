@@ -25,6 +25,9 @@ CREATE TABLE TaiKhoan (
         CHECK (Role IN ('QUAN_LY','NHAN_VIEN')),
     TrangThai NVARCHAR(20) NOT NULL DEFAULT 'HOAT_DONG'  -- Trạng thái tài khoản
         CHECK (TrangThai IN ('HOAT_DONG','KHOA')),
+	HoTen NVARCHAR(100) NOT NULL,                        -- Họ tên người dùng 
+	SoDienThoai NVARCHAR(15) NUll,                       -- Số điện thoại 
+	AnhDaiDien NVARCHAR(500) NULL,
     NgayTao DATETIME2 DEFAULT SYSDATETIME()
 );
 
