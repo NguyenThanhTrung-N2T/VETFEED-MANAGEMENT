@@ -1,3 +1,5 @@
+using VETFEED.Backend.API.DTOs.NhaCungCapSanPham;
+
 namespace VETFEED.Backend.API.DTOs.NhaCungCap
 {
     public class NhaCungCapResponse
@@ -10,5 +12,6 @@ namespace VETFEED.Backend.API.DTOs.NhaCungCap
         public string? TrangThai { get; set; }
         public string? GhiChu { get; set; }
         public DateTime NgayTao { get; set; }
+        public List<NhaCungCapSanPhamResponse>? SanPhams { get; set; }
     }
 }
