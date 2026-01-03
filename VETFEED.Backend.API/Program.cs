@@ -2,34 +2,26 @@
 using Microsoft.EntityFrameworkCore;
 using VETFEED.Backend.API.Repositories;
 using VETFEED.Backend.API.Services;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using VETFEED.Backend.API.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
 
 // thêm các repo và service 
 builder.Services.AddScoped<IKhoHangRepository, KhoHangRepository>();
 builder.Services.AddScoped<IKhoHangService, KhoHangService>();
 
-// NhaCungCap
-builder.Services.AddScoped<INhaCungCapRepository, NhaCungCapRepository>();
-builder.Services.AddScoped<INhaCungCapService, NhaCungCapService>();
-
-// NhaCungCapSanPham
-builder.Services.AddScoped<INhaCungCapSanPhamRepository, NhaCungCapSanPhamRepository>();
-builder.Services.AddScoped<INhaCungCapSanPhamService, NhaCungCapSanPhamService>();
-
-// LoHang
-builder.Services.AddScoped<ILoHangRepository, LoHangRepository>();
-builder.Services.AddScoped<ILoHangService, LoHangService>();
-
+builder.Services.AddScoped<IKhachHangRepository, KhachHangRepository>();
+builder.Services.AddScoped<IKhachHangService, KhachHangService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Lấy connect string  
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Đăng ký DbContext với SQL Server
@@ -67,7 +59,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

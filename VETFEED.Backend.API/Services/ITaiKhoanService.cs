@@ -1,0 +1,25 @@
+﻿using VETFEED.Backend.API.DTOs.TaiKhoan;
+
+namespace VETFEED.Backend.API.Services
+{
+    public interface ITaiKhoanService
+    {
+        // tao tai khoan
+        Task<TaiKhoanResponse?> CreatTaiKhoanAsync(CreateTaiKhoanRequest request);
+
+        // lay tai khoan theo ma tai khoan 
+        Task<TaiKhoanResponse?> GetTaiKhoanByIdAsync(Guid maTK);
+
+        // cap nhat tai khoan
+        Task<TaiKhoanResponse?> UpdateTaiKhoanAsync(Guid maTK, UpdateTaiKhoanRequest request);
+
+        // dang nhap tai khoan 
+        Task<bool> Login(LoginRequest reuqest);
+
+        // lay tai khoan bang email
+        Task<TaiKhoanResponse?> GetTaiKhoanByEmailAsync(string email);
+
+        // cap nhat mat khau 
+        Task<bool> UpdatePasswordAsync(string email, string newpass);
+    }
+}
