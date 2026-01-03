@@ -10,6 +10,14 @@ builder.Services.AddControllers();
 // thêm các repo và service 
 builder.Services.AddScoped<IKhoHangRepository, KhoHangRepository>();
 builder.Services.AddScoped<IKhoHangService, KhoHangService>();
+builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
+builder.Services.AddScoped<ISanPhamService, SanPhamService>();
+
+builder.Services.AddScoped<IKhachHangRepository, KhachHangRepository>();
+builder.Services.AddScoped<IKhachHangService, KhachHangService>();
+
+builder.Services.AddScoped<IGiaBanRepository, GiaBanRepository>();
+builder.Services.AddScoped<IGiaBanService, GiaBanService>();
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -25,24 +33,26 @@ builder.Services.AddDbContext<VetFeedManagementContext>(options => options.UseSq
 var app = builder.Build();
 
 // Kiểm tra kết nối và log ra console
-using (var scope = app.Services.CreateScope()) 
-{ 
-    var dbContext = scope.ServiceProvider.GetRequiredService<VetFeedManagementContext>(); 
-    try 
-    { 
-        if (dbContext.Database.CanConnect()) 
-        { 
-            Console.WriteLine("✅ Kết nối database thành công!"); 
-        } 
-        else 
-        { 
-            Console.WriteLine("❌ Không thể kết nối database."); 
-        } 
-    } catch (Exception ex) 
-    { 
-        Console.WriteLine($"❌ Lỗi kết nối database: {ex.Message}"); 
-    } 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<VetFeedManagementContext>();
+    var cs = builder.Configuration.GetConnectionString("DefaultConnection");
+    Console.WriteLine("🔎 ConnectionString = " + cs);
+
+    try
+    {
+        await dbContext.Database.OpenConnectionAsync();
+        Console.WriteLine("✅ Kết nối database thành công!");
+        await dbContext.Database.CloseConnectionAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("❌ Lỗi kết nối database (chi tiết): " + ex.Message);
+        if (ex.InnerException != null)
+            Console.WriteLine("❌ Inner: " + ex.InnerException.Message);
+    }
 }
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
