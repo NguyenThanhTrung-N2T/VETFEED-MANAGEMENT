@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using VETFEED.Backend.API.Data;
 using VETFEED.Backend.API.DTOs.LoHang;
 using VETFEED.Backend.API.Models;
+using VETFEED.Backend.API.Utils;
 
 namespace VETFEED.Backend.API.Repositories
 {
@@ -73,7 +74,7 @@ namespace VETFEED.Backend.API.Repositories
             var entity = new LoHang
             {
                 MaLo = Guid.NewGuid(),
-                MaLoCode = GenerateMaLoCode(),
+                MaLoCode = await CodeGenerator.GenerateLoHangCodeAsync(_context),
                 MaSP = request.MaSP,
                 NgaySanXuat = request.NgaySanXuat,
                 HanSuDung = request.HanSuDung
@@ -133,11 +134,5 @@ namespace VETFEED.Backend.API.Repositories
             return true;
         }
 
-        // Tự sinh mã lô
-        private string GenerateMaLoCode()
-        {
-            var count = _context.LoHangs.Count() + 1;
-            return $"LO{count:D6}";
-        }
     }
 }

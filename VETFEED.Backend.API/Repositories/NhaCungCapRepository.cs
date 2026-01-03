@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using VETFEED.Backend.API.Data;
 using VETFEED.Backend.API.DTOs.NhaCungCap;
 using VETFEED.Backend.API.Models;
+using VETFEED.Backend.API.Utils;
 
 namespace VETFEED.Backend.API.Repositories
 {
@@ -55,7 +56,7 @@ namespace VETFEED.Backend.API.Repositories
             var entity = new NhaCungCap
             {
                 MaNCC = Guid.NewGuid(),
-                MaNCCCode = GenerateMaNCCCode(),
+                MaNCCCode = await CodeGenerator.GenerateNhaCungCapCodeAsync(_context),
                 TenNCC = request.TenNCC,
                 SoDienThoai = request.SoDienThoai,
                 DiaChi = request.DiaChi,
@@ -118,11 +119,5 @@ namespace VETFEED.Backend.API.Repositories
             return true;
         }
 
-        // Tự sinh mã NCC
-        private string GenerateMaNCCCode()
-        {
-            var count = _context.NhaCungCaps.Count() + 1;
-            return $"NCC{count:D4}";
-        }
     }
 }
