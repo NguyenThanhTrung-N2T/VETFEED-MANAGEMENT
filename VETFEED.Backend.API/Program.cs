@@ -18,6 +18,15 @@ builder.Services.AddScoped<IKhoHangService, KhoHangService>();
 builder.Services.AddScoped<IKhachHangRepository, KhachHangRepository>();
 builder.Services.AddScoped<IKhachHangService, KhachHangService>();
 
+builder.Services.AddScoped<INhaCungCapRepository, NhaCungCapRepository>();
+builder.Services.AddScoped<INhaCungCapService, NhaCungCapService>();
+
+builder.Services.AddScoped<INhaCungCapSanPhamRepository, NhaCungCapSanPhamRepository>();
+builder.Services.AddScoped<INhaCungCapSanPhamService, NhaCungCapSanPhamService>();
+
+builder.Services.AddScoped<ILoHangRepository, LoHangRepository>();
+builder.Services.AddScoped<ILoHangService, LoHangService>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
