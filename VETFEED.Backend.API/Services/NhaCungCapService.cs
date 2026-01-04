@@ -1,4 +1,5 @@
 using VETFEED.Backend.API.DTOs.NhaCungCap;
+using VETFEED.Backend.API.Enums;
 using VETFEED.Backend.API.Repositories;
 
 namespace VETFEED.Backend.API.Services
@@ -32,11 +33,23 @@ namespace VETFEED.Backend.API.Services
 
         public async Task<NhaCungCapResponse> AddNhaCungCapAsync(NhaCungCapRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.TenNCC))
+                throw new ArgumentException("Tên nhà cung cấp không được để trống.");
+
+            if (!Enum.IsDefined(typeof(TrangThaiNhaCungCapEnum), request.TrangThai))
+                throw new ArgumentException("TrangThai không hợp lệ. Chỉ nhận: HOAT_DONG | NGUNG_HOAT_DONG.");
+
             return await _repo.AddNhaCungCapAsync(request);
         }
 
         public async Task<NhaCungCapResponse?> UpdateNhaCungCapAsync(Guid id, NhaCungCapRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.TenNCC))
+                throw new ArgumentException("Tên nhà cung cấp không được để trống.");
+
+            if (!Enum.IsDefined(typeof(TrangThaiNhaCungCapEnum), request.TrangThai))
+                throw new ArgumentException("TrangThai không hợp lệ. Chỉ nhận: HOAT_DONG | NGUNG_HOAT_DONG.");
+
             return await _repo.UpdateNhaCungCapAsync(id, request);
         }
 

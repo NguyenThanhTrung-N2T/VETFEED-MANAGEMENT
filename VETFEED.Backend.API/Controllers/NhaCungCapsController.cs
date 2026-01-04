@@ -37,18 +37,32 @@ namespace VETFEED.Backend.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] NhaCungCapRequest request)
         {
-            var result = await _service.AddNhaCungCapAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = result.MaNCC }, result);
+            try
+            {
+                var result = await _service.AddNhaCungCapAsync(request);
+                return CreatedAtAction(nameof(GetById), new { id = result.MaNCC }, result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         // PUT: api/nhacungcaps/{id} - Cập nhật
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] NhaCungCapRequest request)
         {
-            var result = await _service.UpdateNhaCungCapAsync(id, request);
-            if (result == null)
-                return NotFound(new { message = "Không tìm thấy nhà cung cấp để cập nhật" });
-            return Ok(result);
+            try
+            {
+                var result = await _service.UpdateNhaCungCapAsync(id, request);
+                if (result == null)
+                    return NotFound(new { message = "Không tìm thấy nhà cung cấp để cập nhật" });
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         // DELETE: api/nhacungcaps/{id} - Xóa

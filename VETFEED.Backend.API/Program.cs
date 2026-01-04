@@ -12,6 +12,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // thêm các repo và service 
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<IKhoHangRepository, KhoHangRepository>();
+builder.Services.AddScoped<IKhoHangService, KhoHangService>();
+builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
+builder.Services.AddScoped<ISanPhamService, SanPhamService>();
 builder.Services.AddScoped<IKhoHangRepository, KhoHangRepository>();
 builder.Services.AddScoped<IKhoHangService, KhoHangService>();
 

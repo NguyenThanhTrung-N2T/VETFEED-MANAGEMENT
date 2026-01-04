@@ -29,11 +29,23 @@ namespace VETFEED.Backend.API.Services
 
         public async Task<LoHangResponse> AddLoHangAsync(LoHangRequest request)
         {
+            if (request.MaSP == Guid.Empty)
+                throw new ArgumentException("Mã sản phẩm không được để trống.");
+
+            if (request.NgaySanXuat.HasValue && request.HanSuDung <= request.NgaySanXuat.Value)
+                throw new ArgumentException("Hạn sử dụng phải lớn hơn ngày sản xuất.");
+
             return await _repo.AddLoHangAsync(request);
         }
 
         public async Task<LoHangResponse?> UpdateLoHangAsync(Guid id, LoHangRequest request)
         {
+            if (request.MaSP == Guid.Empty)
+                throw new ArgumentException("Mã sản phẩm không được để trống.");
+
+            if (request.NgaySanXuat.HasValue && request.HanSuDung <= request.NgaySanXuat.Value)
+                throw new ArgumentException("Hạn sử dụng phải lớn hơn ngày sản xuất.");
+
             return await _repo.UpdateLoHangAsync(id, request);
         }
 

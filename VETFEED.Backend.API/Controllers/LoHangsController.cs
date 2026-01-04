@@ -45,18 +45,32 @@ namespace VETFEED.Backend.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] LoHangRequest request)
         {
-            var result = await _service.AddLoHangAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = result.MaLo }, result);
+            try
+            {
+                var result = await _service.AddLoHangAsync(request);
+                return CreatedAtAction(nameof(GetById), new { id = result.MaLo }, result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         // PUT: api/lohangs/{id} - Cập nhật
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] LoHangRequest request)
         {
-            var result = await _service.UpdateLoHangAsync(id, request);
-            if (result == null)
-                return NotFound(new { message = "Không tìm thấy lô hàng để cập nhật" });
-            return Ok(result);
+            try
+            {
+                var result = await _service.UpdateLoHangAsync(id, request);
+                if (result == null)
+                    return NotFound(new { message = "Không tìm thấy lô hàng để cập nhật" });
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         // DELETE: api/lohangs/{id} - Xóa
