@@ -20,15 +20,25 @@ namespace VETFEED.Backend.API.Services
             return await _repo.GetAllNhaCungCapsAsync();
         }
 
-        public async Task<NhaCungCapResponse?> GetNhaCungCapByIdAsync(Guid id)
+        public async Task<NhaCungCapDetailedResponse?> GetNhaCungCapByIdAsync(Guid id)
         {
             var nhaCungCap = await _repo.GetNhaCungCapByIdAsync(id);
             if (nhaCungCap == null) return null;
 
             var sanPhams = await _sanPhamRepo.GetByNhaCungCapAsync(id);
-            nhaCungCap.SanPhams = sanPhams.ToList();
 
-            return nhaCungCap;
+            return new NhaCungCapDetailedResponse
+            {
+                MaNCC = nhaCungCap.MaNCC,
+                MaNCCCode = nhaCungCap.MaNCCCode,
+                TenNCC = nhaCungCap.TenNCC,
+                SoDienThoai = nhaCungCap.SoDienThoai,
+                DiaChi = nhaCungCap.DiaChi,
+                TrangThai = nhaCungCap.TrangThai,
+                GhiChu = nhaCungCap.GhiChu,
+                NgayTao = nhaCungCap.NgayTao,
+                SanPhams = sanPhams.ToList()
+            };
         }
 
         public async Task<NhaCungCapResponse> AddNhaCungCapAsync(NhaCungCapRequest request)
