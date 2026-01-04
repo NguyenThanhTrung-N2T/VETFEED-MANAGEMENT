@@ -14,6 +14,7 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<IKhoHangRepository, KhoHangRepository>();
 builder.Services.AddScoped<IKhoHangService, KhoHangService>();
+
 builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
 builder.Services.AddScoped<ISanPhamService, SanPhamService>();
 
@@ -22,8 +23,12 @@ builder.Services.AddScoped<IKhachHangService, KhachHangService>();
 
 builder.Services.AddScoped<IGiaBanRepository, GiaBanRepository>();
 builder.Services.AddScoped<IGiaBanService, GiaBanService>();
+
 builder.Services.AddScoped<ITaiKhoanRepository, TaiKhoanRepository>();
 builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
+
+builder.Services.AddScoped<ITonKhoRepository, TonKhoRepository>();
+builder.Services.AddScoped<ITonKhoService, TonKhoService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
