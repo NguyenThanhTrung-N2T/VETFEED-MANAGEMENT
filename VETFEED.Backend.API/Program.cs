@@ -10,8 +10,6 @@ using VETFEED.Backend.API.Utils;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-
-// thêm các repo và service 
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<IKhoHangRepository, KhoHangRepository>();
@@ -35,12 +33,91 @@ builder.Services.AddScoped<ILoHangService, LoHangService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "VetFeed API",
+        Version = "v1"
+    });
+
+    // Thêm cấu hình JWT Bearer cho Swagger
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "Nhập JWT token vào đây (ví dụ: Bearer {token})",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = Microsoft.OpenApi.Models.ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Đăng ký DbContext với SQL Server
 builder.Services.AddDbContext<VetFeedManagementContext>(options => options.UseSqlServer(connectionString));
+
+// Đăng ký Authentication với JWT
+builder.Services.AddAuthentication(options => 
+{ 
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; 
+})
+.AddJwtBearer(options => 
+{ 
+    var jwtSettings = builder.Configuration.GetSection("Jwt"); 
+    var key = jwtSettings["Key"];
+    
+    if (string.IsNullOrEmpty(key))
+        throw new InvalidOperationException("JWT Key không được cấu hình!");
+
+    options.TokenValidationParameters = new TokenValidationParameters 
+    { 
+        ValidateIssuer = true, 
+        ValidateAudience = true, 
+        ValidateLifetime = true, 
+        ValidateIssuerSigningKey = true, 
+        ValidIssuer = jwtSettings["Issuer"], 
+        ValidAudience = jwtSettings["Audience"], 
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+        ClockSkew = TimeSpan.Zero
+    }; 
+
+    options.Events = new JwtBearerEvents 
+    { 
+        OnMessageReceived = context => 
+        { 
+            var authorizationHeader = context.Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authorizationHeader) && authorizationHeader.StartsWith("Bearer "))
+            {
+                context.Token = authorizationHeader.Substring("Bearer ".Length).Trim();
+            }
+            else if (context.Request.Cookies.ContainsKey("AccessToken"))
+            {
+                context.Token = context.Request.Cookies["AccessToken"];
+            }
+            return Task.CompletedTask;
+        }
+    }; 
+});
 
 var app = builder.Build();
 
