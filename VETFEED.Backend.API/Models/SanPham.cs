@@ -23,5 +23,6 @@ namespace VETFEED.Backend.API.Models
         public ICollection<NhaCungCapSanPham>? NhaCungCapSanPhams { get; set; }
         public ICollection<GiaBan>? GiaBans { get; set; }
         public ICollection<LoHang>? LoHangs { get; set; }
+        public ICollection<QuyDoiDonVi>? QuyDoiDonVis { get; set; }
     }
 }

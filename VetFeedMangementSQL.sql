@@ -100,6 +100,21 @@ CREATE TABLE SanPham (
 );
 
 -- =========================================
+-- Bảng QuyDoiDonVi
+-- Quy đổi các đơn vị của từng loại sản phẩm
+-- =========================================
+CREATE TABLE QuyDoiDonVi (
+    MaQD UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    MaSP UNIQUEIDENTIFIER NOT NULL,       -- Sản phẩm
+    DonViNhap NVARCHAR(50) NOT NULL,      -- Đơn vị nhập (Thùng/Hộp)
+    TyLe DECIMAL(18,2) NOT NULL,          -- 1 DonViNhap = TyLe DonViTinh (đơn vị chuẩn)  ( 1 thùng = 12 hộp )
+
+    CONSTRAINT FK_QD_SP FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP),
+    CONSTRAINT UQ_QD UNIQUE (MaSP, DonViNhap) -- tránh trùng đơn vị nhập cho cùng SP
+);
+
+
+-- =========================================
 -- Bảng NhaCungCapSanPham
 -- Lưu danh sách sản phẩm mà mỗi nhà cung cấp có thể cung cấp
 -- =========================================
@@ -496,4 +511,3 @@ ON CongNo (NgayPhatSinh);
 -- Index truy vấn theo phiếu
 CREATE INDEX IDX_CongNo_MaPhieu
 ON CongNo (MaPhieu);
-
