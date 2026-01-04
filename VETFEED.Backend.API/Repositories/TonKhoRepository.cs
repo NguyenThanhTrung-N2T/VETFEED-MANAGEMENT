@@ -60,5 +60,25 @@ namespace VETFEED.Backend.API.Repositories
             await _context.SaveChangesAsync(); 
             return true; 
         }
+
+        // kiem tra ton kho 
+        public async Task<bool> IsExistTonKho(Guid MaKho, Guid MaLo)
+        {
+            return await _context.TonKhos.AnyAsync(tk => tk.MaKho == MaKho && tk.MaLo == MaLo);
+        }
+
+        // kiem tra ton kho co du so luong hay khong 
+        public async Task<bool> IsTonKhoEnough(Guid MaKho, Guid MaLo, decimal SoLuongChuyen)
+        {
+            // kiem tra ton kho 
+            var tonKho = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == MaKho && tk.MaLo == MaLo);
+            if (tonKho == null)
+                return false;
+
+            if (tonKho.SoLuong < SoLuongChuyen)
+                return false;
+
+            return true;
+        }
     }
 }

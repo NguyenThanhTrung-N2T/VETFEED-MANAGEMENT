@@ -134,5 +134,10 @@ namespace VETFEED.Backend.API.Repositories
             return true;
         }
 
+        // kiem tra lo hang ton tai 
+        public async Task<bool> IsLoHangExist(Guid MaLo)
+        {
+            return await _context.LoHangs.AnyAsync(lh => lh.MaLo == MaLo);
+        }
     }
 }

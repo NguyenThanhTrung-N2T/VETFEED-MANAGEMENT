@@ -30,9 +30,27 @@ namespace VETFEED.Backend.API.Controllers
         {
             // cap nhat so luong 
             var success = await _tonKhoSerivce.UpdateTonKhoAsync(maKho, maLo, request.SoLuong);
-            if (!success) 
+            if (!success)
                 return NotFound("Không tìm thấy tồn kho với mã kho và mã lô này");
             return Ok("Cập nhật tồn kho thành công");
+        }
+
+        // POST : api/tonkhos/check : kiem tra ton kho theo ma kho va ma lo 
+        [HttpPost("check")]
+        public async Task<IActionResult> CheckTonKhoAsync(CheckTonKhoRequest request)
+        {
+            // kiem tra dau vao 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Thông tin không đầy đủ hoặc không đúng định dạng !");
+            }
+            // kiem tra ton kho 
+            var result = await _tonKhoSerivce.IsTonKhoEnough(request.MaKhoXuat, request.MaLo, request.SoLuongChuyen);
+            if (!result)
+            {
+                return BadRequest("Số lượng tồn kho không đủ !");
+            }
+            return Ok(result);
         }
 
     }

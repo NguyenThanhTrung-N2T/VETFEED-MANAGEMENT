@@ -1,4 +1,4 @@
-using VETFEED.Backend.API.DTOs.LoHang;
+﻿using VETFEED.Backend.API.DTOs.LoHang;
 
 namespace VETFEED.Backend.API.Repositories
 {
@@ -10,5 +10,8 @@ namespace VETFEED.Backend.API.Repositories
         Task<LoHangResponse> AddLoHangAsync(LoHangRequest request);
         Task<LoHangResponse?> UpdateLoHangAsync(Guid id, LoHangRequest request);
         Task<bool> DeleteLoHangAsync(Guid id);
+
+        // kiem tra lo hang ton tai
+        Task<bool> IsLoHangExist(Guid MaLo);
     }
 }

@@ -6,9 +6,11 @@ namespace VETFEED.Backend.API.Services
     public class TonKhoService : ITonKhoService
     {
         private readonly ITonKhoRepository _tonKhoRepo;
-        public TonKhoService(ITonKhoRepository repo)
+        private readonly ILoHangRepository _loHangRepo;
+        public TonKhoService(ITonKhoRepository repo, ILoHangRepository loHangRepo)
         {
             _tonKhoRepo = repo;
+            _loHangRepo = loHangRepo;
         }
 
         // lay danh sach ton kho theo cac kho 
@@ -23,5 +25,30 @@ namespace VETFEED.Backend.API.Services
             return await _tonKhoRepo.UpdateTonKhoAsync(maKho, maLo, soLuong);
         }
 
+        // kiem tra ton kho du so luong 
+        public async Task<bool> IsTonKhoEnough(Guid MaKho, Guid MaLo, decimal SoLuongChuyen)
+        {
+            // kiem tra lo hang 
+            var iExist = await _loHangRepo.IsLoHangExist(MaLo);
+            if (!iExist)
+            {
+                throw new Exception("Lô hàng không tồn tại !");
+            }
+
+            // kiem tra ton kho 
+            var isTonKhoExist = await _tonKhoRepo.IsExistTonKho(MaKho, MaLo);
+            if (!isTonKhoExist)
+            {
+                throw new Exception("Trong kho không lưu trữ lô hàng này !");
+            }
+
+            // kiem tra du ton kho khoong
+            var isEnough = await _tonKhoRepo.IsTonKhoEnough(MaKho, MaLo, SoLuongChuyen);
+            if (isEnough)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }
