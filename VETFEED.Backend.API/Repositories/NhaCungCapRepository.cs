@@ -60,7 +60,7 @@ namespace VETFEED.Backend.API.Repositories
                 TenNCC = request.TenNCC,
                 SoDienThoai = request.SoDienThoai,
                 DiaChi = request.DiaChi,
-                TrangThai = request.TrangThai,
+                TrangThai = Enum.Parse<Enums.TrangThaiNhaCungCapEnum>(request.TrangThai!, true),
                 GhiChu = request.GhiChu,
                 NgayTao = DateTime.Now
             };
@@ -90,7 +90,7 @@ namespace VETFEED.Backend.API.Repositories
             entity.TenNCC = request.TenNCC;
             entity.SoDienThoai = request.SoDienThoai;
             entity.DiaChi = request.DiaChi;
-            entity.TrangThai = request.TrangThai;
+            entity.TrangThai = Enum.Parse<Enums.TrangThaiNhaCungCapEnum>(request.TrangThai!, true);
             entity.GhiChu = request.GhiChu;
 
             await _context.SaveChangesAsync();

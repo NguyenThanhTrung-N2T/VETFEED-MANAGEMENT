@@ -36,7 +36,7 @@ namespace VETFEED.Backend.API.Services
             if (string.IsNullOrWhiteSpace(request.TenNCC))
                 throw new ArgumentException("Tên nhà cung cấp không được để trống.");
 
-            if (!Enum.IsDefined(typeof(TrangThaiNhaCungCapEnum), request.TrangThai))
+            if (!Enum.TryParse<TrangThaiNhaCungCapEnum>(request.TrangThai, true, out _))
                 throw new ArgumentException("TrangThai không hợp lệ. Chỉ nhận: HOAT_DONG | NGUNG_HOAT_DONG.");
 
             return await _repo.AddNhaCungCapAsync(request);
@@ -47,7 +47,7 @@ namespace VETFEED.Backend.API.Services
             if (string.IsNullOrWhiteSpace(request.TenNCC))
                 throw new ArgumentException("Tên nhà cung cấp không được để trống.");
 
-            if (!Enum.IsDefined(typeof(TrangThaiNhaCungCapEnum), request.TrangThai))
+            if (!Enum.TryParse<TrangThaiNhaCungCapEnum>(request.TrangThai, true, out _))
                 throw new ArgumentException("TrangThai không hợp lệ. Chỉ nhận: HOAT_DONG | NGUNG_HOAT_DONG.");
 
             return await _repo.UpdateNhaCungCapAsync(id, request);

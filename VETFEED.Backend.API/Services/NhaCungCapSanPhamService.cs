@@ -41,7 +41,7 @@ namespace VETFEED.Backend.API.Services
             if (request.MaSP == Guid.Empty)
                 throw new ArgumentException("Mã sản phẩm không được để trống.");
 
-            if (!Enum.IsDefined(typeof(TrangThaiNhaCungCapSanPhamEnum), request.TrangThai))
+            if (!Enum.TryParse<TrangThaiNhaCungCapSanPhamEnum>(request.TrangThai, true, out _))
                 throw new ArgumentException("TrangThai không hợp lệ. Chỉ nhận: HOAT_DONG | NGUNG_HOAT_DONG.");
 
             return await _repo.AddNhaCungCapSanPhamAsync(request);
@@ -55,7 +55,7 @@ namespace VETFEED.Backend.API.Services
             if (request.MaSP == Guid.Empty)
                 throw new ArgumentException("Mã sản phẩm không được để trống.");
 
-            if (!Enum.IsDefined(typeof(TrangThaiNhaCungCapSanPhamEnum), request.TrangThai))
+            if (!Enum.TryParse<TrangThaiNhaCungCapSanPhamEnum>(request.TrangThai, true, out _))
                 throw new ArgumentException("TrangThai không hợp lệ. Chỉ nhận: HOAT_DONG | NGUNG_HOAT_DONG.");
 
             return await _repo.UpdateNhaCungCapSanPhamAsync(id, request);

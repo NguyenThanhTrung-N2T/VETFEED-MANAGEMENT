@@ -109,7 +109,7 @@ namespace VETFEED.Backend.API.Repositories
                 MaNCC = request.MaNCC,
                 MaSP = request.MaSP,
                 GiaNhapMacDinh = request.GiaNhapMacDinh,
-                TrangThai = (Enums.TrangThaiNhaCungCapSanPhamEnum)request.TrangThai,
+                TrangThai = Enum.Parse<Enums.TrangThaiNhaCungCapSanPhamEnum>(request.TrangThai!, true),
                 GhiChu = request.GhiChu,
                 NgayTao = DateTime.Now
             };
@@ -144,7 +144,7 @@ namespace VETFEED.Backend.API.Repositories
             entity.MaNCC = request.MaNCC;
             entity.MaSP = request.MaSP;
             entity.GiaNhapMacDinh = request.GiaNhapMacDinh;
-            entity.TrangThai = (Enums.TrangThaiNhaCungCapSanPhamEnum)request.TrangThai;
+            entity.TrangThai = Enum.Parse<Enums.TrangThaiNhaCungCapSanPhamEnum>(request.TrangThai!, true);
             entity.GhiChu = request.GhiChu;
 
             await _context.SaveChangesAsync();
