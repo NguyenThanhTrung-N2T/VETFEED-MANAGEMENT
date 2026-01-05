@@ -42,6 +42,10 @@ builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
 builder.Services.AddScoped<ITonKhoRepository, TonKhoRepository>();
 builder.Services.AddScoped<ITonKhoService, TonKhoService>();
 
+builder.Services.AddScoped<IPhieuNhapRepository, PhieuNhapRepository>();
+builder.Services.AddScoped<ICTPhieuNhapRepository, CTPhieuNhapRepository>();
+builder.Services.AddScoped<IPhieuNhapService, PhieuNhapService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
