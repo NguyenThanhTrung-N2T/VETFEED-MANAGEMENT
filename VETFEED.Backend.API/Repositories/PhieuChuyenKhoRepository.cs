@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using VETFEED.Backend.API.Data;
 using VETFEED.Backend.API.DTOs.CTChuyenKho;
 using VETFEED.Backend.API.DTOs.PhieuChuyenKho;
+using VETFEED.Backend.API.Enums;
 using VETFEED.Backend.API.Models;
 using VETFEED.Backend.API.Utils;
 
@@ -237,6 +238,81 @@ namespace VETFEED.Backend.API.Repositories
             }
         }
 
+        // cap nhat trang thai chi tiet chuyen kho 
+        public async Task<ChiTietPhieuChuyenKhoResponse?> UpdateTrangThaiChiTietAsync(Guid maCTCK,UpdateTrangThaiCTChuyenKho request)
+        {
+            var ct = await _context.CTPhieuChuyenKhos
+                .Include(c => c.PhieuChuyenKho)
+                .FirstOrDefaultAsync(c => c.MaCTCK == maCTCK);
+
+            if (ct == null) return null;
+
+            ct.TrangThai = request.TrangThai!.Value;
+
+            // Nếu trạng thái là XÁC_NHẬN thì cập nhật tồn kho
+            if (request.TrangThai == TrangThaiPhieuChuyenKhoChiTietEnum.DA_NHAN)
+            {
+                var maKhoXuat = ct.PhieuChuyenKho!.MaKhoXuat;
+                var maKhoNhan = ct.PhieuChuyenKho.MaKhoNhan;
+
+                // Trừ kho xuất
+                var tonKhoXuat = await _context.TonKhos
+                    .FirstOrDefaultAsync(t => t.MaKho == maKhoXuat && t.MaLo == ct.MaLo);
+                if (tonKhoXuat == null || tonKhoXuat.SoLuong < ct.SoLuongChuyen)
+                    throw new Exception("Tồn kho không đủ để xác nhận!");
+
+                tonKhoXuat.SoLuong -= ct.SoLuongChuyen;
+
+                // Cộng kho nhận
+                var tonKhoNhan = await _context.TonKhos
+                    .FirstOrDefaultAsync(t => t.MaKho == maKhoNhan && t.MaLo == ct.MaLo);
+                if (tonKhoNhan != null)
+                {
+                    tonKhoNhan.SoLuong += ct.SoLuongChuyen;
+                }
+                else
+                {
+                    _context.TonKhos.Add(new TonKho
+                    {
+                        MaTonKho = Guid.NewGuid(),
+                        MaKho = maKhoNhan,
+                        MaLo = ct.MaLo,
+                        SoLuong = ct.SoLuongChuyen
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Trả về chi tiết phiếu sau khi cập nhật
+            return await GetChiTietPhieuChuyenKhoAsync(ct.MaCK);
+        }
+
+        // xoa phieu chuyen kho
+        public async Task<bool> XoaPhieuChuyenKhoAsync(Guid maCK)
+        {
+            var phieu = await _context.PhieuChuyenKhos
+                .Include(p => p.CTPhieuChuyenKhos)
+                .FirstOrDefaultAsync(p => p.MaCK == maCK);
+
+            if (phieu == null) return false;
+
+            // kiểm tra chi tiết
+            bool coChiTietKhongChoXoa = phieu.CTPhieuChuyenKhos!
+                .Any(ct => ct.TrangThai != TrangThaiPhieuChuyenKhoChiTietEnum.TAO);
+
+            if (coChiTietKhongChoXoa)
+                throw new Exception("Phiếu có chi tiết đang chuyển hoặc đã nhận, không thể xóa!");
+
+            // xóa chi tiết trước
+            _context.CTPhieuChuyenKhos.RemoveRange(phieu.CTPhieuChuyenKhos!);
+
+            // xóa phiếu
+            _context.PhieuChuyenKhos.Remove(phieu);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
 
     }
 }

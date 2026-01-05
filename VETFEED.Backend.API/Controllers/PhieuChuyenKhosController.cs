@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using VETFEED.Backend.API.DTOs.CTChuyenKho;
 using VETFEED.Backend.API.DTOs.PhieuChuyenKho;
 using VETFEED.Backend.API.Services;
 
@@ -65,6 +67,34 @@ namespace VETFEED.Backend.API.Controllers
             return Ok(result); 
         }
 
+        // PUT : api/phieuchuyenkhos/chitiet/{maCTCK}/trangthai : cap nhat trang thai chi tiet chuyen kho
+        [HttpPut("chitiet/{maCTCK}/trangthai")]
+        public async Task<IActionResult> CapNhatTrangThaiChiTiet(Guid maCTCK, [FromBody] UpdateTrangThaiCTChuyenKho trangThai)
+        {
+            if (!ModelState.IsValid || !trangThai.TrangThai.HasValue) 
+            { 
+                return BadRequest("Trạng thái chi tiết chuyển kho không được để trống hoặc không hợp lệ!"); 
+            }
+
+            // cap nhat trang thai
+            var result = await _service.UpdateTrangThaiChiTietAsync(maCTCK, trangThai);
+            if (result == null)
+                return NotFound("Không tìm thấy chi tiết phiếu chuyển kho!");
+
+            // tra ve trang thai chi tiet 
+            return Ok(result);
+        }
+
+        [HttpDelete("{maCK}")]
+        public async Task<IActionResult> XoaPhieuChuyenKho(Guid maCK)
+        {
+            // xóa phiếu 
+            var result = await _service.XoaPhieuChuyenKhoAsync(maCK);
+            if (!result)
+                return NotFound("Không tìm thấy phiếu chuyển kho !");
+
+            return Ok("Phiếu chuyển kho đã được xóa!");
+        }
 
     }
 }

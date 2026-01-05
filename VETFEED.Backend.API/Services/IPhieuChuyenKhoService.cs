@@ -1,4 +1,5 @@
-﻿using VETFEED.Backend.API.DTOs.PhieuChuyenKho;
+﻿using VETFEED.Backend.API.DTOs.CTChuyenKho;
+using VETFEED.Backend.API.DTOs.PhieuChuyenKho;
 
 namespace VETFEED.Backend.API.Services
 {
@@ -15,6 +16,12 @@ namespace VETFEED.Backend.API.Services
 
         // cap nhat phieu chuyen kho 
         Task<ChiTietPhieuChuyenKhoResponse?> UpdatePhieuChuyenKhoAsync(UpdatePhieuChuyenKhoRequest request);
+
+        // cap nhat trang thai chuyen kho
+        Task<ChiTietPhieuChuyenKhoResponse?> UpdateTrangThaiChiTietAsync(Guid maCTCK, UpdateTrangThaiCTChuyenKho request);
+
+        // xoa phieu chuyen kho 
+        Task<bool> XoaPhieuChuyenKhoAsync(Guid maCK);
     }
 
 }

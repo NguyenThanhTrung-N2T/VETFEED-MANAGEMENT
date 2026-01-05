@@ -1,5 +1,8 @@
-﻿using System.Reflection.Metadata.Ecma335;
+﻿using Microsoft.Identity.Client;
+using System.Reflection.Metadata.Ecma335;
+using VETFEED.Backend.API.DTOs.CTChuyenKho;
 using VETFEED.Backend.API.DTOs.PhieuChuyenKho;
+using VETFEED.Backend.API.Enums;
 using VETFEED.Backend.API.Repositories;
 
 namespace VETFEED.Backend.API.Services
@@ -67,6 +70,29 @@ namespace VETFEED.Backend.API.Services
             }
         }
 
+        // cap nhat trang thai chi tiet chuyen kho 
+        public async Task<ChiTietPhieuChuyenKhoResponse?> UpdateTrangThaiChiTietAsync(Guid maCTCK,UpdateTrangThaiCTChuyenKho request)
+        {
+            try
+            {
+                return await _repository.UpdateTrangThaiChiTietAsync(maCTCK, request);
+            } catch(Exception ex)
+            {
+                throw new Exception("Xảy ra lỗi khi cập nhật chi tiết chuyển kho !", ex);
+            }
+        }
+
+        // xoa phieu chuyen kho 
+        public async Task<bool> XoaPhieuChuyenKhoAsync(Guid maCK)
+        {
+            try
+            {
+                return await _repository.XoaPhieuChuyenKhoAsync(maCK);
+            } catch(Exception ex)
+            {
+                throw new Exception("Xảy ra lỗi khi xóa phiếu chuyển kho !", ex);
+            }
+        }
     }
 
 }

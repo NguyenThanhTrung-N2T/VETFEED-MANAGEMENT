@@ -511,3 +511,109 @@ ON CongNo (NgayPhatSinh);
 -- Index truy vấn theo phiếu
 CREATE INDEX IDX_CongNo_MaPhieu
 ON CongNo (MaPhieu);
+
+
+
+
+
+-- ===== Kho hàng =====
+INSERT INTO KhoHang (MaKho, MaKhoCode, TenKho, DiaChi, TrangThai)
+VALUES
+(NEWID(), 'KHO01', N'Kho Thủ Đức', N'123 Xa lộ Hà Nội, TP.HCM', 'HOAT_DONG'),
+(NEWID(), 'KHO02', N'Kho Tân Phú', N'456 Lũy Bán Bích, TP.HCM', 'HOAT_DONG'),
+(NEWID(), 'KHO03', N'Kho Củ Chi', N'789 Tỉnh lộ 8, TP.HCM', 'HOAT_DONG');
+
+-- ===== Nhà cung cấp =====
+INSERT INTO NhaCungCap (MaNCC, MaNCCCode, TenNCC, SoDienThoai, DiaChi, TrangThai)
+VALUES
+(NEWID(), 'NCC01', N'Công ty Dược ABC', '0909123456', N'Quận 1, TP.HCM', 'HOAT_DONG'),
+(NEWID(), 'NCC02', N'Công ty Thức ăn XYZ', '0909234567', N'Quận 5, TP.HCM', 'HOAT_DONG');
+
+-- ===== Khách hàng =====
+INSERT INTO KhachHang (MaKH, MaKHCode, TenKH, SoDienThoai, DiaChi, LoaiKhachHang, HanMucCongNo, TrangThai)
+VALUES
+(NEWID(), 'KH01', N'Trại heo Bình Dương', '0912345678', N'Bình Dương', 'TRANG_TRAI', 50000000, 'HOAT_DONG'),
+(NEWID(), 'KH02', N'Đại lý thuốc thú y A', '0912345679', N'Quận 9, TP.HCM', 'DAI_LY', 20000000, 'HOAT_DONG');
+
+-- ===== Sản phẩm =====
+INSERT INTO SanPham (MaSP, MaSPCode, TenSP, LoaiSanPham, DonViTinh)
+VALUES
+(NEWID(), 'SP01', N'Antibiotic', 'THUOC_THU_Y', N'Vỉ'),
+(NEWID(), 'SP02', N'Peptide', 'THUOC_THU_Y', N'Vỉ'),
+(NEWID(), 'SP03', N'Cám heo', 'THUC_AN_CHAN_NUOI', N'Kg');
+
+-- ===== Quy đổi đơn vị =====
+INSERT INTO QuyDoiDonVi (MaQD, MaSP, DonViNhap, TyLe)
+VALUES
+(NEWID(), (SELECT MaSP FROM SanPham WHERE MaSPCode='SP01'), 'Thùng', 50),
+(NEWID(), (SELECT MaSP FROM SanPham WHERE MaSPCode='SP01'), 'Hộp', 5),
+(NEWID(), (SELECT MaSP FROM SanPham WHERE MaSPCode='SP02'), 'Thùng', 40);
+
+-- ===== Lô hàng =====
+INSERT INTO LoHang (MaLo, MaLoCode, MaSP, NgaySanXuat, HanSuDung)
+VALUES
+(NEWID(), 'LO01', (SELECT MaSP FROM SanPham WHERE MaSPCode='SP01'), '2025-01-01', '2026-01-01'),
+(NEWID(), 'LO02', (SELECT MaSP FROM SanPham WHERE MaSPCode='SP02'), '2025-02-01', '2026-02-01'),
+(NEWID(), 'LO03', (SELECT MaSP FROM SanPham WHERE MaSPCode='SP03'), '2025-03-01', '2026-03-01');
+
+-- ===== Phiếu nhập + chi tiết =====
+INSERT INTO PhieuNhap (MaPN, MaPNCode, MaNCC, MaKho, ThanhTien, TrangThai)
+VALUES
+(NEWID(), 'PN1001', (SELECT MaNCC FROM NhaCungCap WHERE MaNCCCode='NCC01'), (SELECT MaKho FROM KhoHang WHERE MaKhoCode='KHO01'), 1000000, 'DA_NHAN');
+
+INSERT INTO CTPhieuNhap (MaCTPN, MaPN, MaLo, SoLuong, DonGia)
+VALUES
+(NEWID(), (SELECT MaPN FROM PhieuNhap WHERE MaPNCode='PN1001'), (SELECT MaLo FROM LoHang WHERE MaLoCode='LO01'), 100, 20000),
+(NEWID(), (SELECT MaPN FROM PhieuNhap WHERE MaPNCode='PN1001'), (SELECT MaLo FROM LoHang WHERE MaLoCode='LO02'), 50, 30000);
+
+-- ===== Tồn kho =====
+INSERT INTO TonKho (MaTonKho, MaKho, MaLo, SoLuong)
+VALUES
+(NEWID(), (SELECT MaKho FROM KhoHang WHERE MaKhoCode='KHO01'), (SELECT MaLo FROM LoHang WHERE MaLoCode='LO01'), 100),
+(NEWID(), (SELECT MaKho FROM KhoHang WHERE MaKhoCode='KHO01'), (SELECT MaLo FROM LoHang WHERE MaLoCode='LO02'), 50);
+
+-- ===== Phiếu bán + chi tiết =====
+INSERT INTO PhieuBan (MaPB, MaPBCode, MaKH, TongTienHang, ThanhTien, HinhThucThanhToan, TrangThaiThanhToan)
+VALUES
+(NEWID(), 'PB2001', (SELECT MaKH FROM KhachHang WHERE MaKHCode='KH01'), 200000, 200000, 'TIEN_MAT', 'DA_THANH_TOAN');
+
+INSERT INTO CTPhieuBan (MaCTPB, MaPB, MaKho, MaLo, SoLuong, DonGia)
+VALUES
+(NEWID(), (SELECT MaPB FROM PhieuBan WHERE MaPBCode='PB2001'), (SELECT MaKho FROM KhoHang WHERE MaKhoCode='KHO01'), (SELECT MaLo FROM LoHang WHERE MaLoCode='LO01'), 10, 20000);
+
+-- ===== Phiếu chuyển kho + chi tiết =====
+INSERT INTO PhieuChuyenKho (MaCK, MaCKCode, NgayLap, MaKhoXuat, MaKhoNhan, GhiChu)
+VALUES
+(NEWID(), 'CK3001', '2025-08-11',
+ (SELECT MaKho FROM KhoHang WHERE MaKhoCode='KHO01'),
+ (SELECT MaKho FROM KhoHang WHERE MaKhoCode='KHO02'),
+ N'Chuyển sang Tân Phú');
+
+INSERT INTO CTPhieuChuyenKho (MaCTCK, MaCK, MaLo, SoLuongChuyen, TrangThai, GhiChu)
+VALUES
+(NEWID(),
+ (SELECT MaCK FROM PhieuChuyenKho WHERE MaCKCode='CK3001'),
+ (SELECT MaLo FROM LoHang WHERE MaLoCode='LO01'),
+ 20, 'DA_NHAN', N'Đã nhận tại Tân Phú');
+
+-- ===== Phiếu trả hàng + chi tiết =====
+INSERT INTO PhieuTra (MaPT, MaPTCode, NgayTra, MaPB, MaKH, LyDo, ThanhTien, HinhThucHoanTien)
+VALUES
+(NEWID(), 'PT4001', '2025-09-01',
+ (SELECT MaPB FROM PhieuBan WHERE MaPBCode='PB2001'),
+ (SELECT MaKH FROM KhachHang WHERE MaKHCode='KH01'),
+ N'Hàng lỗi', 40000, 'TIEN_MAT');
+
+INSERT INTO CTPhieuTra (MaCTPT, MaPT, MaLo, SoLuongTra, DonGiaHoan)
+VALUES
+(NEWID(),
+ (SELECT MaPT FROM PhieuTra WHERE MaPTCode='PT4001'),
+ (SELECT MaLo FROM LoHang WHERE MaLoCode='LO01'),
+ 2, 20000);
+
+-- ===== Công nợ =====
+INSERT INTO CongNo (MaCongNo, LoaiDoiTuong, MaDoiTuong, MaPhieu, SoTien, NgayPhatSinh, GhiChu)
+VALUES
+(NEWID(), 'KHACH_HANG', (SELECT MaKH FROM KhachHang WHERE MaKHCode='KH01'),
+ (SELECT MaPB FROM PhieuBan WHERE MaPBCode='PB2001'),
+ 200000, GETDATE(), N'Phát sinh công nợ từ phiếu bán PB2001');
