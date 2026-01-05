@@ -52,6 +52,21 @@ namespace VETFEED.Backend.API.Services
                 throw new Exception("Xảy ra lỗi khi tạo phiếu chuyển kho !", ex);
             }
         }
+
+        // cap nhat phieu chuyen kho 
+        public async Task<ChiTietPhieuChuyenKhoResponse?> UpdatePhieuChuyenKhoAsync(UpdatePhieuChuyenKhoRequest request)
+        {
+            try
+            {
+                // cap nhat phieu chuyen kho
+                return await _repository.UpdatePhieuChuyenKhoAsync(request);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Xảy ra lỗi khi cập nhật phiếu chuyển kho !", ex);
+            }
+        }
+
     }
 
 }

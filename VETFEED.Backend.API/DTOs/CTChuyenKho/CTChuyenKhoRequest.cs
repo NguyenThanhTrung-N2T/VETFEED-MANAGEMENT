@@ -2,9 +2,9 @@
 using System.Text.Json.Serialization;
 using VETFEED.Backend.API.Enums;
 
-namespace VETFEED.Backend.API.DTOs.PhieuChuyenKho
+namespace VETFEED.Backend.API.DTOs.CTChuyenKho
 {
-    public class SanPhamChuyenKhoItemRequest
+    public class CTChuyenKhoRequest
     {
         [Required(ErrorMessage = "Mã lô không được bỏ trống !")]
         public Guid MaLo { get; set; }

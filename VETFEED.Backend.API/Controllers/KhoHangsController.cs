@@ -17,7 +17,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET: api/khohangs  : lấy tất cả kho hàng 
-        [Authorize]
+        //[Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllKhoHangsAsync()
         {

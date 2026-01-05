@@ -50,5 +50,21 @@ namespace VETFEED.Backend.API.Controllers
             return Ok(result);
         }
 
+        // PUT : api/phieuchuyenkhos/{maCK} : cap nhat phieu chuyen kho
+        [HttpPut("{maCK}")]
+        public async Task<IActionResult> CapNhatPhieuChuyenKho(Guid maCK, [FromBody] UpdatePhieuChuyenKhoRequest request)
+        {
+            if (maCK != request.MaCK)
+                return BadRequest("Mã phiếu không khớp!");
+
+            var result = await _service.UpdatePhieuChuyenKhoAsync(request);
+            if (result == null)
+                return NotFound("Không tìm thấy phiếu chuyển kho!");
+
+            // tra ve phieu chuyen kho sau khi cap nhat
+            return Ok(result); 
+        }
+
+
     }
 }

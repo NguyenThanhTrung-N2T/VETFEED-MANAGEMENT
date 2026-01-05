@@ -12,5 +12,8 @@ namespace VETFEED.Backend.API.Repositories
 
         // tao phieu chuyen kho 
         Task<ChiTietPhieuChuyenKhoResponse> AddPhieuChuyenKhoAsync(PhieuChuyenKhoRequest request);
+
+        // update phieu chuyen kho
+        Task<ChiTietPhieuChuyenKhoResponse?> UpdatePhieuChuyenKhoAsync(UpdatePhieuChuyenKhoRequest request);
     }
 }

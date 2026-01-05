@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using VETFEED.Backend.API.DTOs.CTChuyenKho;
 
 namespace VETFEED.Backend.API.DTOs.PhieuChuyenKho
 {
@@ -13,6 +14,6 @@ namespace VETFEED.Backend.API.DTOs.PhieuChuyenKho
         public string? GhiChu { get; set; }
 
         [Required(ErrorMessage = "Danh sách sản phẩm cần chuyển không được bỏ trống !")]
-        public List<SanPhamChuyenKhoItemRequest>? DanhSachSanPham { get; set; }
+        public List<CTChuyenKhoRequest>? DanhSachSanPham { get; set; }
     }
 }

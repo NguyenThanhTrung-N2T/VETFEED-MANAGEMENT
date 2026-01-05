@@ -1,4 +1,6 @@
-﻿namespace VETFEED.Backend.API.DTOs.PhieuChuyenKho
+﻿using VETFEED.Backend.API.DTOs.CTChuyenKho;
+
+namespace VETFEED.Backend.API.DTOs.PhieuChuyenKho
 {
     public class ChiTietPhieuChuyenKhoResponse
     {
@@ -13,7 +15,7 @@
         public Guid MaKhoXuat { get; set; }
         public Guid MaKhoNhan { get; set; }
 
-        public List<SanPhamChuyenKhoItemResponse>? DanhSachSanPham { get; set; }
+        public List<CTChuyenKhoResponse>? DanhSachSanPham { get; set; }
     }
 
 }

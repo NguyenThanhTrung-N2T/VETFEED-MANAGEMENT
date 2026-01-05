@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using VETFEED.Backend.API.Data;
+using VETFEED.Backend.API.DTOs.CTChuyenKho;
 using VETFEED.Backend.API.DTOs.PhieuChuyenKho;
 using VETFEED.Backend.API.Models;
 using VETFEED.Backend.API.Utils;
@@ -54,8 +55,10 @@ namespace VETFEED.Backend.API.Repositories
                 .Where(ct => ct.MaCK == maCK)
                 .Include(ct => ct.LoHang)
                 .ThenInclude(lh => lh!.SanPham)
-                .Select(ct => new SanPhamChuyenKhoItemResponse
+                .Select(ct => new CTChuyenKhoResponse
                 {
+                    MaCTCK = ct.MaCTCK,
+                    MaLo = ct.MaLo,
                     MaLoCode = ct.LoHang!.MaLoCode,
                     TenSanPham = ct.LoHang.SanPham!.TenSP,
                     LoaiSanPham = ct.LoHang.SanPham.LoaiSanPham.ToString(),
@@ -99,7 +102,7 @@ namespace VETFEED.Backend.API.Repositories
                 _context.PhieuChuyenKhos.Add(phieu);
 
                 // danh sach chi tiet chuyen kho 
-                var chiTietList = new List<SanPhamChuyenKhoItemResponse>();
+                var chiTietList = new List<CTChuyenKhoResponse>();
 
                 // them cac chi tiet chuyen kho
                 foreach (var item in request.DanhSachSanPham!)
@@ -126,8 +129,10 @@ namespace VETFEED.Backend.API.Repositories
                         .FirstOrDefaultAsync();
 
                     // tra ve danh sach chi tiet chuyen kho
-                    chiTietList.Add(new SanPhamChuyenKhoItemResponse
+                    chiTietList.Add(new CTChuyenKhoResponse
                     {
+                        MaCTCK = ct.MaCTCK,
+                        MaLo = lo!.MaLo,
                         MaLoCode = lo!.MaLoCode,
                         TenSanPham = lo.SanPham!.TenSP,
                         LoaiSanPham = lo.SanPham.LoaiSanPham.ToString(),
@@ -167,6 +172,71 @@ namespace VETFEED.Backend.API.Repositories
             }
 
         }
+
+        // cap nhat chi tiet phieu chuyen kho
+        public async Task<ChiTietPhieuChuyenKhoResponse?> UpdatePhieuChuyenKhoAsync(UpdatePhieuChuyenKhoRequest request)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // lay phieu chuyen kho trong db
+                var phieu = await _context.PhieuChuyenKhos.FindAsync(request.MaCK);
+                if (phieu == null) return null;
+
+                // KHÔNG cho phép đổi kho xuất
+                phieu.NgayLap = request.NgayLap;
+                phieu.MaKhoNhan = request.MaKhoNhan;
+                phieu.GhiChu = request.GhiChu;
+
+                // xử lý chi tiết
+                foreach (var item in request.DanhSachChiTiet!)
+                {
+                    if (item.IsDeleted && item.MaCTCK.HasValue)
+                    {
+                        // xóa chi tiết
+                        var ct = await _context.CTPhieuChuyenKhos.FindAsync(item.MaCTCK.Value);
+                        if (ct != null) _context.CTPhieuChuyenKhos.Remove(ct);
+                    }
+                    else if (!item.MaCTCK.HasValue)
+                    {
+                        // thêm mới
+                        var ct = new CTPhieuChuyenKho
+                        {
+                            MaCTCK = Guid.NewGuid(),
+                            MaCK = request.MaCK,
+                            MaLo = item.MaLo,
+                            SoLuongChuyen = item.SoLuongChuyen,
+                            GhiChu = item.GhiChu,
+                            TrangThai = item.TrangThai
+                        };
+                        _context.CTPhieuChuyenKhos.Add(ct);
+                    }
+                    else
+                    {
+                        // cập nhật chi tiết
+                        var ct = await _context.CTPhieuChuyenKhos.FindAsync(item.MaCTCK.Value);
+                        if (ct != null)
+                        {
+                            ct.MaLo = item.MaLo;
+                            ct.SoLuongChuyen = item.SoLuongChuyen;
+                            ct.GhiChu = item.GhiChu;
+                            ct.TrangThai = item.TrangThai;
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return await GetChiTietPhieuChuyenKhoAsync(request.MaCK);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw new Exception("Lỗi khi cập nhật phiếu chuyển kho!");
+            }
+        }
+
 
     }
 }

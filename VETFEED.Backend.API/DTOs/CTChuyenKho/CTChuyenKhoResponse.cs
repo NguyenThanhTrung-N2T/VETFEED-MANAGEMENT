@@ -1,7 +1,9 @@
-﻿namespace VETFEED.Backend.API.DTOs.PhieuChuyenKho
+﻿namespace VETFEED.Backend.API.DTOs.CTChuyenKho
 {
-    public class SanPhamChuyenKhoItemResponse
+    public class CTChuyenKhoResponse
     {
+        public Guid MaCTCK { get; set; }
+        public Guid MaLo { get; set; }
         public string? MaLoCode { get; set; }
         public string? TenSanPham { get; set; }
         public string? LoaiSanPham { get; set; }
