@@ -11,6 +11,6 @@ namespace VETFEED.Backend.API.DTOs.CTPhieuNhap
         public DateTime HanSuDung { get; set; }
         
         public decimal SoLuong { get; set; }
-        // DonGia không cần nhập, mặc định = 0
+        public decimal? DonGia { get; set; }
     }
 }
