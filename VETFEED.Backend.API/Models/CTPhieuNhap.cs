@@ -12,7 +12,7 @@ namespace VETFEED.Backend.API.Models
         public Guid MaCTPN { get; set; }
         public Guid MaPN { get; set; }                      // FK Phiếu nhập
         public Guid MaLo { get; set; }                      // FK Lô hàng
-        public decimal SoLuong { get; set; }
+        public decimal SoLuong { get; set; }                // Số lượng này là của đơn vị nhập hàng
         public decimal? DonGia { get; set; }
 
         // Navigation

@@ -107,5 +107,27 @@ namespace VETFEED.Backend.API.Services
                 DanhSachChiTiet = danhSachChiTiet
             };
         }
+
+        /* Update phiếu nhập
+           Logic: 
+           Nếu trạng thái DA_NHAN Thì không thể chuyển lại
+           Nếu trạng thái DA_HUY Thì không thể chuyển lại
+           Nếu trạng thái DA_DAT Thì có thể chuyển sang DA_NHAN hoặc DA_HUY
+           Nếu update trạng thái thành DA_NHAN thì cập nhật tiền chi, tồn kho, tính tổng cho từng CTPN
+           Đảm bảo khi chuyển trạng thái thành đã nhập thì phải có Đơn giá của sản phẩm (để tính tổng tiền) Error message: "Cần ghi đơn giá khi nhận hàng!"
+           Quy đổi trường SoLuong dựa vào bảng QuyDoiDonVi để lưu tồn kho theo đơn vị bán hàng
+           Nếu trạng thái là DA_HUY thì không làm gì
+           
+         */
+
+
+         /* Delete phiếu nhập
+            Logic:
+            Dùng transaction để đảm bảo tính nhất quán
+            Nếu trạng thái là DA_NHAN Thì không thể xóa
+            Nếu trạng thái là DA_DAT Thì xóa phiếu nhập và xóa CTPN
+            Nếu trạng thái là DA_HUY Thì giống DA_DAT
+         */
+
     }
 }
