@@ -35,6 +35,7 @@ namespace VETFEED.Backend.API.Repositories
         public async Task<LoHangResponse?> GetLoHangByIdAsync(Guid id)
         {
             var x = await _context.LoHangs
+                .AsNoTracking()
                 .Include(l => l.SanPham)
                 .FirstOrDefaultAsync(l => l.MaLo == id);
 
@@ -134,7 +135,6 @@ namespace VETFEED.Backend.API.Repositories
             return true;
         }
 
-        // Lay entity LoHang (khong phai DTO) de dung trong service
         public async Task<Models.LoHang?> GetLoHangEntityByIdAsync(Guid id)
         {
             return await _context.LoHangs
@@ -142,5 +142,19 @@ namespace VETFEED.Backend.API.Repositories
                 .FirstOrDefaultAsync(l => l.MaLo == id);
         }
 
+        // Cap nhat NgaySanXuat va HanSuDung cho LoHang
+        public async Task<bool> UpdateLoHangDatesAsync(Guid maLo, DateTime? ngaySanXuat, DateTime hanSuDung)
+        {
+            var entity = await _context.LoHangs.FindAsync(maLo);
+            if (entity == null) return false;
+
+            entity.NgaySanXuat = ngaySanXuat;
+            entity.HanSuDung = hanSuDung;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
     }
 }
+

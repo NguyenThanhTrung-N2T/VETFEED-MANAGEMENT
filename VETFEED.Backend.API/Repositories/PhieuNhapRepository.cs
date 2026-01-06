@@ -183,7 +183,6 @@ namespace VETFEED.Backend.API.Repositories
             }
         }
 
-        // Lay entity PhieuNhap (khong phai DTO) de dung trong service
         public async Task<PhieuNhap?> GetPhieuNhapEntityByIdAsync(Guid id)
         {
             return await _context.PhieuNhaps

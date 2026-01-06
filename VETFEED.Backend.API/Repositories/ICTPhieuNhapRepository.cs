@@ -10,7 +10,11 @@ namespace VETFEED.Backend.API.Repositories
         Task<CTPhieuNhap> AddCTPhieuNhapAsync(Guid maPN, Guid maLo, decimal soLuong, decimal donGia = 0);
         Task<bool> DeleteCTPhieuNhapAsync(Guid id);
 
-        // Lay danh sach entities CTPhieuNhap (khong phai DTO) theo MaPN
+        // Lay danh sach entities CTPhieuNhap theo MaPN
         Task<IEnumerable<CTPhieuNhap>> GetCTPhieuNhapEntitiesByMaPNAsync(Guid maPN);
+
+        // Cap nhat SoLuong va DonGia cho CTPhieuNhap
+        Task<bool> UpdateCTPhieuNhapAsync(Guid maCTPN, decimal soLuong, decimal donGia);
     }
 }
+

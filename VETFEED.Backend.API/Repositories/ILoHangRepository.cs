@@ -12,7 +12,11 @@ namespace VETFEED.Backend.API.Repositories
         Task<LoHangResponse?> UpdateLoHangAsync(Guid id, LoHangRequest request);
         Task<bool> DeleteLoHangAsync(Guid id);
 
-        // Lay entity LoHang (khong phai DTO) de dung trong service
+        // Lay entity LoHang  de dung trong service
         Task<LoHang?> GetLoHangEntityByIdAsync(Guid id);
+
+        // Cap nhat NgaySanXuat va HanSuDung cho LoHang
+        Task<bool> UpdateLoHangDatesAsync(Guid maLo, DateTime? ngaySanXuat, DateTime hanSuDung);
     }
 }
+

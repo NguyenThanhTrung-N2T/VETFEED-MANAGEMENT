@@ -89,7 +89,6 @@ namespace VETFEED.Backend.API.Repositories
             return true;
         }
 
-        // Lay danh sach entities CTPhieuNhap (khong phai DTO) theo MaPN
         public async Task<IEnumerable<CTPhieuNhap>> GetCTPhieuNhapEntitiesByMaPNAsync(Guid maPN)
         {
             return await _context.CTPhieuNhaps
@@ -97,5 +96,19 @@ namespace VETFEED.Backend.API.Repositories
                 .Where(ct => ct.MaPN == maPN)
                 .ToListAsync();
         }
+
+        // Cap nhat SoLuong va DonGia cho CTPhieuNhap
+        public async Task<bool> UpdateCTPhieuNhapAsync(Guid maCTPN, decimal soLuong, decimal donGia)
+        {
+            var entity = await _context.CTPhieuNhaps.FindAsync(maCTPN);
+            if (entity == null) return false;
+
+            entity.SoLuong = soLuong;
+            entity.DonGia = donGia;
+            
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }
+
