@@ -134,5 +134,13 @@ namespace VETFEED.Backend.API.Repositories
             return true;
         }
 
+        // Lay entity LoHang (khong phai DTO) de dung trong service
+        public async Task<Models.LoHang?> GetLoHangEntityByIdAsync(Guid id)
+        {
+            return await _context.LoHangs
+                .Include(l => l.SanPham)
+                .FirstOrDefaultAsync(l => l.MaLo == id);
+        }
+
     }
 }

@@ -182,5 +182,28 @@ namespace VETFEED.Backend.API.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        // Lay entity PhieuNhap (khong phai DTO) de dung trong service
+        public async Task<PhieuNhap?> GetPhieuNhapEntityByIdAsync(Guid id)
+        {
+            return await _context.PhieuNhaps
+                .Include(p => p.CTPhieuNhaps!)
+                    .ThenInclude(ct => ct.LoHang)
+                .FirstOrDefaultAsync(p => p.MaPN == id);
+        }
+
+        // Cap nhat ThanhTien va TrangThai cho PhieuNhap
+        public async Task<bool> UpdatePhieuNhapThanhTienAndTrangThaiAsync(Guid id, decimal thanhTien, TrangThaiPhieuNhapEnum trangThai)
+        {
+            var entity = await _context.PhieuNhaps.FindAsync(id);
+            if (entity == null) return false;
+
+            entity.ThanhTien = thanhTien;
+            entity.TrangThai = trangThai;
+            entity.NgayCapNhat = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

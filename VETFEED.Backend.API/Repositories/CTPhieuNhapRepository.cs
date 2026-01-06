@@ -88,5 +88,14 @@ namespace VETFEED.Backend.API.Repositories
 
             return true;
         }
+
+        // Lay danh sach entities CTPhieuNhap (khong phai DTO) theo MaPN
+        public async Task<IEnumerable<CTPhieuNhap>> GetCTPhieuNhapEntitiesByMaPNAsync(Guid maPN)
+        {
+            return await _context.CTPhieuNhaps
+                .Include(ct => ct.LoHang)
+                .Where(ct => ct.MaPN == maPN)
+                .ToListAsync();
+        }
     }
 }
