@@ -262,8 +262,6 @@ namespace VETFEED.Backend.API.Services
                 }
             }
             
-            // 6. Nếu chuyển sang DA_HUY thì không làm gì với tồn kho
-            // (chỉ cập nhật trạng thái)
 
             // 7. Cập nhật phiếu nhập (ThanhTien từ FE và TrangThai)
             await _phieuNhapRepo.UpdatePhieuNhapThanhTienAndTrangThaiAsync(id, request.ThanhTien, newStatus);
