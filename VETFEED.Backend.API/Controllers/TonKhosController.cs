@@ -53,5 +53,23 @@ namespace VETFEED.Backend.API.Controllers
             return Ok(result);
         }
 
+        // POST : api/tonkhos/checkallkho : kiem tra ton kho theo ma lo tai tat ca cac kho
+        [HttpPost("checkallkho")]
+        public async Task<IActionResult> CheckTonKhoAllKhoAsync(CheckAllKhoRequest request)
+        {
+            // kiem tra dau vao 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Thông tin không đầy đủ hoặc không đúng định dạng !");
+            }
+            // kiem tra ton kho 
+            var result = await _tonKhoSerivce.IsTonKhoEnoughAllKhoAsync(request.MaLo, request.SoLuongCan, request.DonViBan!);
+            if (!result)
+            {
+                return BadRequest("Tồn kho tại tất cả các kho không đủ !");
+            }
+            return Ok(result);
+
+        }
     }
 }

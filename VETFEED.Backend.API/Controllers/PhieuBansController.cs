@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.PhieuBan;
 using VETFEED.Backend.API.Services;
@@ -40,7 +40,7 @@ namespace VETFEED.Backend.API.Controllers
             {
                 var result = await _phieuBanService.GetChiTietPhieuBanAsync(maPB);
                 if (result == null)
-                    return NotFound(new { error = "Phi?u b�n kh�ng t?n t?i!" });
+                    return NotFound(new { error = "Phiếu bán không tồn tại !" });
 
                 return Ok(result);
             }
@@ -55,14 +55,14 @@ namespace VETFEED.Backend.API.Controllers
         public async Task<IActionResult> CreatePhieuBan([FromBody] CreatePhieuBanRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new { error = "D? li?u kh�ng h?p l?!" });
+                return BadRequest(new { error = "Dữ liệu không hợp lệ !" });
 
             try
             {
                 var (result, error) = await _phieuBanService.CreatePhieuBanAsync(request);
 
                 if (result == null)
-                    return StatusCode(400, new { error = error ?? "X?y ra l?i khi t?o phi?u b�n!" });
+                    return StatusCode(400, new { error = error ?? "Xảy ra lỗi khi tạo phiếu bán !" });
 
                 return CreatedAtAction(nameof(GetChiTietPhieuBan), new { maPB = result.MaPB }, result);
             }
@@ -77,14 +77,14 @@ namespace VETFEED.Backend.API.Controllers
         public async Task<IActionResult> UpdatePhieuBan(Guid maPB, [FromBody] CreatePhieuBanRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new { error = "D? li?u kh�ng h?p l?!" });
+                return BadRequest(new { error = "D? li?u không h?p l?!" });
 
             try
             {
                 var (result, error) = await _phieuBanService.UpdatePhieuBanAsync(maPB, request);
 
                 if (result == null)
-                    return StatusCode(400, new { error = error ?? "X?y ra l?i khi c?p nh?t phi?u b�n!" });
+                    return StatusCode(400, new { error = error ?? "X?y ra l?i khi c?p nh?t phi?u bán!" });
 
                 return Ok(result);
             }
@@ -102,9 +102,9 @@ namespace VETFEED.Backend.API.Controllers
             {
                 var result = await _phieuBanService.DeletePhieuBanAsync(maPB);
                 if (!result)
-                    return NotFound(new { error = "Phi?u b�n kh�ng t?n t?i!" });
+                    return NotFound(new { error = "Phi?u bán không t?n t?i!" });
 
-                return Ok(new { message = "X�a phi?u b�n th�nh c�ng!" });
+                return Ok(new { message = "Xóa phi?u bán thành công!" });
             }
             catch (Exception ex)
             {

@@ -4,17 +4,17 @@ namespace VETFEED.Backend.API.Repositories
 {
     public interface IPhieuBanRepository
     {
-        // L?y danh sách phi?u bán
+        // lay danh sach phieu ban
         Task<IEnumerable<PhieuBanResponse>> GetDanhSachPhieuBanAsync();
 
-        // L?y chi ti?t phi?u bán
-        Task<PhieuBanResponse?> GetChiTietPhieuBanAsync(Guid maPB);
+        // lay chi tiet phieu ban
+        Task<PhieuBanDetailResponse?> GetChiTietPhieuBanAsync(Guid maPB);
 
-        // T?o phi?u bán
-        Task<PhieuBanResponse> CreatePhieuBanAsync(CreatePhieuBanRequest request);
+        // tao phieu ban
+        Task<PhieuBanDetailResponse> CreatePhieuBanAsync(CreatePhieuBanRequest request);
 
         // C?p nh?t phi?u bán
-        Task<PhieuBanResponse?> UpdatePhieuBanAsync(Guid maPB, CreatePhieuBanRequest request);
+        Task<PhieuBanDetailResponse?> UpdatePhieuBanAsync(Guid maPB, CreatePhieuBanRequest request);
 
         // Xóa phi?u bán
         Task<bool> DeletePhieuBanAsync(Guid maPB);

@@ -1,4 +1,4 @@
-using VETFEED.Backend.API.DTOs.PhieuBan;
+ï»¿using VETFEED.Backend.API.DTOs.PhieuBan;
 using VETFEED.Backend.API.Repositories;
 
 namespace VETFEED.Backend.API.Services
@@ -12,34 +12,34 @@ namespace VETFEED.Backend.API.Services
             _phieuBanRepo = phieuBanRepo;
         }
 
-        // L?y danh sách phi?u bán
+        // lay danh sach phieu ban
         public async Task<IEnumerable<PhieuBanResponse>> GetDanhSachPhieuBanAsync()
         {
             return await _phieuBanRepo.GetDanhSachPhieuBanAsync();
         }
 
-        // L?y chi ti?t phi?u bán
-        public async Task<PhieuBanResponse?> GetChiTietPhieuBanAsync(Guid maPB)
+        // lay chi tiet phieu ban
+        public async Task<PhieuBanDetailResponse?> GetChiTietPhieuBanAsync(Guid maPB)
         {
             return await _phieuBanRepo.GetChiTietPhieuBanAsync(maPB);
         }
 
-        // T?o phi?u bán
-        public async Task<(PhieuBanResponse? result, string? error)> CreatePhieuBanAsync(CreatePhieuBanRequest request)
+        // Tao phieu ban
+        public async Task<(PhieuBanDetailResponse? result, string? error)> CreatePhieuBanAsync(CreatePhieuBanRequest request)
         {
             try
             {
-                // ? Validate
+                // kiem tra dau vao
                 if (request.DanhSachChiTiet == null || request.DanhSachChiTiet.Count == 0)
-                    return (null, "Danh sách chi ti?t phi?u bán không ???c ?? tr?ng!");
+                    return (null, "Danh sÃ¡ch chi tiáº¿t khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng !");
 
                 if (request.TienCoc < 0)
-                    return (null, "Ti?n c?c không ???c âm!");
+                    return (null, "Tiá»n cá»c khÃ´ng Ä‘Æ°á»£c Ã¢m !");
 
                 if (request.ChietKhauPhanTram < 0 || request.ChietKhauPhanTram > 100)
-                    return (null, "Chi?t kh?u ph?i t? 0 ??n 100%!");
+                    return (null, "Chiáº¿t kháº¥u pháº£i tá»« 0 Ä‘áº¿n 100 % !");
 
-                // ? G?i repository t?o phi?u bán
+                //tao phieu ban
                 var result = await _phieuBanRepo.CreatePhieuBanAsync(request);
                 return (result, null);
             }
@@ -49,14 +49,14 @@ namespace VETFEED.Backend.API.Services
             }
         }
 
-        // C?p nh?t phi?u bán
-        public async Task<(PhieuBanResponse? result, string? error)> UpdatePhieuBanAsync(Guid maPB, CreatePhieuBanRequest request)
+        // C?p nh?t phi?u bÃ¡n
+        public async Task<(PhieuBanDetailResponse? result, string? error)> UpdatePhieuBanAsync(Guid maPB, CreatePhieuBanRequest request)
         {
             try
             {
                 var result = await _phieuBanRepo.UpdatePhieuBanAsync(maPB, request);
                 if (result == null)
-                    return (null, "Phi?u bán không t?n t?i!");
+                    return (null, "Phi?u bÃ¡n khÃ´ng t?n t?i!");
 
                 return (result, null);
             }
@@ -66,7 +66,7 @@ namespace VETFEED.Backend.API.Services
             }
         }
 
-        // Xóa phi?u bán
+        // XÃ³a phi?u bÃ¡n
         public async Task<bool> DeletePhieuBanAsync(Guid maPB)
         {
             return await _phieuBanRepo.DeletePhieuBanAsync(maPB);
