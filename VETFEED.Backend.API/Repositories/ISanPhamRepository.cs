@@ -10,7 +10,7 @@ namespace VETFEED.Backend.API.Repositories
         Task<SanPhamResponse> CreateAsync(VETFEED.Backend.API.Models.SanPham entity);
         Task<SanPhamResponse?> UpdateAsync(Guid maSP, SanPhamUpdateRequest request);
         Task<bool> DeleteAsync(Guid maSP);
-
+        Task<SanPhamResponse?> GetByCodeAsync(string maSPCode);
         Task<bool> HasReferencesAsync(Guid maSP); // check GiaBan/LoHang/NCSP
     }
 }
