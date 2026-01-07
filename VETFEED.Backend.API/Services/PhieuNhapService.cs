@@ -310,7 +310,10 @@ namespace VETFEED.Backend.API.Services
                 await _loHangRepo.DeleteLoHangsByIdsAsync(maLoList);
             }
 
-            // 4. Xóa phiếu nhập (sẽ cascade xóa CTPN)
+            // 4. Batch xóa tất cả CTPhieuNhap (không có cascade delete)
+            await _ctPhieuNhapRepo.DeleteCTPhieuNhapsByMaPNAsync(id);
+
+            // 5. Xóa phiếu nhập
             return await _phieuNhapRepo.DeletePhieuNhapAsync(id);
         }
 

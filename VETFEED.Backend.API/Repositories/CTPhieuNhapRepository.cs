@@ -109,6 +109,20 @@ namespace VETFEED.Backend.API.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
+        // Batch xoa tat ca CTPhieuNhap theo MaPN
+        public async Task<int> DeleteCTPhieuNhapsByMaPNAsync(Guid maPN)
+        {
+            var entities = await _context.CTPhieuNhaps
+                .Where(ct => ct.MaPN == maPN)
+                .ToListAsync();
+
+            if (entities.Count == 0) return 0;
+
+            _context.CTPhieuNhaps.RemoveRange(entities);
+            return await _context.SaveChangesAsync();
+        }
     }
 }
+
 
