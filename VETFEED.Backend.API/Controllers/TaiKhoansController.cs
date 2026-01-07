@@ -124,18 +124,30 @@ namespace VETFEED.Backend.API.Controllers
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] UpdatePasswordRequest request)
         {
-            // kiem tra dau vao
+            // ❌ KIỂM TRA DỮ LIỆU ĐẦU VÀO
             if (!ModelState.IsValid)
-            {
-                return BadRequest("Email hoặc mật khẩu không đạt chuẩn !");
-            }
-            // cap nhat mat khau 
+                return BadRequest(new { error = "Email hoặc mật khẩu không đạt chuẩn!" });
+
+            // ✅ LẤY MaTK TỪ JWT CLAIM
+            var maTKClaim = User.FindFirst("maTK")?.Value;
+            if (string.IsNullOrEmpty(maTKClaim) || !Guid.TryParse(maTKClaim, out var maTK))
+                return Unauthorized(new { error = "Token không hợp lệ!" });
+
+            // ✅ LẤY THÔNG TIN TÀI KHOẢN HIỆN TẠI
+            var taiKhoanHienTai = await _taiKhoanService.GetTaiKhoanByIdAsync(maTK);
+            if (taiKhoanHienTai == null)
+                return NotFound(new { error = "Tài khoản không tồn tại!" });
+
+            // ✅ KIỂM TRA EMAIL CÓ TRÙNG VỚI TÀI KHOẢN TRONG JWT HAY KHÔNG
+            if (taiKhoanHienTai.Email != request.Email)
+                return StatusCode(StatusCodes.Status403Forbidden, new { error = "Bạn chỉ có thể đổi mật khẩu của chính mình!" });
+
+            // ✅ CẬP NHẬT MẬT KHẨU
             var result = await _taiKhoanService.UpdatePasswordAsync(request.Email!, request.Password!);
             if (!result)
-            {
-                return NotFound("Email không tồn tại !");
-            }
-            return Ok("Cập nhật mật khẩu thành công !");
+                return StatusCode(500, new { error = "Xảy ra lỗi khi cập nhật mật khẩu!" });
+
+            return Ok(new { message = "Cập nhật mật khẩu thành công!" });
         }
 
         // POST : api/taikhoans/forgot-password : quên mật khẩu
