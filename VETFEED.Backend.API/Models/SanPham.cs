@@ -15,7 +15,7 @@ namespace VETFEED.Backend.API.Models
         public string? MaSPCode { get; set; }
         public string? TenSP { get; set; }
         public LoaiSanPhamEnum LoaiSanPham { get; set; }
-        public string? DonViTinh { get; set; }
+        public string? DonViCoSo { get; set; }                // Đơn vị cơ sở (viên, kg, lít...)
         public string? GhiChu { get; set; }
         public DateTime NgayTao { get; set; }
 

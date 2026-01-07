@@ -34,7 +34,7 @@ namespace VETFEED.Backend.API.Services
                 MaSPCode = await CodeGenerator.GenerateSanPhamCodeAsync(_context),
                 TenSP = request.TenSP.Trim(),
                 LoaiSanPham = loai,
-                DonViTinh = request.DonViTinh,
+                DonViCoSo = request.DonViTinh,
                 GhiChu = request.GhiChu,
                 NgayTao = DateTime.Now
             };

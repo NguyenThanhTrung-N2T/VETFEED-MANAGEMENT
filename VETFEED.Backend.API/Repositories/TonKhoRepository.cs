@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VETFEED.Backend.API.Data;
 using VETFEED.Backend.API.DTOs.TonKho;
+using VETFEED.Backend.API.Models;
 
 namespace VETFEED.Backend.API.Repositories
 {
@@ -21,7 +22,7 @@ namespace VETFEED.Backend.API.Repositories
                 MaKho = kho.MaKho,
                 TenKho = kho.TenKho!,
                 DanhSachTonKho = _context.TonKhos
-                    .Where(tk => tk.MaKho == kho.MaKho && tk.SoLuong > 0)
+                    .Where(tk => tk.MaKho == kho.MaKho && tk.SoLuongCoSo > 0)
                     .Join(_context.LoHangs, tk => tk.MaLo, lo => lo.MaLo, (tk, lo) => new { tk, lo })
                     .Join(_context.SanPhams, x => x.lo.MaSP, sp => sp.MaSP, (x, sp) => new TonKhoItemResponse
                     {
@@ -38,7 +39,7 @@ namespace VETFEED.Backend.API.Repositories
                             .Where(ct => ct.MaLo == x.lo.MaLo)
                             .Select(ct => ct.DonGia)
                             .FirstOrDefault(),
-                        SoLuong = x.tk.SoLuong
+                        SoLuong = x.tk.SoLuongCoSo
                     })
                     .ToList()
             }).ToListAsync();
@@ -55,7 +56,7 @@ namespace VETFEED.Backend.API.Repositories
             if (tonKho == null) 
                 return false; 
             // cap nhat so luong
-            tonKho.SoLuong = soLuong; 
+            tonKho.SoLuongCoSo = soLuong; 
             tonKho.NgayCapNhat = DateTime.UtcNow; 
             await _context.SaveChangesAsync(); 
             return true; 
@@ -75,10 +76,115 @@ namespace VETFEED.Backend.API.Repositories
             if (tonKho == null)
                 return false;
 
-            if (tonKho.SoLuong < SoLuongChuyen)
+            if (tonKho.SoLuongCoSo < SoLuongChuyen)
                 return false;
 
             return true;
+        }
+
+        // lay ton kho theo ma kho va ma lo 
+        public async Task<TonKhoChiTietResponse?> GetTonKhoAsync(Guid maKho, Guid maLo) 
+        {
+            // lay ton kho 
+            var tonKho = await _context.TonKhos.FirstOrDefaultAsync(t => t.MaKho == maKho && t.MaLo == maLo); 
+            if (tonKho == null) 
+                return null; 
+            return new TonKhoChiTietResponse 
+            { 
+                MaTK = tonKho.MaTonKho, 
+                MaKho = tonKho.MaKho, 
+                MaLo = tonKho.MaLo, 
+                SoLuongTon = tonKho.SoLuongCoSo, 
+                NgayCapNhat = tonKho.NgayCapNhat 
+            }; 
+        }
+
+        // them ton kho 
+        public async Task<TonKhoChiTietResponse> AddTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong) 
+        {
+            try
+            {
+                // tao ton kho
+                var tonKho = new TonKho
+                {
+                    MaTonKho = Guid.NewGuid(),
+                    MaKho = maKho,
+                    MaLo = maLo,
+                    SoLuongCoSo = soLuong,
+                    NgayCapNhat = DateTime.Now
+                };
+                // them ton kho 
+                _context.TonKhos.Add(tonKho);
+                await _context.SaveChangesAsync();
+                return new TonKhoChiTietResponse
+                {
+                    MaTK = tonKho.MaTonKho,
+                    MaKho = tonKho.MaKho,
+                    MaLo = tonKho.MaLo,
+                    SoLuongTon = tonKho.SoLuongCoSo,
+                    NgayCapNhat = tonKho.NgayCapNhat
+                };
+            } catch(Exception ex)
+            {
+                throw new Exception("Xảy ra lỗi khi thêm tồn kho !", ex);
+            }
+            
+        }
+
+        // tang so luong ton kho 
+        public async Task<bool> IncreaseTonKhoAsync(Guid MaKho, Guid MaLo, decimal soLuong)
+        {
+            // kiem tra ton kho 
+            var tonKho = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == MaKho && tk.MaLo == MaLo);
+            if(tonKho == null)
+            {
+                // them ton kho 
+                tonKho = new TonKho
+                {
+                    MaTonKho = Guid.NewGuid(),
+                    MaKho = MaKho,
+                    MaLo = MaLo,
+                    SoLuongCoSo = soLuong,
+                    NgayCapNhat = DateTime.Now,
+                };
+                _context.TonKhos.Add(tonKho);
+            }
+            else
+            {
+                tonKho.SoLuongCoSo += soLuong;
+                tonKho.NgayCapNhat = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // giam so luong ton kho 
+        public async Task<bool> DecreaseTonKhoAsync(Guid MaKho, Guid MaLo, decimal soLuong)
+        {
+            // kiem tra ton kho 
+            var tonKho = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == MaKho && tk.MaLo == MaLo);
+            if (tonKho == null || tonKho.SoLuongCoSo < soLuong)
+            {
+                // khong du so luong 
+                return false;
+            }
+
+            tonKho.SoLuongCoSo -= soLuong;
+            tonKho.NgayCapNhat = DateTime.Now;
+
+            // luu ton kho
+            await _context.SaveChangesAsync();
+            return true;
+
+        }
+
+        // kiem tra ton kho cua lo tai toan bo cac kho 
+        public async Task<bool> IsTonKhoEnoughAllKhoAsync(Guid maLo, decimal soLuongCan)
+        {
+            // lay ton ton kho
+            var tongTon = await _context.TonKhos.Where(t => t.MaLo == maLo).SumAsync(t => t.SoLuongCoSo); 
+            return tongTon >= soLuongCan;
         }
     }
 }

@@ -88,7 +88,20 @@ namespace VETFEED.Backend.API.Controllers
                 Expires = DateTimeOffset.UtcNow.AddMinutes(expireMinutes) 
             });
 
-            return Ok("Đăng nhập thành công !");
+            var response = new LoginResponse
+            {
+                MaTK = taikhoan.MaTK,
+                HoTen = taikhoan.HoTen,
+                Email = taikhoan.Email,
+                SoDienThoai = taikhoan.SoDienThoai,
+                AnhDaiDien = taikhoan.AnhDaiDien,
+                TrangThai = taikhoan.TrangThai,
+                Role = taikhoan.Role,
+                AccessToken = token
+            };
+
+            return Ok(response);
+            
         }
 
         // POST : api/taikhoans/logout : đăng xuất

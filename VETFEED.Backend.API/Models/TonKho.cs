@@ -12,7 +12,8 @@ namespace VETFEED.Backend.API.Models
         public Guid MaTonKho { get; set; }
         public Guid MaKho { get; set; }
         public Guid MaLo { get; set; }
-        public decimal SoLuong { get; set; }
+        public decimal SoLuongCoSo { get; set; }                 // Số lượng tồn theo đơn vị cơ sở
+        public decimal GiaVonBinhQuan { get; set; }              // Giá vốn bình quân theo đơn vị cơ sở
         public DateTime NgayCapNhat { get; set; }
 
         // Navigation

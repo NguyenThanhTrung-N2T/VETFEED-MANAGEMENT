@@ -7,7 +7,7 @@
         public string? MaLoCode { get; set; }
         public string? TenSanPham { get; set; }
         public string? LoaiSanPham { get; set; }
-        public string? DonViTinh { get; set; }
+        public string? DonViCoSo { get; set; }                // Đổi từ DonViTinh
         public decimal SoLuongChuyen { get; set; }
         public decimal? DonGia { get; set; } 
         public DateTime? HanSuDung { get; set; } 

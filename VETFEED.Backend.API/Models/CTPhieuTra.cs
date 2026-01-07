@@ -12,8 +12,8 @@ namespace VETFEED.Backend.API.Models
         public Guid MaCTPT { get; set; }
         public Guid MaPT { get; set; }
         public Guid MaLo { get; set; }
-        public decimal SoLuongTra { get; set; }
-        public decimal DonGiaHoan { get; set; }
+        public decimal SoLuongTra { get; set; }                   // Số lượng trả
+        public decimal DonGiaHoan { get; set; }                   // Đơn giá hoàn (theo đơn vị giao dịch)
         public string? GhiChu { get; set; }
 
         // Navigation

@@ -63,7 +63,7 @@ namespace VETFEED.Backend.API.Repositories
                     MaLoCode = ct.LoHang!.MaLoCode,
                     TenSanPham = ct.LoHang.SanPham!.TenSP,
                     LoaiSanPham = ct.LoHang.SanPham.LoaiSanPham.ToString(),
-                    DonViTinh = ct.LoHang.SanPham.DonViTinh,
+                    DonViCoSo = ct.LoHang.SanPham.DonViCoSo,
                     SoLuongChuyen = ct.SoLuongChuyen,
                     HanSuDung = ct.LoHang.HanSuDung,
                     GhiChu = ct.GhiChu,
@@ -137,7 +137,7 @@ namespace VETFEED.Backend.API.Repositories
                         MaLoCode = lo!.MaLoCode,
                         TenSanPham = lo.SanPham!.TenSP,
                         LoaiSanPham = lo.SanPham.LoaiSanPham.ToString(),
-                        DonViTinh = lo.SanPham.DonViTinh,
+                        DonViCoSo = lo.SanPham.DonViCoSo,
                         SoLuongChuyen = item.SoLuongChuyen,
                         HanSuDung = lo.HanSuDung,
                         GhiChu = item.GhiChu,
@@ -258,17 +258,17 @@ namespace VETFEED.Backend.API.Repositories
                 // Trừ kho xuất
                 var tonKhoXuat = await _context.TonKhos
                     .FirstOrDefaultAsync(t => t.MaKho == maKhoXuat && t.MaLo == ct.MaLo);
-                if (tonKhoXuat == null || tonKhoXuat.SoLuong < ct.SoLuongChuyen)
+                if (tonKhoXuat == null || tonKhoXuat.SoLuongCoSo < ct.SoLuongChuyen)
                     throw new Exception("Tồn kho không đủ để xác nhận!");
 
-                tonKhoXuat.SoLuong -= ct.SoLuongChuyen;
+                tonKhoXuat.SoLuongCoSo -= ct.SoLuongChuyen;
 
                 // Cộng kho nhận
                 var tonKhoNhan = await _context.TonKhos
                     .FirstOrDefaultAsync(t => t.MaKho == maKhoNhan && t.MaLo == ct.MaLo);
                 if (tonKhoNhan != null)
                 {
-                    tonKhoNhan.SoLuong += ct.SoLuongChuyen;
+                    tonKhoNhan.SoLuongCoSo += ct.SoLuongChuyen;
                 }
                 else
                 {
@@ -277,7 +277,7 @@ namespace VETFEED.Backend.API.Repositories
                         MaTonKho = Guid.NewGuid(),
                         MaKho = maKhoNhan,
                         MaLo = ct.MaLo,
-                        SoLuong = ct.SoLuongChuyen
+                        SoLuongCoSo = ct.SoLuongChuyen
                     });
                 }
             }
