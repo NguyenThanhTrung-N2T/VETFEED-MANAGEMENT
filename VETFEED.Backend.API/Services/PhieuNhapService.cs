@@ -288,12 +288,33 @@ namespace VETFEED.Backend.API.Services
 
         /* Delete phiếu nhập
            Logic:
-           Dùng transaction để đảm bảo tính nhất quán
            Nếu trạng thái là DA_NHAN Thì không thể xóa
-           Nếu trạng thái là DA_DAT Thì xóa phiếu nhập và xóa CTPN
-           Nếu trạng thái là DA_HUY Thì giống DA_DAT
+           Nếu trạng thái là DA_DAT hoặc DA_HUY Thì xóa phiếu nhập, CTPN và LoHang
          */
+        public async Task<bool> DeletePhieuNhapAsync(Guid id)
+        {
+            // 1. Lấy phiếu nhập
+            var phieuNhap = await _phieuNhapRepo.GetPhieuNhapEntityByIdAsync(id);
+            if (phieuNhap == null)
+                throw new ArgumentException("Không tìm thấy phiếu nhập.");
+
+            // 2. Kiểm tra trạng thái
+            if (phieuNhap.TrangThai == TrangThaiPhieuNhapEnum.DA_NHAN)
+                throw new InvalidOperationException("Phiếu nhập đã nhận không thể xóa.");
+
+            // 3. Batch xóa tất cả LoHang liên quan
+            var danhSachCTPN = await _ctPhieuNhapRepo.GetCTPhieuNhapEntitiesByMaPNAsync(id);
+            var maLoList = danhSachCTPN.Select(ct => ct.MaLo).ToList();
+            if (maLoList.Any())
+            {
+                await _loHangRepo.DeleteLoHangsByIdsAsync(maLoList);
+            }
+
+            // 4. Xóa phiếu nhập (sẽ cascade xóa CTPN)
+            return await _phieuNhapRepo.DeletePhieuNhapAsync(id);
+        }
 
     }
 }
+
 

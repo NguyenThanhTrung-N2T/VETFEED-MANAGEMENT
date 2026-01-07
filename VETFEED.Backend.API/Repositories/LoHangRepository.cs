@@ -155,6 +155,20 @@ namespace VETFEED.Backend.API.Repositories
             return true;
         }
 
+        // Xoa nhieu LoHang cung luc (batch delete)
+        public async Task<int> DeleteLoHangsByIdsAsync(IEnumerable<Guid> maLoList)
+        {
+            var entities = await _context.LoHangs
+                .Where(l => maLoList.Contains(l.MaLo))
+                .ToListAsync();
+
+            if (entities.Count == 0) return 0;
+
+            _context.LoHangs.RemoveRange(entities);
+            return await _context.SaveChangesAsync();
+        }
+
     }
 }
+
 

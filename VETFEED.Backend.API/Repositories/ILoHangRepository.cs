@@ -17,6 +17,10 @@ namespace VETFEED.Backend.API.Repositories
 
         // Cap nhat NgaySanXuat va HanSuDung cho LoHang
         Task<bool> UpdateLoHangDatesAsync(Guid maLo, DateTime? ngaySanXuat, DateTime hanSuDung);
+
+        // Xoa nhieu LoHang cung luc (batch delete)
+        Task<int> DeleteLoHangsByIdsAsync(IEnumerable<Guid> maLoList);
     }
 }
+
 

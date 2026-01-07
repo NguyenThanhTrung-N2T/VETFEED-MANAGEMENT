@@ -70,6 +70,28 @@ namespace VETFEED.Backend.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        // DELETE: api/phieunhaps/{id} - Xóa phiếu nhập
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            try
+            {
+                var result = await _service.DeletePhieuNhapAsync(id);
+                if (!result)
+                    return NotFound(new { message = "Không tìm thấy phiếu nhập" });
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
+
 
