@@ -56,6 +56,7 @@ namespace VETFEED.Backend.API.Services
             if (spEntity != null)
             {
                 spEntity.LoaiSanPham = loai;
+                spEntity.DonViCoSo = request.DonViTinh;
                 await _context.SaveChangesAsync();
             }
 
