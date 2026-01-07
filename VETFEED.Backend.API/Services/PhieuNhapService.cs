@@ -226,7 +226,6 @@ namespace VETFEED.Backend.API.Services
             }
 
             // 6. Xử lý khi chuyển sang DA_NHAN
-            decimal thanhTien = 0;
             if (newStatus == TrangThaiPhieuNhapEnum.DA_NHAN && currentStatus == TrangThaiPhieuNhapEnum.DA_DAT)
             {
                 // Lấy lại danh sách chi tiết đã cập nhật
@@ -238,9 +237,6 @@ namespace VETFEED.Backend.API.Services
                     if (ct.DonGia == null || ct.DonGia <= 0)
                         throw new InvalidOperationException("Cần ghi đơn giá khi nhận hàng!");
 
-                    // Tính thành tiền
-                    thanhTien += ct.SoLuong * ct.DonGia.Value;
-
                     // Lấy thông tin lô hàng để lấy MaSP
                     var loHang = await _loHangRepo.GetLoHangEntityByIdAsync(ct.MaLo);
                     if (loHang == null)
@@ -251,7 +247,7 @@ namespace VETFEED.Backend.API.Services
                     var quyDoiList = await _quyDoiDonViRepo.GetByMaSPAsync(loHang.MaSP);
                     decimal tyLe = 1;
                     
-                    // Lấy tỷ lệ đầu tiên nếu có (hoặc có thể cải thiện logic chọn đơn vị nhập cụ thể)
+                    // Lấy tỷ lệ đầu tiên nếu có
                     var quyDoi = quyDoiList.FirstOrDefault();
                     if (quyDoi != null)
                     {
@@ -269,8 +265,8 @@ namespace VETFEED.Backend.API.Services
             // 6. Nếu chuyển sang DA_HUY thì không làm gì với tồn kho
             // (chỉ cập nhật trạng thái)
 
-            // 7. Cập nhật phiếu nhập (ThanhTien và TrangThai)
-            await _phieuNhapRepo.UpdatePhieuNhapThanhTienAndTrangThaiAsync(id, thanhTien, newStatus);
+            // 7. Cập nhật phiếu nhập (ThanhTien từ FE và TrangThai)
+            await _phieuNhapRepo.UpdatePhieuNhapThanhTienAndTrangThaiAsync(id, request.ThanhTien, newStatus);
 
             // 8. Cập nhật thông tin khác (MaNCC, MaKho, GhiChu) nếu cần
             var updateRequest = new PhieuNhapRequest
