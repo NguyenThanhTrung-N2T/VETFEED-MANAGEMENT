@@ -27,6 +27,7 @@ namespace VETFEED.Backend.API.Data
         public DbSet<PhieuTra> PhieuTras { get; set; }
         public DbSet<CTPhieuTra> CTPhieuTras { get; set; }
         public DbSet<CongNo> CongNos { get; set; }
+        public DbSet<QuyDoiDonVi> QuyDoiDonVis { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +50,7 @@ namespace VETFEED.Backend.API.Data
             modelBuilder.Entity<PhieuTra>().ToTable("PhieuTra"); 
             modelBuilder.Entity<CTPhieuTra>().ToTable("CTPhieuTra"); 
             modelBuilder.Entity<CongNo>().ToTable("CongNo");
+            modelBuilder.Entity<QuyDoiDonVi>().ToTable("QuyDoiDonVi");
 
             // Áp dụng cho tất cả property kiểu decimal trong toàn bộ entity
             foreach (var entityType in modelBuilder.Model.GetEntityTypes()) 
@@ -228,6 +230,16 @@ namespace VETFEED.Backend.API.Data
                 .HasOne(ct => ct.LoHang)
                 .WithMany(lh => lh.CTPhieuTras)
                 .HasForeignKey(ct => ct.MaLo);
+
+            modelBuilder.Entity<QuyDoiDonVi>()
+                .HasOne(qd => qd.SanPham) // 1 QuyDoiDonVi thuộc 1 SanPham
+                .WithMany(sp => sp.QuyDoiDonVis) // 1 SanPham có nhiều QuyDoiDonVi
+                .HasForeignKey(qd => qd.MaSP) // Khóa ngoại
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<QuyDoiDonVi>()
+                .HasIndex(qd => new { qd.MaSP, qd.DonViNhap })
+                .IsUnique();
+
 
             // CongNo: liên kết tới KH hoặc NCC (tùy LoaiDoiTuong)
             // Không thể tạo FK trực tiếp vì polymorphic, xử lý logic ở service layer

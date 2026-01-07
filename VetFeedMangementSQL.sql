@@ -25,6 +25,9 @@ CREATE TABLE TaiKhoan (
         CHECK (Role IN ('QUAN_LY','NHAN_VIEN')),
     TrangThai NVARCHAR(20) NOT NULL DEFAULT 'HOAT_DONG'  -- Trạng thái tài khoản
         CHECK (TrangThai IN ('HOAT_DONG','KHOA')),
+	HoTen NVARCHAR(100) NOT NULL,                        -- Họ tên người dùng 
+	SoDienThoai NVARCHAR(15) NUll,                       -- Số điện thoại 
+	AnhDaiDien NVARCHAR(500) NULL,
     NgayTao DATETIME2 DEFAULT SYSDATETIME()
 );
 
@@ -88,12 +91,26 @@ CREATE TABLE KhachHang (
 CREATE TABLE SanPham (
     MaSP UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),    -- Khóa chính SP
     MaSPCode NVARCHAR(50) NOT NULL UNIQUE,                -- Mã sản phẩm
-    TenSP NVARCHAR(255) NOT NULL,                          -- Tên sản phẩm
-    LoaiSanPham NVARCHAR(30)                               -- Phân loại SP
+    TenSP NVARCHAR(255) NOT NULL,                         -- Tên sản phẩm
+    LoaiSanPham NVARCHAR(30)                              -- Phân loại SP
         CHECK (LoaiSanPham IN ('THUOC_THU_Y','THUC_AN_CHAN_NUOI')),
-    DonViTinh NVARCHAR(20),                                -- Đơn vị tính
-    GhiChu NVARCHAR(500),                                  -- Ghi chú
-    NgayTao DATETIME2 DEFAULT SYSDATETIME()                -- Ngày tạo
+    DonViCoSo NVARCHAR(20) NOT NULL,                      -- Đơn vị cơ sở (base unit: viên, kg, lít)
+    GhiChu NVARCHAR(500),                                 -- Ghi chú
+    NgayTao DATETIME2 DEFAULT SYSDATETIME()               -- Ngày tạo
+);
+
+-- =========================================
+-- Bảng QuyDoiDonVi
+-- Quy đổi các đơn vị của từng loại sản phẩm
+-- =========================================
+CREATE TABLE QuyDoiDonVi (
+    MaQD UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    MaSP UNIQUEIDENTIFIER NOT NULL,       -- Sản phẩm
+    DonViNhap NVARCHAR(50) NOT NULL,      -- Đơn vị nhập (Thùng/Hộp)
+    TyLe DECIMAL(18,2) NOT NULL,          -- 1 DonViNhap = TyLe DonViTinh (đơn vị chuẩn)  ( 1 thùng = 12 hộp )
+
+    CONSTRAINT FK_QD_SP FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP),
+    CONSTRAINT UQ_QD UNIQUE (MaSP, DonViNhap) -- tránh trùng đơn vị nhập cho cùng SP
 );
 
 -- =========================================
@@ -199,12 +216,12 @@ CREATE INDEX IDX_LoHang_MaSP ON LoHang(MaSP);
 -- Quản lý tồn kho theo kho + lô
 -- =========================================
 CREATE TABLE TonKho (
-    MaTonKho UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(), -- Khóa chính
-    MaKho UNIQUEIDENTIFIER NOT NULL,                        -- Kho
-    MaLo UNIQUEIDENTIFIER NOT NULL,                         -- Lô hàng
-    SoLuong DECIMAL(18,2) NOT NULL                          -- Số lượng tồn
-        CHECK (SoLuong >= 0),
-    NgayCapNhat DATETIME2 NOT NULL DEFAULT SYSDATETIME(),   -- Lần cập nhật gần nhất
+    MaTonKho UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    MaKho UNIQUEIDENTIFIER NOT NULL,                      -- Kho
+    MaLo UNIQUEIDENTIFIER NOT NULL,                       -- Lô hàng
+    SoLuongCoSo DECIMAL(18,2) NOT NULL DEFAULT 0,         -- Số lượng tồn theo đơn vị cơ sở
+    GiaVonBinhQuan DECIMAL(18,2) NOT NULL DEFAULT 0,      -- Giá vốn bình quân theo đơn vị cơ sở
+    NgayCapNhat DATETIME2 NOT NULL DEFAULT SYSDATETIME(), -- Lần cập nhật gần nhất
 
     CONSTRAINT FK_TonKho_Kho FOREIGN KEY (MaKho)
         REFERENCES KhoHang(MaKho),
@@ -220,6 +237,7 @@ CREATE INDEX IDX_TonKho_MaKho ON TonKho(MaKho);
 
 -- Index truy vấn tồn kho theo lô
 CREATE INDEX IDX_TonKho_MaLo ON TonKho(MaLo);
+
 
 
 -- =========================
@@ -254,20 +272,18 @@ CREATE INDEX IDX_PN_NCC ON PhieuNhap(MaNCC);
 -- CHI TIẾT PHIẾU NHẬP
 -- =========================
 CREATE TABLE CTPhieuNhap (
-    MaCTPN UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(), -- Khóa chính
-    MaPN UNIQUEIDENTIFIER NOT NULL,                      -- Phiếu nhập cha
-    MaLo UNIQUEIDENTIFIER NOT NULL,                      -- Lô hàng
-    SoLuong DECIMAL(18,2) NOT NULL CHECK (SoLuong > 0),  -- Số lượng nhập
-    DonGia DECIMAL(18,2),                                -- Đơn giá nhập
+    MaCTPN UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    MaPN UNIQUEIDENTIFIER NOT NULL,                       -- Phiếu nhập cha
+    MaLo UNIQUEIDENTIFIER NOT NULL,                       -- Lô hàng
+    SoLuong DECIMAL(18,2) NOT NULL CHECK (SoLuong > 0),   -- Số lượng theo đơn vị giao dịch
+    DonGia DECIMAL(18,2),                                 -- Đơn giá theo đơn vị giao dịch
+    DonViNhap NVARCHAR(50) NOT NULL,                      -- Đơn vị giao dịch (Thùng/Hộp…)
+    SoLuongQuyDoi DECIMAL(18,2) NOT NULL,                 -- Số lượng quy đổi về đơn vị cơ sở
+    DonGiaCoSo DECIMAL(18,2) NOT NULL,                    -- Giá vốn theo đơn vị cơ sở
 
-    CONSTRAINT FK_CTPN_PN FOREIGN KEY (MaPN)
-        REFERENCES PhieuNhap(MaPN)
-        ON DELETE CASCADE, -- Xóa phiếu → xóa chi tiết
-
-    CONSTRAINT FK_CTPN_Lo FOREIGN KEY (MaLo)
-        REFERENCES LoHang(MaLo),
-
-    CONSTRAINT UQ_CTPN UNIQUE (MaPN, MaLo) -- 1 lô chỉ xuất hiện 1 lần trong phiếu
+    CONSTRAINT FK_CTPN_PN FOREIGN KEY (MaPN) REFERENCES PhieuNhap(MaPN) ON DELETE CASCADE,
+    CONSTRAINT FK_CTPN_Lo FOREIGN KEY (MaLo) REFERENCES LoHang(MaLo),
+    CONSTRAINT UQ_CTPN UNIQUE (MaPN, MaLo)
 );
 
 CREATE INDEX IDX_CTPN_PN ON CTPhieuNhap(MaPN);
@@ -313,33 +329,26 @@ CREATE INDEX IDX_PB_KH ON PhieuBan(MaKH);
 -- =========================
 CREATE TABLE CTPhieuBan (
     MaCTPB UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-
-    MaPB UNIQUEIDENTIFIER NOT NULL, -- Phiếu bán
-    MaKho UNIQUEIDENTIFIER NOT NULL, -- Kho xuất
-    MaLo UNIQUEIDENTIFIER NOT NULL,  -- Lô xuất
-
-    SoLuong DECIMAL(18,2) NOT NULL CHECK (SoLuong > 0),
-    DonGia DECIMAL(18,2) NOT NULL CHECK (DonGia >= 0),
-
+    MaPB UNIQUEIDENTIFIER NOT NULL,                       -- Phiếu bán
+    MaKho UNIQUEIDENTIFIER NOT NULL,                      -- Kho xuất
+    MaLo UNIQUEIDENTIFIER NOT NULL,                       -- Lô xuất
+    SoLuong DECIMAL(18,2) NOT NULL CHECK (SoLuong > 0),   -- Số lượng theo đơn vị giao dịch
+    DonGia DECIMAL(18,2) NOT NULL CHECK (DonGia >= 0),    -- Đơn giá theo đơn vị giao dịch
+    DonViBan NVARCHAR(50) NOT NULL,                       -- Đơn vị giao dịch (Thùng/Hộp/Viên…)
+    SoLuongQuyDoi DECIMAL(18,2) NOT NULL,                 -- Số lượng quy đổi về đơn vị cơ sở
+    GiaVonCoSo DECIMAL(18,2) NOT NULL,                    -- Giá vốn tại thời điểm bán (theo đơn vị cơ sở)
+    ThanhTienVon DECIMAL(18,2) NOT NULL,                  -- Thành tiền vốn (SoLuongQuyDoi * GiaVonCoSo)
     GhiChu NVARCHAR(500),
 
-    CONSTRAINT FK_CTPB_PB FOREIGN KEY (MaPB)
-        REFERENCES PhieuBan(MaPB)
-        ON DELETE CASCADE,
-
-    CONSTRAINT FK_CTPB_Kho FOREIGN KEY (MaKho)
-        REFERENCES KhoHang(MaKho),
-
-    CONSTRAINT FK_CTPB_Lo FOREIGN KEY (MaLo)
-        REFERENCES LoHang(MaLo),
-
+    CONSTRAINT FK_CTPB_PB FOREIGN KEY (MaPB) REFERENCES PhieuBan(MaPB) ON DELETE CASCADE,
+    CONSTRAINT FK_CTPB_Kho FOREIGN KEY (MaKho) REFERENCES KhoHang(MaKho),
+    CONSTRAINT FK_CTPB_Lo FOREIGN KEY (MaLo) REFERENCES LoHang(MaLo),
     CONSTRAINT UQ_CTPB UNIQUE (MaPB, MaKho, MaLo)
 );
 
 CREATE INDEX IDX_CTPB_PB ON CTPhieuBan (MaPB);
 CREATE INDEX IDX_CTPB_MaKho ON CTPhieuBan(MaKho);
 CREATE INDEX IDX_CTPB_MaLo ON CTPhieuBan(MaLo);
-
 
 
 -- =========================
@@ -493,4 +502,6 @@ ON CongNo (NgayPhatSinh);
 -- Index truy vấn theo phiếu
 CREATE INDEX IDX_CongNo_MaPhieu
 ON CongNo (MaPhieu);
+
+
 

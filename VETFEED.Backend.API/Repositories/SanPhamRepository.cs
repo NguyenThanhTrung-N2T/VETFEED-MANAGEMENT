@@ -66,7 +66,7 @@ namespace VETFEED.Backend.API.Repositories
                 MaSPCode = x.MaSPCode,
                 TenSP = x.TenSP,
                 LoaiSanPham = x.LoaiSanPham.ToString(),
-                DonViTinh = x.DonViTinh,
+                DonViTinh = x.DonViCoSo,
                 GhiChu = x.GhiChu,
                 NgayTao = x.NgayTao
             }).ToListAsync();
@@ -90,7 +90,7 @@ namespace VETFEED.Backend.API.Repositories
                     MaSPCode = x.MaSPCode,
                     TenSP = x.TenSP,
                     LoaiSanPham = x.LoaiSanPham.ToString(),
-                    DonViTinh = x.DonViTinh,
+                    DonViTinh = x.DonViCoSo,
                     GhiChu = x.GhiChu,
                     NgayTao = x.NgayTao
                 }).FirstOrDefaultAsync();
@@ -109,7 +109,7 @@ namespace VETFEED.Backend.API.Repositories
             if (sp == null) return null;
 
             sp.TenSP = request.TenSP;
-            sp.DonViTinh = request.DonViTinh;
+            sp.DonViCoSo = request.DonViTinh;
             sp.GhiChu = request.GhiChu;
             // LoaiSanPham sẽ set ở service (parse enum)
             await _context.SaveChangesAsync();

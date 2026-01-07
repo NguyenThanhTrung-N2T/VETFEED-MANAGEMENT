@@ -2,57 +2,157 @@
 using Microsoft.EntityFrameworkCore;
 using VETFEED.Backend.API.Repositories;
 using VETFEED.Backend.API.Services;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using VETFEED.Backend.API.Utils;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
-
-// thêm các repo và service 
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<IKhoHangRepository, KhoHangRepository>();
 builder.Services.AddScoped<IKhoHangService, KhoHangService>();
+
 builder.Services.AddScoped<ISanPhamRepository, SanPhamRepository>();
 builder.Services.AddScoped<ISanPhamService, SanPhamService>();
+
+builder.Services.AddScoped<IKhoHangRepository, KhoHangRepository>();
+builder.Services.AddScoped<IKhoHangService, KhoHangService>();
 
 builder.Services.AddScoped<IKhachHangRepository, KhachHangRepository>();
 builder.Services.AddScoped<IKhachHangService, KhachHangService>();
 
+builder.Services.AddScoped<INhaCungCapRepository, NhaCungCapRepository>();
+builder.Services.AddScoped<INhaCungCapService, NhaCungCapService>();
+
+builder.Services.AddScoped<INhaCungCapSanPhamRepository, NhaCungCapSanPhamRepository>();
+builder.Services.AddScoped<INhaCungCapSanPhamService, NhaCungCapSanPhamService>();
+
+builder.Services.AddScoped<ILoHangRepository, LoHangRepository>();
+builder.Services.AddScoped<ILoHangService, LoHangService>();
+
 builder.Services.AddScoped<IGiaBanRepository, GiaBanRepository>();
 builder.Services.AddScoped<IGiaBanService, GiaBanService>();
 
+builder.Services.AddScoped<ITaiKhoanRepository, TaiKhoanRepository>();
+builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddScoped<ITonKhoRepository, TonKhoRepository>();
+builder.Services.AddScoped<ITonKhoService, TonKhoService>();
+
+builder.Services.AddScoped<IPhieuChuyenKhoRepository, PhieuChuyenKhoRepository>();
+builder.Services.AddScoped<IPhieuChuyenKhoService, PhieuChuyenKhoService>();
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "VetFeed API",
+        Version = "v1"
+    });
 
-// Lấy connect string  
+    // Thêm cấu hình JWT Bearer cho Swagger
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "Nhập JWT token vào đây (ví dụ: Bearer {token})",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = Microsoft.OpenApi.Models.ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
+});
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Đăng ký DbContext với SQL Server
 builder.Services.AddDbContext<VetFeedManagementContext>(options => options.UseSqlServer(connectionString));
 
+// Đăng ký Authentication với JWT
+builder.Services.AddAuthentication(options => 
+{ 
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; 
+})
+.AddJwtBearer(options => 
+{ 
+    var jwtSettings = builder.Configuration.GetSection("Jwt"); 
+    var key = jwtSettings["Key"];
+    
+    if (string.IsNullOrEmpty(key))
+        throw new InvalidOperationException("JWT Key không được cấu hình!");
+
+    options.TokenValidationParameters = new TokenValidationParameters 
+    { 
+        ValidateIssuer = true, 
+        ValidateAudience = true, 
+        ValidateLifetime = true, 
+        ValidateIssuerSigningKey = true, 
+        ValidIssuer = jwtSettings["Issuer"], 
+        ValidAudience = jwtSettings["Audience"], 
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+        ClockSkew = TimeSpan.Zero
+    }; 
+
+    options.Events = new JwtBearerEvents 
+    { 
+        OnMessageReceived = context => 
+        { 
+            var authorizationHeader = context.Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authorizationHeader) && authorizationHeader.StartsWith("Bearer "))
+            {
+                context.Token = authorizationHeader.Substring("Bearer ".Length).Trim();
+            }
+            else if (context.Request.Cookies.ContainsKey("AccessToken"))
+            {
+                context.Token = context.Request.Cookies["AccessToken"];
+            }
+            return Task.CompletedTask;
+        }
+    }; 
+});
+
 var app = builder.Build();
 
 // Kiểm tra kết nối và log ra console
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<VetFeedManagementContext>();
-    var cs = builder.Configuration.GetConnectionString("DefaultConnection");
-    Console.WriteLine("🔎 ConnectionString = " + cs);
-
-    try
-    {
-        await dbContext.Database.OpenConnectionAsync();
-        Console.WriteLine("✅ Kết nối database thành công!");
-        await dbContext.Database.CloseConnectionAsync();
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine("❌ Lỗi kết nối database (chi tiết): " + ex.Message);
-        if (ex.InnerException != null)
-            Console.WriteLine("❌ Inner: " + ex.InnerException.Message);
-    }
+using (var scope = app.Services.CreateScope()) 
+{ 
+    var dbContext = scope.ServiceProvider.GetRequiredService<VetFeedManagementContext>(); 
+    try 
+    { 
+        if (dbContext.Database.CanConnect()) 
+        { 
+            Console.WriteLine("✅ Kết nối database thành công!"); 
+        } 
+        else 
+        { 
+            Console.WriteLine("❌ Không thể kết nối database."); 
+        } 
+    } catch (Exception ex) 
+    { 
+        Console.WriteLine($"❌ Lỗi kết nối database: {ex.Message}"); 
+    } 
 }
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -64,7 +164,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

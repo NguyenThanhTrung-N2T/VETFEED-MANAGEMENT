@@ -15,7 +15,7 @@ namespace VETFEED.Backend.API.Models
         public string? MaSPCode { get; set; }
         public string? TenSP { get; set; }
         public LoaiSanPhamEnum LoaiSanPham { get; set; }
-        public string? DonViTinh { get; set; }
+        public string? DonViCoSo { get; set; }                // Đơn vị cơ sở (viên, kg, lít...)
         public string? GhiChu { get; set; }
         public DateTime NgayTao { get; set; }
 
@@ -23,5 +23,6 @@ namespace VETFEED.Backend.API.Models
         public ICollection<NhaCungCapSanPham>? NhaCungCapSanPhams { get; set; }
         public ICollection<GiaBan>? GiaBans { get; set; }
         public ICollection<LoHang>? LoHangs { get; set; }
+        public ICollection<QuyDoiDonVi>? QuyDoiDonVis { get; set; }
     }
 }
