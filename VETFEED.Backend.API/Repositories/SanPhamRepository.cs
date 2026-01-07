@@ -153,7 +153,7 @@ namespace VETFEED.Backend.API.Repositories
                     MaSPCode = x.MaSPCode,
                     TenSP = x.TenSP,
                     LoaiSanPham = x.LoaiSanPham.ToString(),
-                    DonViTinh = x.DonViTinh,
+                    DonViTinh = x.DonViCoSo,
                     GhiChu = x.GhiChu,
                     NgayTao = x.NgayTao
                 })
