@@ -20,7 +20,21 @@ namespace VETFEED.Backend.API.Controllers
             var result = await _service.SearchAsync(query);
             return Ok(result);
         }
+        [HttpGet("by-code/{maKHCode}")]
+        public async Task<IActionResult> GetByCode(string maKHCode)
+        {
+            var kh = await _service.GetByCodeAsync(maKHCode);
+            if (kh == null) return NotFound("Không tìm thấy khách hàng.");
+            return Ok(kh);
+        }
 
+        [HttpGet("by-phone")]
+        public async Task<IActionResult> GetByPhone([FromQuery] string phone)
+        {
+            var kh = await _service.GetByPhoneAsync(phone);
+            if (kh == null) return NotFound("Không tìm thấy khách hàng.");
+            return Ok(kh);
+        }
         [HttpGet("{maKH:guid}")]
         public async Task<IActionResult> GetById(Guid maKH)
         {

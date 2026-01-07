@@ -99,5 +99,21 @@ namespace VETFEED.Backend.API.Services
             var ok = await _repo.DeleteAsync(maKH);
             return ok ? (true, null) : (false, "Xóa thất bại.");
         }
+        public Task<KhachHangResponse?> GetByCodeAsync(string maKHCode)
+        {
+            if (string.IsNullOrWhiteSpace(maKHCode))
+                return Task.FromResult<KhachHangResponse?>(null);
+
+            return _repo.GetByCodeAsync(maKHCode.Trim());
+        }
+
+        public Task<KhachHangResponse?> GetByPhoneAsync(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+                return Task.FromResult<KhachHangResponse?>(null);
+
+            return _repo.GetByPhoneAsync(phone.Trim());
+        }
+
     }
 }

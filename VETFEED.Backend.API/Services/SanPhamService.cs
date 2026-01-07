@@ -73,5 +73,13 @@ namespace VETFEED.Backend.API.Services
             var ok = await _repo.DeleteAsync(maSP);
             return ok ? (true, null) : (false, "Xóa thất bại.");
         }
+        public Task<SanPhamResponse?> GetByCodeAsync(string maSPCode)
+        {
+            if (string.IsNullOrWhiteSpace(maSPCode))
+                return Task.FromResult<SanPhamResponse?>(null);
+
+            return _repo.GetByCodeAsync(maSPCode);
+        }
+
     }
 }

@@ -9,6 +9,8 @@ namespace VETFEED.Backend.API.Services
         Task<KhachHangResponse?> GetByIdAsync(Guid maKH);
         Task<KhachHangResponse> CreateAsync(KhachHangCreateRequest request);
         Task<KhachHangResponse?> UpdateAsync(Guid maKH, KhachHangUpdateRequest request);
+        Task<KhachHangResponse?> GetByCodeAsync(string maKHCode);
+        Task<KhachHangResponse?> GetByPhoneAsync(string phone);
         Task<(bool ok, string? error)> DeleteAsync(Guid maKH);
     }
 }
