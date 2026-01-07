@@ -47,5 +47,29 @@ namespace VETFEED.Backend.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        // PUT: api/phieunhaps/{id} - Cập nhật phiếu nhập
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] PhieuNhapUpdateRequest request)
+        {
+            try
+            {
+                var result = await _service.UpdatePhieuNhapAsync(id, request);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
+

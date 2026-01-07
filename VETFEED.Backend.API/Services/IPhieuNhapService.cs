@@ -7,5 +7,7 @@ namespace VETFEED.Backend.API.Services
         Task<IEnumerable<PhieuNhapResponse>> GetAllPhieuNhapsAsync();
         Task<PhieuNhapDetailedResponse?> GetPhieuNhapByIdAsync(Guid id);
         Task<PhieuNhapDetailedResponse> CreatePhieuNhapAsync(PhieuNhapCreateRequest request);
+        Task<PhieuNhapDetailedResponse> UpdatePhieuNhapAsync(Guid id, PhieuNhapUpdateRequest request);
     }
 }
+

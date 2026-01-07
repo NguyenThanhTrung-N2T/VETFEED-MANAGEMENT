@@ -11,15 +11,21 @@ namespace VETFEED.Backend.API.Services
         private readonly IPhieuNhapRepository _phieuNhapRepo;
         private readonly ICTPhieuNhapRepository _ctPhieuNhapRepo;
         private readonly ILoHangRepository _loHangRepo;
+        private readonly ITonKhoRepository _tonKhoRepo;
+        private readonly IQuyDoiDonViRepository _quyDoiDonViRepo;
 
         public PhieuNhapService(
             IPhieuNhapRepository phieuNhapRepo,
             ICTPhieuNhapRepository ctPhieuNhapRepo,
-            ILoHangRepository loHangRepo)
+            ILoHangRepository loHangRepo,
+            ITonKhoRepository tonKhoRepo,
+            IQuyDoiDonViRepository quyDoiDonViRepo)
         {
             _phieuNhapRepo = phieuNhapRepo;
             _ctPhieuNhapRepo = ctPhieuNhapRepo;
             _loHangRepo = loHangRepo;
+            _tonKhoRepo = tonKhoRepo;
+            _quyDoiDonViRepo = quyDoiDonViRepo;
         }
 
         // Lấy tất cả phiếu nhập
@@ -42,6 +48,8 @@ namespace VETFEED.Backend.API.Services
                 throw new ArgumentException("Mã nhà cung cấp không hợp lệ.");
             if (request.MaKho == Guid.Empty)
                 throw new ArgumentException("Mã kho không hợp lệ.");
+            if (request.DanhSachChiTiet == null || !request.DanhSachChiTiet.Any())
+                throw new ArgumentException("Danh sách chi tiết phiếu nhập không được để trống.");
 
             // 1. Tạo phiếu nhập với trạng thái DA_DAT
             var phieuNhapRequest = new PhieuNhapRequest
@@ -110,24 +118,186 @@ namespace VETFEED.Backend.API.Services
 
         /* Update phiếu nhập
            Logic: 
-           Nếu trạng thái DA_NHAN Thì không thể chuyển lại
-           Nếu trạng thái DA_HUY Thì không thể chuyển lại
+           Nếu trạng thái DA_NHAN Thì không thể chuyển lại trạng thái khác
+           Nếu trạng thái DA_HUY Thì không thể chuyển lại trạng thái khác
            Nếu trạng thái DA_DAT Thì có thể chuyển sang DA_NHAN hoặc DA_HUY
-           Nếu update trạng thái thành DA_NHAN thì cập nhật tiền chi, tồn kho, tính tổng cho từng CTPN
+           Nếu update trạng thái thành DA_NHAN thì cập nhật tiền, tồn kho, tính tổng cho từng CTPN
            Đảm bảo khi chuyển trạng thái thành đã nhập thì phải có Đơn giá của sản phẩm (để tính tổng tiền) Error message: "Cần ghi đơn giá khi nhận hàng!"
            Quy đổi trường SoLuong dựa vào bảng QuyDoiDonVi để lưu tồn kho theo đơn vị bán hàng
            Nếu trạng thái là DA_HUY thì không làm gì
-           
          */
+        public async Task<PhieuNhapDetailedResponse> UpdatePhieuNhapAsync(Guid id, PhieuNhapUpdateRequest request)
+        {
+            // 1. Lấy phiếu nhập hiện tại
+            var phieuNhap = await _phieuNhapRepo.GetPhieuNhapEntityByIdAsync(id);
+            if (phieuNhap == null)
+                throw new ArgumentException("Không tìm thấy phiếu nhập.");
 
+            // 2. Validate mã nhà cung cấp và mã kho
+            if (request.MaNCC == Guid.Empty)
+                throw new ArgumentException("Mã nhà cung cấp không hợp lệ.");
+            if (request.MaKho == Guid.Empty)
+                throw new ArgumentException("Mã kho không hợp lệ.");
+            if (request.DanhSachChiTiet == null || !request.DanhSachChiTiet.Any())
+                throw new ArgumentException("Danh sách chi tiết phiếu nhập không được để trống.");
 
-         /* Delete phiếu nhập
-            Logic:
-            Dùng transaction để đảm bảo tính nhất quán
-            Nếu trạng thái là DA_NHAN Thì không thể xóa
-            Nếu trạng thái là DA_DAT Thì xóa phiếu nhập và xóa CTPN
-            Nếu trạng thái là DA_HUY Thì giống DA_DAT
+            // 3. Validate và parse trạng thái mới
+            var currentStatus = phieuNhap.TrangThai;
+            TrangThaiPhieuNhapEnum newStatus;
+
+            if (!string.IsNullOrEmpty(request.TrangThai))
+            {
+                if (!Enum.TryParse<TrangThaiPhieuNhapEnum>(request.TrangThai, true, out newStatus))
+                    throw new ArgumentException("TrangThai không hợp lệ. Chỉ nhận: DA_DAT | DA_NHAN | DA_HUY.");
+            }
+            else
+            {
+                newStatus = currentStatus; // Giữ nguyên trạng thái cũ nếu không cung cấp
+            }
+
+            // Không cho phép thay đổi từ DA_NHAN hoặc DA_HUY
+            if (currentStatus == TrangThaiPhieuNhapEnum.DA_NHAN)
+                throw new InvalidOperationException("Phiếu nhập đã nhận không thể chuyển sang trạng thái khác.");
+            if (currentStatus == TrangThaiPhieuNhapEnum.DA_HUY)
+                throw new InvalidOperationException("Phiếu nhập đã hủy không thể chuyển sang trạng thái khác.");
+
+            // 4. So sánh danh sách chi tiết trong DB với request, xóa những chi tiết không có trong request
+            var existingCTPNs = await _ctPhieuNhapRepo.GetCTPhieuNhapEntitiesByMaPNAsync(id);
+            var requestMaCTPNs = request.DanhSachChiTiet?.Select(ct => ct.MaCTPN).ToHashSet() ?? new HashSet<Guid>();
+
+            foreach (var existingCTPN in existingCTPNs)
+            {
+                // Nếu chi tiết không có trong danh sách gửi về => xóa
+                if (!requestMaCTPNs.Contains(existingCTPN.MaCTPN))
+                {
+                    // Xóa CTPN
+                    await _ctPhieuNhapRepo.DeleteCTPhieuNhapAsync(existingCTPN.MaCTPN);
+
+                    // Xóa LoHang liên quan (vì LoHang được tạo khi tạo CTPN và chỉ dùng cho CTPN này)
+                    await _loHangRepo.DeleteLoHangAsync(existingCTPN.MaLo);
+                }
+            }
+
+            // 5. Cập nhật thông tin chi tiết phiếu nhập (SoLuong, DonGia, NgaySanXuat, HanSuDung)
+            if (request.DanhSachChiTiet != null && request.DanhSachChiTiet.Any())
+            {
+                foreach (var ctUpdate in request.DanhSachChiTiet)
+                {
+                    if (ctUpdate.MaCTPN == Guid.Empty)
+                        throw new ArgumentException("Mã chi tiết phiếu nhập không hợp lệ.");
+
+                    // Cập nhật SoLuong, DonGia cho CTPN
+                    var updated = await _ctPhieuNhapRepo.UpdateCTPhieuNhapAsync(
+                        ctUpdate.MaCTPN,
+                        ctUpdate.SoLuong,
+                        ctUpdate.DonGia ?? 0
+                    );
+
+                    if (!updated)
+                        throw new ArgumentException($"Không tìm thấy chi tiết phiếu nhập với mã {ctUpdate.MaCTPN}.");
+
+                    // Cập nhật NgaySanXuat, HanSuDung cho LoHang (nếu được cung cấp)
+                    if (ctUpdate.HanSuDung.HasValue)
+                    {
+                        // Validate: HanSuDung phải trong tương lai
+                        if (ctUpdate.HanSuDung.Value <= DateTime.Now)
+                            throw new ArgumentException("Hạn sử dụng phải là ngày trong tương lai.");
+
+                        // Validate: NgaySanXuat < HanSuDung (nếu có NSX)
+                        if (ctUpdate.NgaySanXuat.HasValue && ctUpdate.NgaySanXuat.Value >= ctUpdate.HanSuDung.Value)
+                            throw new ArgumentException("Ngày sản xuất phải trước hạn sử dụng.");
+
+                        // Lấy CTPN để lấy MaLo
+                        var ctpn = await _ctPhieuNhapRepo.GetCTPhieuNhapByIdAsync(ctUpdate.MaCTPN);
+                        if (ctpn == null)
+                            throw new ArgumentException($"Không tìm thấy chi tiết phiếu nhập với mã {ctUpdate.MaCTPN}.");
+
+                        // Cập nhật LoHang
+                        var loUpdated = await _loHangRepo.UpdateLoHangDatesAsync(
+                            ctpn.MaLo,
+                            ctUpdate.NgaySanXuat,
+                            ctUpdate.HanSuDung.Value
+                        );
+
+                        if (!loUpdated)
+                            throw new ArgumentException($"Không tìm thấy lô hàng với mã {ctpn.MaLo}.");
+                    }
+                }
+            }
+
+            // 6. Xử lý khi chuyển sang DA_NHAN
+            decimal thanhTien = 0;
+            if (newStatus == TrangThaiPhieuNhapEnum.DA_NHAN && currentStatus == TrangThaiPhieuNhapEnum.DA_DAT)
+            {
+                // Lấy lại danh sách chi tiết đã cập nhật
+                var danhSachCTPN = await _ctPhieuNhapRepo.GetCTPhieuNhapEntitiesByMaPNAsync(id);
+                
+                foreach (var ct in danhSachCTPN)
+                {
+                    // Kiểm tra DonGia bắt buộc
+                    if (ct.DonGia == null || ct.DonGia <= 0)
+                        throw new InvalidOperationException("Cần ghi đơn giá khi nhận hàng!");
+
+                    // Tính thành tiền
+                    thanhTien += ct.SoLuong * ct.DonGia.Value;
+
+                    // Lấy thông tin lô hàng để lấy MaSP
+                    var loHang = await _loHangRepo.GetLoHangEntityByIdAsync(ct.MaLo);
+                    if (loHang == null)
+                        throw new ArgumentException($"Không tìm thấy lô hàng với mã {ct.MaLo}.");
+
+                    // Quy đổi số lượng theo đơn vị bán hàng
+                    // Nếu không có quy đổi, mặc định TyLe = 1
+                    var quyDoiList = await _quyDoiDonViRepo.GetByMaSPAsync(loHang.MaSP);
+                    decimal tyLe = 1;
+                    
+                    // Lấy tỷ lệ đầu tiên nếu có (hoặc có thể cải thiện logic chọn đơn vị nhập cụ thể)
+                    var quyDoi = quyDoiList.FirstOrDefault();
+                    if (quyDoi != null)
+                    {
+                        tyLe = quyDoi.TyLe;
+                    }
+
+                    // SoLuong trong tồn kho = SoLuong nhập * TyLe
+                    decimal soLuongTonKho = ct.SoLuong * tyLe;
+
+                    // Cập nhật tồn kho (thêm mới hoặc cộng thêm)
+                    await _tonKhoRepo.AddOrUpdateTonKhoAsync(request.MaKho, ct.MaLo, soLuongTonKho);
+                }
+            }
+            
+            // 6. Nếu chuyển sang DA_HUY thì không làm gì với tồn kho
+            // (chỉ cập nhật trạng thái)
+
+            // 7. Cập nhật phiếu nhập (ThanhTien và TrangThai)
+            await _phieuNhapRepo.UpdatePhieuNhapThanhTienAndTrangThaiAsync(id, thanhTien, newStatus);
+
+            // 8. Cập nhật thông tin khác (MaNCC, MaKho, GhiChu) nếu cần
+            var updateRequest = new PhieuNhapRequest
+            {
+                MaNCC = request.MaNCC,
+                MaKho = request.MaKho,
+                TrangThai = newStatus.ToString(),
+                GhiChu = request.GhiChu
+            };
+            await _phieuNhapRepo.UpdatePhieuNhapAsync(id, updateRequest);
+
+            // 9. Trả về response chi tiết
+            var result = await _phieuNhapRepo.GetPhieuNhapByIdAsync(id);
+            if (result == null)
+                throw new InvalidOperationException("Không thể lấy thông tin phiếu nhập sau khi cập nhật.");
+            
+            return result;
+        }
+
+        /* Delete phiếu nhập
+           Logic:
+           Dùng transaction để đảm bảo tính nhất quán
+           Nếu trạng thái là DA_NHAN Thì không thể xóa
+           Nếu trạng thái là DA_DAT Thì xóa phiếu nhập và xóa CTPN
+           Nếu trạng thái là DA_HUY Thì giống DA_DAT
          */
 
     }
 }
+
