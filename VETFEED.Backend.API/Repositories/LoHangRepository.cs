@@ -35,6 +35,7 @@ namespace VETFEED.Backend.API.Repositories
         public async Task<LoHangResponse?> GetLoHangByIdAsync(Guid id)
         {
             var x = await _context.LoHangs
+                .AsNoTracking()
                 .Include(l => l.SanPham)
                 .FirstOrDefaultAsync(l => l.MaLo == id);
 
@@ -134,6 +135,39 @@ namespace VETFEED.Backend.API.Repositories
             return true;
         }
 
+        public async Task<Models.LoHang?> GetLoHangEntityByIdAsync(Guid id)
+        {
+            return await _context.LoHangs
+                .Include(l => l.SanPham)
+                .FirstOrDefaultAsync(l => l.MaLo == id);
+        }
+
+        // Cap nhat NgaySanXuat va HanSuDung cho LoHang
+        public async Task<bool> UpdateLoHangDatesAsync(Guid maLo, DateTime? ngaySanXuat, DateTime hanSuDung)
+        {
+            var entity = await _context.LoHangs.FindAsync(maLo);
+            if (entity == null) return false;
+
+            entity.NgaySanXuat = ngaySanXuat;
+            entity.HanSuDung = hanSuDung;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // Xoa nhieu LoHang cung luc (batch delete)
+        public async Task<int> DeleteLoHangsByIdsAsync(IEnumerable<Guid> maLoList)
+        {
+            var entities = await _context.LoHangs
+                .Where(l => maLoList.Contains(l.MaLo))
+                .ToListAsync();
+
+            if (entities.Count == 0) return 0;
+
+            _context.LoHangs.RemoveRange(entities);
+            return await _context.SaveChangesAsync();
+        }
+
         // kiem tra lo hang ton tai 
         public async Task<bool> IsLoHangExist(Guid MaLo)
         {
@@ -141,3 +175,5 @@ namespace VETFEED.Backend.API.Repositories
         }
     }
 }
+
+
