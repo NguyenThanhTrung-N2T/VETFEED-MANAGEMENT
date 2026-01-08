@@ -81,7 +81,10 @@ namespace VETFEED.Backend.API.Services
                         phieuNhap.MaPN,
                         loHang.MaLo,
                         chiTiet.SoLuong,
-                        (chiTiet.DonGia != null) ? chiTiet.DonGia.Value : 0
+                        (chiTiet.DonGia != null) ? chiTiet.DonGia.Value : 0,
+                        chiTiet.DonViNhap,
+                        0, // SoLuongQuyDoi - sẽ được tính khi nhận hàng
+                        0  // DonGiaCoSo - sẽ được tính khi nhận hàng
                     );
 
                     danhSachChiTiet.Add(new CTPhieuNhapResponse
@@ -94,7 +97,10 @@ namespace VETFEED.Backend.API.Services
                         NgaySanXuat = loHang.NgaySanXuat,
                         HanSuDung = loHang.HanSuDung,
                         SoLuong = ctEntity.SoLuong,
-                        DonGia = ctEntity.DonGia
+                        DonGia = ctEntity.DonGia,
+                        DonViNhap = ctEntity.DonViNhap,
+                        SoLuongQuyDoi = ctEntity.SoLuongQuyDoi,
+                        DonGiaCoSo = ctEntity.DonGiaCoSo
                     });
                 }
             }
@@ -186,11 +192,13 @@ namespace VETFEED.Backend.API.Services
                     if (ctUpdate.MaCTPN == Guid.Empty)
                         throw new ArgumentException("Mã chi tiết phiếu nhập không hợp lệ.");
 
-                    // Cập nhật SoLuong, DonGia cho CTPN
+                    // Cập nhật SoLuong, DonGia, DonViNhap cho CTPN
+                    // Sẽ tính SoLuongQuyDoi  sau khi chuyển trạng thái DA_NHAN
                     var updated = await _ctPhieuNhapRepo.UpdateCTPhieuNhapAsync(
                         ctUpdate.MaCTPN,
                         ctUpdate.SoLuong,
-                        ctUpdate.DonGia ?? 0
+                        ctUpdate.DonGia ?? 0,
+                        ctUpdate.DonViNhap
                     );
 
                     if (!updated)
@@ -225,7 +233,7 @@ namespace VETFEED.Backend.API.Services
                 }
             }
 
-            // 6. Xử lý khi chuyển sang DA_NHAN
+            // 6. Xử lý khi chuyển sang DA_NHAN: tính SoLuongQuyDoi và cập nhật tồn kho
             if (newStatus == TrangThaiPhieuNhapEnum.DA_NHAN && currentStatus == TrangThaiPhieuNhapEnum.DA_DAT)
             {
                 // Lấy lại danh sách chi tiết đã cập nhật
@@ -236,6 +244,13 @@ namespace VETFEED.Backend.API.Services
                     // Kiểm tra DonGia bắt buộc
                     if (ct.DonGia == null || ct.DonGia <= 0)
                         throw new InvalidOperationException("Cần ghi đơn giá khi nhận hàng!");
+
+                    // Lấy thông tin chi tiết từ request để lấy DonGiaCoSo
+                    var ctRequest = request.DanhSachChiTiet?.FirstOrDefault(x => x.MaCTPN == ct.MaCTPN);
+                    
+                    // Kiểm tra DonGiaCoSo bắt buộc khi nhận hàng
+                    if (ctRequest == null || ctRequest.DonGiaCoSo == null || ctRequest.DonGiaCoSo <= 0)
+                        throw new InvalidOperationException("Cần ghi đơn giá cơ sở khi nhận hàng!");
 
                     // Lấy thông tin lô hàng để lấy MaSP
                     var loHang = await _loHangRepo.GetLoHangEntityByIdAsync(ct.MaLo);
@@ -254,11 +269,24 @@ namespace VETFEED.Backend.API.Services
                         tyLe = quyDoi.TyLe;
                     }
 
-                    // SoLuong trong tồn kho = SoLuong nhập * TyLe
-                    decimal soLuongTonKho = ct.SoLuong * tyLe;
+                    // Số lượng quy đổi về đơn vị cơ sở = SoLuong nhập * TyLe
+                    decimal soLuongQuyDoi = ct.SoLuong * tyLe;
+                    
+                    // DonGiaCoSo từ FE request
+                    decimal donGiaCoSo = ctRequest.DonGiaCoSo.Value;
 
-                    // Cập nhật tồn kho (thêm mới hoặc cộng thêm)
-                    await _tonKhoRepo.AddOrUpdateTonKhoAsync(request.MaKho, ct.MaLo, soLuongTonKho);
+                    // Cập nhật lại CTPN với SoLuongQuyDoi và DonGiaCoSo
+                    await _ctPhieuNhapRepo.UpdateCTPhieuNhapAsync(
+                        ct.MaCTPN,
+                        ct.SoLuong,
+                        ct.DonGia.Value,
+                        ct.DonViNhap,
+                        soLuongQuyDoi,
+                        donGiaCoSo
+                    );
+
+                    // Cập nhật tồn kho (thêm mới hoặc cộng thêm) - sử dụng số lượng quy đổi
+                    await _tonKhoRepo.AddOrUpdateTonKhoAsync(request.MaKho, ct.MaLo, soLuongQuyDoi);
                 }
             }
             

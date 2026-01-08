@@ -11,6 +11,9 @@ namespace VETFEED.Backend.API.DTOs.CTPhieuNhap
         public DateTime? HanSuDung { get; set; }
         public decimal SoLuong { get; set; }
         public decimal? DonGia { get; set; }
+        public string? DonViNhap { get; set; }          // Đơn vị giao dịch
+        public decimal SoLuongQuyDoi { get; set; }      // Số lượng quy đổi về đơn vị cơ sở
+        public decimal DonGiaCoSo { get; set; }         // Giá vốn theo đơn vị cơ sở
         public decimal ThanhTien => SoLuong * (DonGia ?? 0);
     }
 }

@@ -31,7 +31,10 @@ namespace VETFEED.Backend.API.Repositories
                     NgaySanXuat = x.LoHang != null ? x.LoHang.NgaySanXuat : null,
                     HanSuDung = x.LoHang != null ? x.LoHang.HanSuDung : null,
                     SoLuong = x.SoLuong,
-                    DonGia = x.DonGia
+                    DonGia = x.DonGia,
+                    DonViNhap = x.DonViNhap,
+                    SoLuongQuyDoi = x.SoLuongQuyDoi,
+                    DonGiaCoSo = x.DonGiaCoSo
                 }).ToListAsync();
         }
 
@@ -55,12 +58,15 @@ namespace VETFEED.Backend.API.Repositories
                 NgaySanXuat = x.LoHang?.NgaySanXuat,
                 HanSuDung = x.LoHang?.HanSuDung,
                 SoLuong = x.SoLuong,
-                DonGia = x.DonGia
+                DonGia = x.DonGia,
+                DonViNhap = x.DonViNhap,
+                SoLuongQuyDoi = x.SoLuongQuyDoi,
+                DonGiaCoSo = x.DonGiaCoSo
             };
         }
 
         // Thêm chi tiết phiếu nhập - nhận MaLo đã có sẵn (Service tạo LoHang)
-        public async Task<CTPhieuNhap> AddCTPhieuNhapAsync(Guid maPN, Guid maLo, decimal soLuong, decimal donGia = 0)
+        public async Task<CTPhieuNhap> AddCTPhieuNhapAsync(Guid maPN, Guid maLo, decimal soLuong, decimal donGia = 0, string? donViNhap = null, decimal soLuongQuyDoi = 0, decimal donGiaCoSo = 0)
         {
             var entity = new CTPhieuNhap
             {
@@ -68,7 +74,10 @@ namespace VETFEED.Backend.API.Repositories
                 MaPN = maPN,
                 MaLo = maLo,
                 SoLuong = soLuong,
-                DonGia = donGia
+                DonGia = donGia,
+                DonViNhap = donViNhap,
+                SoLuongQuyDoi = soLuongQuyDoi,
+                DonGiaCoSo = donGiaCoSo
             };
 
             _context.CTPhieuNhaps.Add(entity);
@@ -98,13 +107,16 @@ namespace VETFEED.Backend.API.Repositories
         }
 
         // Cap nhat SoLuong va DonGia cho CTPhieuNhap
-        public async Task<bool> UpdateCTPhieuNhapAsync(Guid maCTPN, decimal soLuong, decimal donGia)
+        public async Task<bool> UpdateCTPhieuNhapAsync(Guid maCTPN, decimal soLuong, decimal donGia, string? donViNhap = null, decimal soLuongQuyDoi = 0, decimal donGiaCoSo = 0)
         {
             var entity = await _context.CTPhieuNhaps.FindAsync(maCTPN);
             if (entity == null) return false;
 
             entity.SoLuong = soLuong;
             entity.DonGia = donGia;
+            entity.DonViNhap = donViNhap;
+            entity.SoLuongQuyDoi = soLuongQuyDoi;
+            entity.DonGiaCoSo = donGiaCoSo;
             
             await _context.SaveChangesAsync();
             return true;

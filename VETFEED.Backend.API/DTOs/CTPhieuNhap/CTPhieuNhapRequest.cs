@@ -12,5 +12,6 @@ namespace VETFEED.Backend.API.DTOs.CTPhieuNhap
         
         public decimal SoLuong { get; set; }
         public decimal? DonGia { get; set; }
+        public string? DonViNhap { get; set; }  // Đơn vị giao dịch (Thùng/Hộp...)
     }
 }

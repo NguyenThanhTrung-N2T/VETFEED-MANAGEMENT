@@ -73,7 +73,10 @@ namespace VETFEED.Backend.API.Repositories
                     NgaySanXuat = ct.LoHang?.NgaySanXuat,
                     HanSuDung = ct.LoHang?.HanSuDung,
                     SoLuong = ct.SoLuong,
-                    DonGia = ct.DonGia
+                    DonGia = ct.DonGia,
+                    DonViNhap = ct.DonViNhap,
+                    SoLuongQuyDoi = ct.SoLuongQuyDoi,
+                    DonGiaCoSo = ct.DonGiaCoSo
                 }).ToList()
             };
         }

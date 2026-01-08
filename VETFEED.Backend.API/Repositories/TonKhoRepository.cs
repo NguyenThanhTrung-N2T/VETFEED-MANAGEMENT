@@ -102,6 +102,10 @@ namespace VETFEED.Backend.API.Repositories
         // them ton kho 
         public async Task<TonKhoChiTietResponse> AddTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong) 
         {
+            // kiem tra neu da ton tai
+            var existing = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == maKho && tk.MaLo == maLo);
+            if (existing != null)
+                return null; // Da ton tai, khong tao moi
             try
             {
                 // tao ton kho
@@ -188,26 +192,26 @@ namespace VETFEED.Backend.API.Repositories
         }
 
         // tao moi ban ghi ton kho
-        public async Task<bool> AddTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong)
-        {
-            // kiem tra neu da ton tai
-            var existing = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == maKho && tk.MaLo == maLo);
-            if (existing != null)
-                return false; // Da ton tai, khong tao moi
+        //public async Task<bool> AddTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong)
+        //{
+        //    // kiem tra neu da ton tai
+        //    var existing = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == maKho && tk.MaLo == maLo);
+        //    if (existing != null)
+        //        return false; // Da ton tai, khong tao moi
 
-            var tonKho = new Models.TonKho
-            {
-                MaTonKho = Guid.NewGuid(),
-                MaKho = maKho,
-                MaLo = maLo,
-                SoLuong = soLuong,
-                NgayCapNhat = DateTime.UtcNow
-            };
+        //    var tonKho = new Models.TonKho
+        //    {
+        //        MaTonKho = Guid.NewGuid(),
+        //        MaKho = maKho,
+        //        MaLo = maLo,
+        //        SoLuong = soLuong,
+        //        NgayCapNhat = DateTime.UtcNow
+        //    };
 
-            _context.TonKhos.Add(tonKho);
-            await _context.SaveChangesAsync();
-            return true;
-        }
+        //    _context.TonKhos.Add(tonKho);
+        //    await _context.SaveChangesAsync();
+        //    return true;
+        //}
 
         // them hoac cap nhat ton kho (neu ton tai thi cong them so luong)
         public async Task<bool> AddOrUpdateTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong)
@@ -217,7 +221,7 @@ namespace VETFEED.Backend.API.Repositories
             if (tonKho != null)
             {
                 // Da ton tai: cong them so luong
-                tonKho.SoLuong += soLuong;
+                tonKho.SoLuongCoSo += soLuong;
                 tonKho.NgayCapNhat = DateTime.UtcNow;
             }
             else
@@ -228,7 +232,7 @@ namespace VETFEED.Backend.API.Repositories
                     MaTonKho = Guid.NewGuid(),
                     MaKho = maKho,
                     MaLo = maLo,
-                    SoLuong = soLuong,
+                    SoLuongCoSo = soLuong,
                     NgayCapNhat = DateTime.UtcNow
                 };
                 _context.TonKhos.Add(tonKho);
@@ -237,5 +241,6 @@ namespace VETFEED.Backend.API.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
     }
 }
