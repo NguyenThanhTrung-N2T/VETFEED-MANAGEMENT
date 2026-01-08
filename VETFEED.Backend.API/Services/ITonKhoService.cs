@@ -12,5 +12,8 @@ namespace VETFEED.Backend.API.Services
 
         // kiem tra ton kho du so luong 
         Task<bool> IsTonKhoEnough(Guid MaKho, Guid MaLo, decimal SoLuongChuyen);
+
+        // kiem tra ton kho theo lo o tat ca cac kho
+        Task<bool> IsTonKhoEnoughAllKhoAsync(Guid maLo, decimal soLuongCan , string DonViTinh);
     }
 }

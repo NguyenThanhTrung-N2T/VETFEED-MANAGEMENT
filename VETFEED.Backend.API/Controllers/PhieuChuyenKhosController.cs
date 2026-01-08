@@ -19,6 +19,7 @@ namespace VETFEED.Backend.API.Controllers
 
         // GET : api/phieuchuyenkhos : lay danh sach phieu chuyen kho 
         [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<PhieuChuyenKhoResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetDanhSachPhieuChuyenKho()
         {
             // lay danh sach phieu chuyen kho 
@@ -28,7 +29,9 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET : api/phieuchuyenkhos/{maCK} : lay chi tiet phieu chuyen kho 
-        [HttpGet("{maCK}")] 
+        [HttpGet("{maCK}")]
+        [ProducesResponseType(typeof(ChiTietPhieuChuyenKhoResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetChiTietPhieuChuyenKho(Guid maCK) 
         { 
             // lay chi tiet phieu chuyen kho
@@ -41,6 +44,8 @@ namespace VETFEED.Backend.API.Controllers
 
         // POST : api/phieuchuyenkhos : tao phieu chuyen kho
         [HttpPost]
+        [ProducesResponseType(typeof(PhieuChuyenKhoResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> TaoPhieuChuyenKho([FromBody] PhieuChuyenKhoRequest request)
         {
             // kiem tra dau vao 
@@ -54,6 +59,9 @@ namespace VETFEED.Backend.API.Controllers
 
         // PUT : api/phieuchuyenkhos/{maCK} : cap nhat phieu chuyen kho
         [HttpPut("{maCK}")]
+        [ProducesResponseType(typeof(PhieuChuyenKhoResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CapNhatPhieuChuyenKho(Guid maCK, [FromBody] UpdatePhieuChuyenKhoRequest request)
         {
             if (maCK != request.MaCK)
@@ -69,6 +77,9 @@ namespace VETFEED.Backend.API.Controllers
 
         // PUT : api/phieuchuyenkhos/chitiet/{maCTCK}/trangthai : cap nhat trang thai chi tiet chuyen kho
         [HttpPut("chitiet/{maCTCK}/trangthai")]
+        [ProducesResponseType(typeof(ChiTietPhieuChuyenKhoResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CapNhatTrangThaiChiTiet(Guid maCTCK, [FromBody] UpdateTrangThaiCTChuyenKho trangThai)
         {
             if (!ModelState.IsValid || !trangThai.TrangThai.HasValue) 
@@ -86,6 +97,8 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         [HttpDelete("{maCK}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> XoaPhieuChuyenKho(Guid maCK)
         {
             // xóa phiếu 

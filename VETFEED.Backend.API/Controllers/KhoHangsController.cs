@@ -19,6 +19,7 @@ namespace VETFEED.Backend.API.Controllers
         // GET: api/khohangs  : lấy tất cả kho hàng 
         //[Authorize]
         [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<KhoHangResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllKhoHangsAsync()
         {
             // lấy tất cả kho hàng từ service
@@ -28,8 +29,10 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET : api/khohangs/{maKho} : lấy kho hàng theo mã kho
-        [Authorize]
+        //[Authorize]
         [HttpGet("{maKho}", Name = "GetKhoHangById")]
+        [ProducesResponseType(typeof(KhoHangResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetKhoHangByIdAsync(Guid maKho)
         {
             // lấy kho hàng theo mã kho từ service
@@ -43,8 +46,10 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // POST : api/khohangs : thêm kho hàng
-        [Authorize]
+        //[Authorize]
         [HttpPost]
+        [ProducesResponseType(typeof(KhoHangResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AddKhoHangAsync([FromBody] CreateKhoHangRequest request)
         {
             // kiểm tra đầu vào 
@@ -59,8 +64,10 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // PUT : api/khohangs/{maKho} : cập nhật kho hàng 
-        [Authorize]
+        //[Authorize]
         [HttpPut("{maKho}")]
+        [ProducesResponseType(typeof(KhoHangResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateKhoHangAsync(Guid maKho, [FromBody] UpdateKhoHangRequest request)
         {
             // kiểm tra đầu vào 
@@ -81,8 +88,10 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // DELETE : api/khohangs/{maKho} : xóa kho hàng 
-        [Authorize]
+        //[Authorize]
         [HttpDelete("{maKho}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteKhoHangAsync(Guid maKho)
         {
             // kết quả xóa kho hàng
@@ -97,8 +106,9 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // POST : api/khohangs/search
-        [Authorize]
+        //[Authorize]
         [HttpPost("search")]
+        [ProducesResponseType(typeof(IEnumerable<KhoHangResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> SearchKhoHangAsync([FromBody] SearchKhoHangRequest request)
         {
             // danh sách kết quả tìm kiếm 
