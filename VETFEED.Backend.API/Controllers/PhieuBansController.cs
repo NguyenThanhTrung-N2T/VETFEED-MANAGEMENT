@@ -7,7 +7,6 @@ namespace VETFEED.Backend.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class PhieuBansController : ControllerBase
     {
         private readonly IPhieuBanService _phieuBanService;
@@ -102,9 +101,9 @@ namespace VETFEED.Backend.API.Controllers
             {
                 var result = await _phieuBanService.DeletePhieuBanAsync(maPB);
                 if (!result)
-                    return NotFound(new { error = "Phi?u bán không t?n t?i!" });
+                    return NotFound(new { error = "Phiếu bán không tồn tại!" });
 
-                return Ok(new { message = "Xóa phi?u bán thành công!" });
+                return Ok(new { message = "Xóa phiếu bán thành công!" });
             }
             catch (Exception ex)
             {

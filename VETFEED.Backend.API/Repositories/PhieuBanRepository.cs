@@ -374,18 +374,92 @@ namespace VETFEED.Backend.API.Repositories
         // Xóa phi?u bán
         public async Task<bool> DeletePhieuBanAsync(Guid maPB)
         {
-            var phieuBan = await _context.PhieuBans
-                .Include(pb => pb.CTPhieuBans)
-                .FirstOrDefaultAsync(pb => pb.MaPB == maPB);
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            if (phieuBan == null)
-                return false;
+            try
+            {
+                // Lấy phiếu bán + chi tiết + khách hàng
+                var phieuBan = await _context.PhieuBans
+                    .Include(pb => pb.KhachHang)
+                    .Include(pb => pb.CTPhieuBans)
+                    .FirstOrDefaultAsync(pb => pb.MaPB == maPB);
 
-            _context.CTPhieuBans.RemoveRange(phieuBan.CTPhieuBans!);
-            _context.PhieuBans.Remove(phieuBan);
-            await _context.SaveChangesAsync();
+                if (phieuBan == null)
+                    throw new InvalidOperationException("Phiếu bán không tồn tại.");
 
-            return true;
+                // Kiểm tra phiếu trả hàng liên quan
+                var hasReturns = await _context.PhieuTras
+                    .AnyAsync(pt => pt.MaPB == maPB);
+                if (hasReturns)
+                    throw new InvalidOperationException("Phiếu bán đã có phiếu trả liên quan, không thể xóa.");
+
+                //  Rollback tồn kho
+                foreach (var ct in phieuBan.CTPhieuBans!)
+                {
+                    var tonKho = await _context.TonKhos
+                        .FirstOrDefaultAsync(tk => tk.MaKho == ct.MaKho && tk.MaLo == ct.MaLo);
+
+                    if (tonKho == null)
+                    {
+                        tonKho = new TonKho
+                        {
+                            MaTonKho = Guid.NewGuid(),
+                            MaKho = ct.MaKho,
+                            MaLo = ct.MaLo,
+                            SoLuongCoSo = 0,
+                            GiaVonBinhQuan = ct.GiaVonCoSo
+                        };
+                        _context.TonKhos.Add(tonKho);
+                    }
+
+                    tonKho.SoLuongCoSo += ct.SoLuongQuyDoi; // cộng trả lại số lượng đã xuất
+                }
+
+                // rollback cong no va tong mua cua khach hang
+                if (phieuBan.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO)
+                {
+                    // lay cong no
+                    var congNos = await _context.CongNos
+                        .Where(cn => cn.MaPhieu == phieuBan.MaPB
+                                  && cn.LoaiDoiTuong == LoaiDoiTuongCongNoEnum.KHACH_HANG)
+                        .ToListAsync();
+
+                    // Tổng số tiền công nợ cần rollback
+                    var totalDebtRollback = congNos.Sum(cn => cn.SoTien);
+
+                    // Rollback công nợ hiện tại của khách hàng
+                    phieuBan.KhachHang!.CongNoHienTai -= totalDebtRollback;
+                    if (phieuBan.KhachHang!.CongNoHienTai < 0)
+                        phieuBan.KhachHang!.CongNoHienTai = 0;
+
+                    // Xóa record công nợ của phiếu bán trong bảng CongNos
+                    if (congNos.Count > 0)
+                        _context.CongNos.RemoveRange(congNos);
+                }
+
+                // Rollback tổng mua của khách hàng
+                phieuBan.KhachHang!.TongMua -= phieuBan.ThanhTien;
+                if (phieuBan.KhachHang!.TongMua < 0)
+                    phieuBan.KhachHang!.TongMua = 0;
+
+
+                // Xóa chi tiết và phiếu bán
+                _context.CTPhieuBans.RemoveRange(phieuBan.CTPhieuBans);
+                _context.PhieuBans.Remove(phieuBan);
+
+                // Lưu thay đổi
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return true; // ✅ báo thành công
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                return false; // ✅ báo thất bại
+            }
         }
+
+
     }
 }

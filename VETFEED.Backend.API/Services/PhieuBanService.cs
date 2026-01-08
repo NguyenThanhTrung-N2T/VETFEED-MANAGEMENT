@@ -66,10 +66,16 @@ namespace VETFEED.Backend.API.Services
             }
         }
 
-        // Xóa phi?u bán
+        // Xoa phieu ban 
         public async Task<bool> DeletePhieuBanAsync(Guid maPB)
         {
-            return await _phieuBanRepo.DeletePhieuBanAsync(maPB);
+            try
+            {
+                return await _phieuBanRepo.DeletePhieuBanAsync(maPB);
+            } catch (Exception ex)
+            {
+                throw new Exception("Xảy ra lỗi khi xóa phiếu bán !", ex);
+            }
         }
     }
 }

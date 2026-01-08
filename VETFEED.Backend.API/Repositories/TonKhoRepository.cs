@@ -35,10 +35,7 @@ namespace VETFEED.Backend.API.Repositories
                                 .Select(pn => pn.MaPNCode)
                                 .FirstOrDefault())
                             .FirstOrDefault(),
-                        DonGia = _context.CTPhieuNhaps
-                            .Where(ct => ct.MaLo == x.lo.MaLo)
-                            .Select(ct => ct.DonGia)
-                            .FirstOrDefault(),
+                        DonGia = x.tk.GiaVonBinhQuan,
                         SoLuong = x.tk.SoLuongCoSo
                     })
                     .ToList()
