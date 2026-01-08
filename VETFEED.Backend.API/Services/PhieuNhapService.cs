@@ -142,8 +142,6 @@ namespace VETFEED.Backend.API.Services
             var phieuNhap = await _phieuNhapRepo.GetPhieuNhapEntityByIdAsync(id);
             if (phieuNhap == null)
                 throw new ArgumentException("Không tìm thấy phiếu nhập.");
-            if(phieuNhap.TrangThai == TrangThaiPhieuNhapEnum.DA_NHAN)
-                throw new ArgumentException("Không thể cập nhật phiếu nhập đã nhận.");
             // 2. Validate mã nhà cung cấp và mã kho
             if (request.MaNCC == Guid.Empty)
                 throw new ArgumentException("Mã nhà cung cấp không hợp lệ.");
@@ -156,6 +154,8 @@ namespace VETFEED.Backend.API.Services
             var currentStatus = phieuNhap.TrangThai;
             TrangThaiPhieuNhapEnum newStatus;
 
+            if(currentStatus == TrangThaiPhieuNhapEnum.DA_NHAN)
+                throw new ArgumentException("Không thể cập nhật phiếu nhập đã nhận.");
             if (!string.IsNullOrEmpty(request.TrangThai))
             {
                 if (!Enum.TryParse<TrangThaiPhieuNhapEnum>(request.TrangThai, true, out newStatus))
