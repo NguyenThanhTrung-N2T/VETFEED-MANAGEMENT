@@ -142,7 +142,7 @@ namespace VETFEED.Backend.API.Services
             var phieuNhap = await _phieuNhapRepo.GetPhieuNhapEntityByIdAsync(id);
             if (phieuNhap == null)
                 throw new ArgumentException("Không tìm thấy phiếu nhập.");
-            if(phieunhap.TrangThai == TrangThaiPhieuNhapEnum.DA_NHAN)
+            if(phieuNhap.TrangThai == TrangThaiPhieuNhapEnum.DA_NHAN)
                 throw new ArgumentException("Không thể cập nhật phiếu nhập đã nhận.");
             // 2. Validate mã nhà cung cấp và mã kho
             if (request.MaNCC == Guid.Empty)
