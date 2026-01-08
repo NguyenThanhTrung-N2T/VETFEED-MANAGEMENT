@@ -81,9 +81,20 @@ namespace VETFEED.Backend.API.Controllers
         /// Cập nhật phiếu nhập kho
         /// </summary>
         /// <remarks>
-        /// - Chỉ được cập nhật khi phiếu ở trạng thái DANG_XU_LY.
-        /// - Khi chuyển sang trạng thái DA_NHAN, hệ thống sẽ tự động cập nhật tồn kho.
-        /// - Không thể sửa phiếu đã có trạng thái DA_NHAN.
+        /// **Ràng buộc trạng thái:**
+        /// - DA_DAT → có thể chuyển sang DA_NHAN hoặc DA_HUY
+        /// - DA_NHAN → không thể thay đổi
+        /// - DA_HUY → có thể chuyển sang DA_DAT, KHÔNG được chuyển sang DA_NHAN
+        /// 
+        /// **Chi tiết phiếu nhập (danhSachChiTiet):**
+        /// - **THÊM MỚI**: maCTPN = "00000000-0000-0000-0000-000000000000" → yêu cầu maSP, hanSuDung
+        /// - **CẬP NHẬT**: maCTPN = GUID thực → cập nhật chi tiết đã có
+        /// - **XÓA**: Các chi tiết trong DB mà KHÔNG gửi trong request sẽ bị xóa
+        /// 
+        /// **Khi chuyển sang DA_NHAN:**
+        /// - Hệ thống tự động tính SoLuongQuyDoi và DonGiaCoSo
+        /// - Cập nhật tồn kho tự động
+        /// - Yêu cầu DonGia cho tất cả chi tiết
         /// </remarks>
         /// <param name="id">Mã phiếu nhập cần cập nhật</param>
         /// <param name="request">Thông tin cập nhật</param>
