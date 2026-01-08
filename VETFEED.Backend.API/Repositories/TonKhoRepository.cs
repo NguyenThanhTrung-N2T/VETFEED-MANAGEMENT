@@ -105,7 +105,13 @@ namespace VETFEED.Backend.API.Repositories
             // kiem tra neu da ton tai
             var existing = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == maKho && tk.MaLo == maLo);
             if (existing != null)
-                return null; // Da ton tai, khong tao moi
+                return new TonKhoChiTietResponse{
+                    MaTK = existing.MaTonKho,
+                    MaKho = existing.MaKho,
+                    MaLo = existing.MaLo,
+                    SoLuongTon = existing.SoLuongCoSo,
+                    NgayCapNhat = existing.NgayCapNhat
+                }; // Da ton tai, khong tao moi
             try
             {
                 // tao ton kho
