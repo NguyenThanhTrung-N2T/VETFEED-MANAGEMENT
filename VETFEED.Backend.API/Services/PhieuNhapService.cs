@@ -125,12 +125,16 @@ namespace VETFEED.Backend.API.Services
         /* Update phiếu nhập
            Logic: 
            Nếu trạng thái DA_NHAN Thì không thể chuyển lại trạng thái khác
-           Nếu trạng thái DA_HUY Thì không thể chuyển lại trạng thái khác
+           Nếu trạng thái DA_HUY Thì có thể chuyển sang DA_DAT nhưng KHÔNG được chuyển sang DA_NHAN
            Nếu trạng thái DA_DAT Thì có thể chuyển sang DA_NHAN hoặc DA_HUY
            Nếu update trạng thái thành DA_NHAN thì cập nhật tiền, tồn kho, tính tổng cho từng CTPN
            Đảm bảo khi chuyển trạng thái thành đã nhập thì phải có Đơn giá của sản phẩm (để tính tổng tiền) Error message: "Cần ghi đơn giá khi nhận hàng!"
            Quy đổi trường SoLuong dựa vào bảng QuyDoiDonVi để lưu tồn kho theo đơn vị bán hàng
-           Nếu trạng thái là DA_HUY thì không làm gì
+           
+           CTPN trong request:
+           - Nếu MaCTPN = Guid.Empty: tạo mới CTPN (yêu cầu MaSP, HanSuDung)
+           - Nếu MaCTPN != Guid.Empty: cập nhật CTPN đã có
+           - CTPN trong DB nhưng không có trong request: sẽ bị xóa
          */
         public async Task<PhieuNhapDetailedResponse> UpdatePhieuNhapAsync(Guid id, PhieuNhapUpdateRequest request)
         {
@@ -161,74 +165,125 @@ namespace VETFEED.Backend.API.Services
                 newStatus = currentStatus; // Giữ nguyên trạng thái cũ nếu không cung cấp
             }
 
-            // Không cho phép thay đổi từ DA_NHAN hoặc DA_HUY
+            // Không cho phép thay đổi từ DA_NHAN
             if (currentStatus == TrangThaiPhieuNhapEnum.DA_NHAN)
                 throw new InvalidOperationException("Phiếu nhập đã nhận không thể chuyển sang trạng thái khác.");
-            if (currentStatus == TrangThaiPhieuNhapEnum.DA_HUY)
-                throw new InvalidOperationException("Phiếu nhập đã hủy không thể chuyển sang trạng thái khác.");
+            
+            // DA_HUY có thể chuyển sang DA_DAT nhưng KHÔNG được chuyển sang DA_NHAN
+            if (currentStatus == TrangThaiPhieuNhapEnum.DA_HUY && newStatus == TrangThaiPhieuNhapEnum.DA_NHAN)
+                throw new InvalidOperationException("Phiếu nhập đã hủy không thể chuyển sang trạng thái Đã nhận.");
 
-            // 4. So sánh danh sách chi tiết trong DB với request, xóa những chi tiết không có trong request
+            // 4. So sánh danh sách chi tiết trong DB với request
             var existingCTPNs = await _ctPhieuNhapRepo.GetCTPhieuNhapEntitiesByMaPNAsync(id);
-            var requestMaCTPNs = request.DanhSachChiTiet?.Select(ct => ct.MaCTPN).ToHashSet() ?? new HashSet<Guid>();
+            var existingMaCTPNs = existingCTPNs.Select(ct => ct.MaCTPN).ToHashSet();
+            
+            // Lọc ra các MaCTPN trong request (bỏ qua Guid.Empty vì đó là CTPN mới)
+            var requestMaCTPNs = request.DanhSachChiTiet?
+                .Where(ct => ct.MaCTPN != Guid.Empty)
+                .Select(ct => ct.MaCTPN)
+                .ToHashSet() ?? new HashSet<Guid>();
 
+            // Xóa những CTPN không có trong request
             foreach (var existingCTPN in existingCTPNs)
             {
-                // Nếu chi tiết không có trong danh sách gửi về => xóa
                 if (!requestMaCTPNs.Contains(existingCTPN.MaCTPN))
                 {
                     // Xóa CTPN
                     await _ctPhieuNhapRepo.DeleteCTPhieuNhapAsync(existingCTPN.MaCTPN);
 
-                    // Xóa LoHang liên quan (vì LoHang được tạo khi tạo CTPN và chỉ dùng cho CTPN này)
+                    // Xóa LoHang liên quan
                     await _loHangRepo.DeleteLoHangAsync(existingCTPN.MaLo);
                 }
             }
 
-            // 5. Cập nhật thông tin chi tiết phiếu nhập (SoLuong, DonGia, NgaySanXuat, HanSuDung)
+            // 5. Xử lý từng chi tiết: THÊM MỚI hoặc CẬP NHẬT
             if (request.DanhSachChiTiet != null && request.DanhSachChiTiet.Any())
             {
                 foreach (var ctUpdate in request.DanhSachChiTiet)
                 {
                     if (ctUpdate.MaCTPN == Guid.Empty)
-                        throw new ArgumentException("Mã chi tiết phiếu nhập không hợp lệ.");
-
-                    // Cập nhật SoLuong, DonGia, DonViNhap cho CTPN
-                    // Sẽ tính SoLuongQuyDoi  sau khi chuyển trạng thái DA_NHAN
-                    var updated = await _ctPhieuNhapRepo.UpdateCTPhieuNhapAsync(
-                        ctUpdate.MaCTPN,
-                        ctUpdate.SoLuong,
-                        ctUpdate.DonGia ?? 0,
-                        ctUpdate.DonViNhap
-                    );
-
-                    if (!updated)
-                        throw new ArgumentException($"Không tìm thấy chi tiết phiếu nhập với mã {ctUpdate.MaCTPN}.");
-
-                    // Cập nhật NgaySanXuat, HanSuDung cho LoHang (nếu được cung cấp)
-                    if (ctUpdate.HanSuDung.HasValue)
                     {
+                        // ===== THÊM MỚI CTPN =====
+                        // Validate: MaSP bắt buộc khi tạo mới
+                        if (ctUpdate.MaSP == null || ctUpdate.MaSP == Guid.Empty)
+                            throw new ArgumentException("Mã sản phẩm là bắt buộc khi thêm mới chi tiết phiếu nhập.");
+                        
+                        // Validate: HanSuDung bắt buộc khi tạo mới
+                        if (!ctUpdate.HanSuDung.HasValue)
+                            throw new ArgumentException("Hạn sử dụng là bắt buộc khi thêm mới chi tiết phiếu nhập.");
+                        
                         // Validate: HanSuDung phải trong tương lai
                         if (ctUpdate.HanSuDung.Value <= DateTime.Now)
                             throw new ArgumentException("Hạn sử dụng phải là ngày trong tương lai.");
-
-                        // Validate: NgaySanXuat < HanSuDung (nếu có NSX)
+                        
+                        // Validate: NgaySanXuat < HanSuDung
                         if (ctUpdate.NgaySanXuat.HasValue && ctUpdate.NgaySanXuat.Value >= ctUpdate.HanSuDung.Value)
                             throw new ArgumentException("Ngày sản xuất phải trước hạn sử dụng.");
 
-                        // Lấy CTPN để lấy MaLo
-                        var ctpn = await _ctPhieuNhapRepo.GetCTPhieuNhapByIdAsync(ctUpdate.MaCTPN);
-                        if (ctpn == null)
+                        // Tạo lô hàng mới
+                        var loHangRequest = new LoHangRequest
+                        {
+                            MaSP = ctUpdate.MaSP.Value,
+                            NgaySanXuat = ctUpdate.NgaySanXuat,
+                            HanSuDung = ctUpdate.HanSuDung.Value
+                        };
+                        var loHang = await _loHangRepo.AddLoHangAsync(loHangRequest);
+
+                        // Tạo chi tiết phiếu nhập mới
+                        await _ctPhieuNhapRepo.AddCTPhieuNhapAsync(
+                            id, // MaPN của phiếu nhập hiện tại
+                            loHang.MaLo,
+                            ctUpdate.SoLuong,
+                            ctUpdate.DonGia ?? 0,
+                            ctUpdate.DonViNhap,
+                            0, // SoLuongQuyDoi - sẽ được tính khi nhận hàng
+                            0  // DonGiaCoSo - sẽ được tính khi nhận hàng
+                        );
+                    }
+                    else
+                    {
+                        // ===== CẬP NHẬT CTPN ĐÃ CÓ =====
+                        // Kiểm tra CTPN có tồn tại trong DB không
+                        if (!existingMaCTPNs.Contains(ctUpdate.MaCTPN))
                             throw new ArgumentException($"Không tìm thấy chi tiết phiếu nhập với mã {ctUpdate.MaCTPN}.");
 
-                        // Cập nhật LoHang
-                        var loUpdated = await _loHangRepo.UpdateLoHangDatesAsync(
-                            ctpn.MaLo,
-                            ctUpdate.NgaySanXuat,
-                            ctUpdate.HanSuDung.Value
+                        // Cập nhật SoLuong, DonGia, DonViNhap cho CTPN
+                        var updated = await _ctPhieuNhapRepo.UpdateCTPhieuNhapAsync(
+                            ctUpdate.MaCTPN,
+                            ctUpdate.SoLuong,
+                            ctUpdate.DonGia ?? 0,
+                            ctUpdate.DonViNhap
                         );
 
-                        if (!loUpdated)
-                            throw new ArgumentException($"Không tìm thấy lô hàng với mã {ctpn.MaLo}.");
+                        if (!updated)
+                            throw new ArgumentException($"Không thể cập nhật chi tiết phiếu nhập với mã {ctUpdate.MaCTPN}.");
+
+                        // Cập nhật NgaySanXuat, HanSuDung cho LoHang (nếu được cung cấp)
+                        if (ctUpdate.HanSuDung.HasValue)
+                        {
+                            // Validate: HanSuDung phải trong tương lai
+                            if (ctUpdate.HanSuDung.Value <= DateTime.Now)
+                                throw new ArgumentException("Hạn sử dụng phải là ngày trong tương lai.");
+
+                            // Validate: NgaySanXuat < HanSuDung (nếu có NSX)
+                            if (ctUpdate.NgaySanXuat.HasValue && ctUpdate.NgaySanXuat.Value >= ctUpdate.HanSuDung.Value)
+                                throw new ArgumentException("Ngày sản xuất phải trước hạn sử dụng.");
+
+                            // Lấy CTPN để lấy MaLo
+                            var ctpn = await _ctPhieuNhapRepo.GetCTPhieuNhapByIdAsync(ctUpdate.MaCTPN);
+                            if (ctpn == null)
+                                throw new ArgumentException($"Không tìm thấy chi tiết phiếu nhập với mã {ctUpdate.MaCTPN}.");
+
+                            // Cập nhật LoHang
+                            var loUpdated = await _loHangRepo.UpdateLoHangDatesAsync(
+                                ctpn.MaLo,
+                                ctUpdate.NgaySanXuat,
+                                ctUpdate.HanSuDung.Value
+                            );
+
+                            if (!loUpdated)
+                                throw new ArgumentException($"Không tìm thấy lô hàng với mã {ctpn.MaLo}.");
+                        }
                     }
                 }
             }
