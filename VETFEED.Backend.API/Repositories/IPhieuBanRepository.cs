@@ -1,4 +1,4 @@
-using VETFEED.Backend.API.DTOs.PhieuBan;
+Ôªøusing VETFEED.Backend.API.DTOs.PhieuBan;
 
 namespace VETFEED.Backend.API.Repositories
 {
@@ -13,10 +13,8 @@ namespace VETFEED.Backend.API.Repositories
         // tao phieu ban
         Task<PhieuBanDetailResponse> CreatePhieuBanAsync(CreatePhieuBanRequest request);
 
-        // C?p nh?t phi?u b·n
-        Task<PhieuBanDetailResponse?> UpdatePhieuBanAsync(Guid maPB, CreatePhieuBanRequest request);
 
-        // XÛa phi?u b·n
+        // X√≥a phi·∫øu b√°n
         Task<bool> DeletePhieuBanAsync(Guid maPB);
     }
 }

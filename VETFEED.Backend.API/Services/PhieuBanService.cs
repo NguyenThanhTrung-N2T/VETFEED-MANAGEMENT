@@ -49,22 +49,6 @@ namespace VETFEED.Backend.API.Services
             }
         }
 
-        // C?p nh?t phi?u bán
-        public async Task<(PhieuBanDetailResponse? result, string? error)> UpdatePhieuBanAsync(Guid maPB, CreatePhieuBanRequest request)
-        {
-            try
-            {
-                var result = await _phieuBanRepo.UpdatePhieuBanAsync(maPB, request);
-                if (result == null)
-                    return (null, "Phi?u bán không t?n t?i!");
-
-                return (result, null);
-            }
-            catch (Exception ex)
-            {
-                return (null, ex.Message);
-            }
-        }
 
         // Xoa phieu ban 
         public async Task<bool> DeletePhieuBanAsync(Guid maPB)

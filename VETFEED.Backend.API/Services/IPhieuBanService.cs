@@ -13,9 +13,6 @@ namespace VETFEED.Backend.API.Services
         // Tap phieu ban
         Task<(PhieuBanDetailResponse? result, string? error)> CreatePhieuBanAsync(CreatePhieuBanRequest request);
 
-        // C?p nh?t phi?u bán
-        Task<(PhieuBanDetailResponse? result, string? error)> UpdatePhieuBanAsync(Guid maPB, CreatePhieuBanRequest request);
-
         // Xóa phiếu bán
         Task<bool> DeletePhieuBanAsync(Guid maPB);
     }

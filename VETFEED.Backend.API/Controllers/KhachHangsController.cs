@@ -15,6 +15,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         [HttpGet]
+
         public async Task<IActionResult> Search([FromQuery] KhachHangQuery query)
         {
             var result = await _service.SearchAsync(query);

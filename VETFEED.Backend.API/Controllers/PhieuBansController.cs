@@ -18,6 +18,8 @@ namespace VETFEED.Backend.API.Controllers
 
         // GET: api/phieubans
         [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<PhieuBanResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetDanhSachPhieuBan()
         {
             try
@@ -33,6 +35,8 @@ namespace VETFEED.Backend.API.Controllers
 
         // GET: api/phieubans/{maPB}
         [HttpGet("{maPB}")]
+        [ProducesResponseType(typeof(PhieuBanDetailResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetChiTietPhieuBan(Guid maPB)
         {
             try
@@ -51,6 +55,8 @@ namespace VETFEED.Backend.API.Controllers
 
         // POST: api/phieubans
         [HttpPost]
+        [ProducesResponseType(typeof(PhieuBanResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreatePhieuBan([FromBody] CreatePhieuBanRequest request)
         {
             if (!ModelState.IsValid)
@@ -71,30 +77,11 @@ namespace VETFEED.Backend.API.Controllers
             }
         }
 
-        // PUT: api/phieubans/{maPB}
-        [HttpPut("{maPB}")]
-        public async Task<IActionResult> UpdatePhieuBan(Guid maPB, [FromBody] CreatePhieuBanRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(new { error = "D? li?u không h?p l?!" });
-
-            try
-            {
-                var (result, error) = await _phieuBanService.UpdatePhieuBanAsync(maPB, request);
-
-                if (result == null)
-                    return StatusCode(400, new { error = error ?? "X?y ra l?i khi c?p nh?t phi?u bán!" });
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
-        }
 
         // DELETE: api/phieubans/{maPB}
         [HttpDelete("{maPB}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeletePhieuBan(Guid maPB)
         {
             try

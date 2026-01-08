@@ -360,18 +360,7 @@ namespace VETFEED.Backend.API.Repositories
             }
         }
 
-        // C?p nh?t phi?u bán
-        public async Task<PhieuBanDetailResponse?> UpdatePhieuBanAsync(Guid maPB, CreatePhieuBanRequest request)
-        {
-            var phieuBan = await _context.PhieuBans.FindAsync(maPB);
-            if (phieuBan == null)
-                return null;
-
-            // TODO: Implement logic update
-            throw new NotImplementedException();
-        }
-
-        // Xóa phi?u bán
+        // Xóa phieuu bán
         public async Task<bool> DeletePhieuBanAsync(Guid maPB)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
