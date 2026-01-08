@@ -138,5 +138,27 @@ namespace VETFEED.Backend.API.Repositories
             var hasNcsp = await _context.NhaCungCapSanPhams.AnyAsync(x => x.MaSP == maSP);
             return hasNcsp;
         }
+        public async Task<SanPhamResponse?> GetByCodeAsync(string maSPCode)
+        {
+            if (string.IsNullOrWhiteSpace(maSPCode))
+                return null;
+
+            var code = maSPCode.Trim();
+
+            return await _context.SanPhams.AsNoTracking()
+                .Where(x => x.MaSPCode == code)
+                .Select(x => new SanPhamResponse
+                {
+                    MaSP = x.MaSP,
+                    MaSPCode = x.MaSPCode,
+                    TenSP = x.TenSP,
+                    LoaiSanPham = x.LoaiSanPham.ToString(),
+                    DonViTinh = x.DonViCoSo,
+                    GhiChu = x.GhiChu,
+                    NgayTao = x.NgayTao
+                })
+                .FirstOrDefaultAsync();
+        }
+
     }
 }

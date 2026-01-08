@@ -42,6 +42,12 @@ builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
 builder.Services.AddScoped<ITonKhoRepository, TonKhoRepository>();
 builder.Services.AddScoped<ITonKhoService, TonKhoService>();
 
+builder.Services.AddScoped<IPhieuNhapRepository, PhieuNhapRepository>();
+builder.Services.AddScoped<ICTPhieuNhapRepository, CTPhieuNhapRepository>();
+builder.Services.AddScoped<IPhieuNhapService, PhieuNhapService>();
+
+builder.Services.AddScoped<IQuyDoiDonViRepository, QuyDoiDonViRepository>();
+
 builder.Services.AddScoped<IPhieuChuyenKhoRepository, PhieuChuyenKhoRepository>();
 builder.Services.AddScoped<IPhieuChuyenKhoService, PhieuChuyenKhoService>();
 

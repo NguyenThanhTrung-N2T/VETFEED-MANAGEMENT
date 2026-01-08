@@ -1,4 +1,5 @@
 ﻿using VETFEED.Backend.API.DTOs.LoHang;
+using VETFEED.Backend.API.Models;
 
 namespace VETFEED.Backend.API.Repositories
 {
@@ -13,5 +14,16 @@ namespace VETFEED.Backend.API.Repositories
 
         // kiem tra lo hang ton tai
         Task<bool> IsLoHangExist(Guid MaLo);
+
+        // Lay entity LoHang  de dung trong service
+        Task<LoHang?> GetLoHangEntityByIdAsync(Guid id);
+
+        // Cap nhat NgaySanXuat va HanSuDung cho LoHang
+        Task<bool> UpdateLoHangDatesAsync(Guid maLo, DateTime? ngaySanXuat, DateTime hanSuDung);
+
+        // Xoa nhieu LoHang cung luc (batch delete)
+        Task<int> DeleteLoHangsByIdsAsync(IEnumerable<Guid> maLoList);
     }
 }
+
+

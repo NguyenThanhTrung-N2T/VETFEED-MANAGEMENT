@@ -20,6 +20,13 @@ namespace VETFEED.Backend.API.Controllers
             var result = await _service.SearchAsync(query);
             return Ok(result);
         }
+        [HttpGet("by-code/{maSPCode}")]
+        public async Task<IActionResult> GetByCode(string maSPCode)
+        {
+            var sp = await _service.GetByCodeAsync(maSPCode);
+            if (sp == null) return NotFound("Không tìm thấy sản phẩm.");
+            return Ok(sp);
+        }
 
         [HttpGet("{maSP:guid}")]
         public async Task<IActionResult> GetById(Guid maSP)

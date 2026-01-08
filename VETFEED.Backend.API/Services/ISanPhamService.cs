@@ -10,5 +10,6 @@ namespace VETFEED.Backend.API.Services
         Task<SanPhamResponse> CreateAsync(SanPhamCreateRequest request);
         Task<SanPhamResponse?> UpdateAsync(Guid maSP, SanPhamUpdateRequest request);
         Task<(bool ok, string? error)> DeleteAsync(Guid maSP);
+        Task<SanPhamResponse?> GetByCodeAsync(string maSPCode);
     }
 }

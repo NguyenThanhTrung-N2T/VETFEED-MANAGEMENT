@@ -171,5 +171,59 @@ namespace VETFEED.Backend.API.Repositories
 
             return await q.AnyAsync();
         }
+        public async Task<KhachHangResponse?> GetByCodeAsync(string maKHCode)
+        {
+            if (string.IsNullOrWhiteSpace(maKHCode))
+                return null;
+
+            var code = maKHCode.Trim();
+
+            return await _context.KhachHangs.AsNoTracking()
+                .Where(x => x.MaKHCode == code)
+                .Select(x => new KhachHangResponse
+                {
+                    MaKH = x.MaKH,
+                    MaKHCode = x.MaKHCode,
+                    TenKH = x.TenKH,
+                    SoDienThoai = x.SoDienThoai,
+                    DiaChi = x.DiaChi,
+                    LoaiKhachHang = x.LoaiKhachHang.ToString(),
+                    HanMucCongNo = x.HanMucCongNo,
+                    TongMua = x.TongMua,
+                    CongNoHienTai = x.CongNoHienTai,
+                    TrangThai = x.TrangThai.ToString(),
+                    GhiChu = x.GhiChu,
+                    NgayTao = x.NgayTao
+                })
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<KhachHangResponse?> GetByPhoneAsync(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+                return null;
+
+            var p = phone.Trim();
+
+            return await _context.KhachHangs.AsNoTracking()
+                .Where(x => x.SoDienThoai == p)
+                .Select(x => new KhachHangResponse
+                {
+                    MaKH = x.MaKH,
+                    MaKHCode = x.MaKHCode,
+                    TenKH = x.TenKH,
+                    SoDienThoai = x.SoDienThoai,
+                    DiaChi = x.DiaChi,
+                    LoaiKhachHang = x.LoaiKhachHang.ToString(),
+                    HanMucCongNo = x.HanMucCongNo,
+                    TongMua = x.TongMua,
+                    CongNoHienTai = x.CongNoHienTai,
+                    TrangThai = x.TrangThai.ToString(),
+                    GhiChu = x.GhiChu,
+                    NgayTao = x.NgayTao
+                })
+                .FirstOrDefaultAsync();
+        }
+
     }
 }

@@ -11,7 +11,8 @@ namespace VETFEED.Backend.API.Repositories
 
         Task<KhachHangResponse> CreateAsync(KhachHang entity);
         Task<KhachHangResponse?> UpdateAsync(Guid maKH, KhachHangUpdateRequest request);
-
+        Task<KhachHangResponse?> GetByCodeAsync(string maKHCode);
+        Task<KhachHangResponse?> GetByPhoneAsync(string phone);
         Task<bool> DeleteAsync(Guid maKH);
         Task<bool> HasReferencesAsync(Guid maKH); // PhieuBan / PhieuTra / CongNo(KH)
         Task<bool> PhoneExistsAsync(string phone, Guid? excludeMaKH = null);
