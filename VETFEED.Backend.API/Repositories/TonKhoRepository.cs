@@ -235,25 +235,63 @@ namespace VETFEED.Backend.API.Repositories
         //}
 
         // them hoac cap nhat ton kho (neu ton tai thi cong them so luong)
-        public async Task<bool> AddOrUpdateTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong)
+        // public async Task<bool> AddOrUpdateTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong)
+        // {
+        //     var tonKho = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == maKho && tk.MaLo == maLo);
+            
+        //     if (tonKho != null)
+        //     {
+        //         // Da ton tai: cong them so luong
+        //         tonKho.SoLuongCoSo += soLuong;
+        //         tonKho.NgayCapNhat = DateTime.UtcNow;
+        //     }
+        //     else
+        //     {
+        //         // Chua ton tai: tao moi
+        //         tonKho = new Models.TonKho
+        //         {
+        //             MaTonKho = Guid.NewGuid(),
+        //             MaKho = maKho,
+        //             MaLo = maLo,
+        //             SoLuongCoSo = soLuong,
+        //             NgayCapNhat = DateTime.UtcNow
+        //         };
+        //         _context.TonKhos.Add(tonKho);
+        //     }
+
+        //     await _context.SaveChangesAsync();
+        //     return true;
+        // }
+
+        // them hoac cap nhat ton kho voi gia von binh quan gia quyen
+        public async Task<bool> AddOrUpdateTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong, decimal donGiaCoSo)
         {
             var tonKho = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == maKho && tk.MaLo == maLo);
             
             if (tonKho != null)
             {
-                // Da ton tai: cong them so luong
-                tonKho.SoLuongCoSo += soLuong;
+                // Tính giá vốn bình quân gia quyền
+                // GiaVonMoi = (SL_Cũ × Giá_Cũ + SL_Mới × Giá_Mới) / (SL_Cũ + SL_Mới)
+                var tongGiaTriCu = tonKho.SoLuongCoSo * tonKho.GiaVonBinhQuan;
+                var tongGiaTriMoi = soLuong * donGiaCoSo;
+                var tongSoLuong = tonKho.SoLuongCoSo + soLuong;
+                
+                tonKho.GiaVonBinhQuan = tongSoLuong > 0 
+                    ? (tongGiaTriCu + tongGiaTriMoi) / tongSoLuong 
+                    : 0;
+                tonKho.SoLuongCoSo = tongSoLuong;
                 tonKho.NgayCapNhat = DateTime.UtcNow;
             }
             else
             {
-                // Chua ton tai: tao moi
+                // Chưa tồn tại: tạo mới với giá vốn ban đầu
                 tonKho = new Models.TonKho
                 {
                     MaTonKho = Guid.NewGuid(),
                     MaKho = maKho,
                     MaLo = maLo,
                     SoLuongCoSo = soLuong,
+                    GiaVonBinhQuan = donGiaCoSo,
                     NgayCapNhat = DateTime.UtcNow
                 };
                 _context.TonKhos.Add(tonKho);

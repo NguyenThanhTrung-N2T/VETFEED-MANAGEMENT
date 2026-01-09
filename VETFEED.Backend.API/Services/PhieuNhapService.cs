@@ -334,8 +334,8 @@ namespace VETFEED.Backend.API.Services
                         donGiaCoSo
                     );
 
-                    // Cập nhật tồn kho (thêm mới hoặc cộng thêm) - sử dụng số lượng quy đổi
-                    await _tonKhoRepo.AddOrUpdateTonKhoAsync(request.MaKho, ct.MaLo, soLuongQuyDoi);
+                    // Cập nhật tồn kho (thêm mới hoặc cộng thêm) - sử dụng số lượng quy đổi và giá vốn cơ sở
+                    await _tonKhoRepo.AddOrUpdateTonKhoAsync(request.MaKho, ct.MaLo, soLuongQuyDoi, donGiaCoSo);
                 }
             }
             
