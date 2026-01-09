@@ -2,11 +2,29 @@
 
 namespace VETFEED.Backend.API.Repositories
 {
+    /// <summary>
+    /// Repository phiếu trả hàng
+    /// </summary>
     public interface IPhieuTraRepository
     {
-        // lay danh sach phieu tra
+        /// <summary>
+        /// Lấy danh sách phiếu trả
+        /// </summary>
         Task<IEnumerable<PhieuTraListResponse>> GetDanhSachPhieuTraAsync();
 
+        /// <summary>
+        /// Lấy chi tiết phiếu trả
+        /// </summary>
+        Task<PhieuTraDetailResponse?> GetChiTietPhieuTraAsync(Guid maPT);
 
+        /// <summary>
+        /// Tạo phiếu trả mới - trả về chi tiết đầy đủ
+        /// </summary>
+        Task<PhieuTraDetailResponse> CreatePhieuTraAsync(CreatePhieuTraRequest request);
+
+        /// <summary>
+        /// Xóa phiếu trả
+        /// </summary>
+        Task<bool> DeletePhieuTraAsync(Guid maPT);
     }
 }
