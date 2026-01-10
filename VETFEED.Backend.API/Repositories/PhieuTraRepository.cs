@@ -214,6 +214,7 @@ namespace VETFEED.Backend.API.Repositories
                         MaLo = maLo,
                         SoLuongTra = soLuongTraTheoDonViBan,
                         DonGiaHoan = donGiaBan,
+                        DonViTra = donViTra,
                         GhiChu = $"{chiTietTraRequest.GhiChu} | Phân bổ: {string.Join("; ", ghiChuPhanBo)}"
                     };
                     _context.CTPhieuTras.Add(ctPhieuTra);
@@ -289,10 +290,7 @@ namespace VETFEED.Backend.API.Repositories
         }
 
 
-
-        /// <summary>
-        /// Xóa phiếu trả
-        /// </summary>
+        //Xóa phiếu trả
         public async Task<bool> DeletePhieuTraAsync(Guid maPT)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -307,58 +305,93 @@ namespace VETFEED.Backend.API.Repositories
                 if (phieuTra == null)
                     return false;
 
-                // ✅ Rollback tồn kho
-                var chiTietList = await _context.CTPhieuBans
-                    .Where(ct => ct.MaPB == phieuTra.MaPB)
+                var khachHang = phieuTra.KhachHang!;
+                var tongTienTra = phieuTra.ThanhTien;
+
+                // Lấy toàn bộ CT phiếu bán gốc (để biết các kho liên quan)
+                var ctPhieuBan = await _context.CTPhieuBans
+                    .Include(x => x.LoHang)
+                        .ThenInclude(lo => lo!.SanPham)
+                    .Where(x => x.MaPB == phieuTra.MaPB)
                     .ToListAsync();
 
-                foreach (var ct in phieuTra.CTPhieuTras!)
+                foreach (var ctTra in phieuTra.CTPhieuTras!)
                 {
-                    // Tìm chi tiết phiếu bán gốc
-                    var ctPBGoc = chiTietList.FirstOrDefault(x => x.MaLo == ct.MaLo);
-                    if (ctPBGoc != null)
+                    // Các CT bán của đúng lô
+                    var ctBanTheoLo = ctPhieuBan
+                        .Where(x => x.MaLo == ctTra.MaLo)
+                        .ToList();
+
+                    if (!ctBanTheoLo.Any())
+                        throw new Exception("Không tìm thấy chi tiết phiếu bán cho lô trả");
+
+                    var sanPham = ctBanTheoLo.First().LoHang!.SanPham!;
+                    decimal tyLe = 1m;
+
+                    if (!string.Equals(
+                        ctTra.DonViTra!.Trim(),
+                        sanPham.DonViCoSo!.Trim(),
+                        StringComparison.OrdinalIgnoreCase))
                     {
-                        var tonKho = await _context.TonKhos
-                            .FirstOrDefaultAsync(tk => tk.MaKho == ctPBGoc.MaKho && tk.MaLo == ct.MaLo);
+                        var qd = await _context.QuyDoiDonVis.FirstOrDefaultAsync(x =>
+                            x.MaSP == sanPham.MaSP &&
+                            x.DonViNhap == ctTra.DonViTra);
 
-                        if (tonKho != null)
-                        {
-                            // ✅ SoLuongTra đã là theo đơn vị trả
-                            // Cần quy đổi về đơn vị cơ sở để trừ tồn kho
-                            var quyDoi = await _context.QuyDoiDonVis
-                                .FirstOrDefaultAsync(qd => qd.MaSP == ctPBGoc.LoHang!.MaSP && qd.DonViNhap == ctPBGoc.DonViBan);
+                        if (qd == null)
+                            throw new Exception($"Không tìm thấy quy đổi cho đơn vị {ctTra.DonViTra}");
 
-                            decimal soLuongCoSoTuongUngVoiMotDonViBan = quyDoi?.TyLe ?? 1;
-                            decimal soLuongCoSoCanTru = ct.SoLuongTra * soLuongCoSoTuongUngVoiMotDonViBan;
-
-                            tonKho.SoLuongCoSo -= soLuongCoSoCanTru;
-                        }
+                        tyLe = qd.TyLe; // ví dụ: 1 hộp = 10 viên
                     }
+
+                    var soLuongCanTru = ctTra.SoLuongTra * tyLe;
+
+                    if (soLuongCanTru <= 0)
+                        throw new Exception("Số lượng rollback không hợp lệ");
+
+                    var tonKhos = await _context.TonKhos
+                        .Where(t =>
+                            t.MaLo == ctTra.MaLo &&
+                            ctBanTheoLo.Select(x => x.MaKho).Contains(t.MaKho))
+                        .OrderBy(t => t.SoLuongCoSo) // trừ kho nhỏ trước
+                        .ToListAsync();
+
+                    foreach (var tk in tonKhos)
+                    {
+                        if (soLuongCanTru <= 0)
+                            break;
+
+                        if (tk.SoLuongCoSo <= 0)
+                            continue;
+
+                        var tru = Math.Min(tk.SoLuongCoSo, soLuongCanTru);
+
+                        tk.SoLuongCoSo -= tru;
+                        tk.NgayCapNhat = DateTime.UtcNow;
+
+                        soLuongCanTru -= tru;
+                    }
+
+                    if (soLuongCanTru > 0)
+                        throw new Exception("Rollback tồn kho không đủ số lượng");
                 }
 
-                // ✅ Rollback công nợ
                 var congNos = await _context.CongNos
                     .Where(cn => cn.MaPhieu == phieuTra.MaPT)
                     .ToListAsync();
 
                 foreach (var cn in congNos)
                 {
-                    if (cn.SoTien > 0)
-                    {
-                        // Trả nợ → cộng lại
-                        phieuTra.KhachHang!.CongNoHienTai += cn.SoTien;
-                    }
+                    if (cn.SoTien < 0)
+                        khachHang.CongNoHienTai += Math.Abs(cn.SoTien);
                     else
-                    {
-                        // Hoàn/giảm tiền → trừ lại
-                        phieuTra.KhachHang!.CongNoHienTai -= cn.SoTien;
-                    }
+                        khachHang.CongNoHienTai -= cn.SoTien;
                 }
 
-                // ✅ Rollback TongMua
-                phieuTra.KhachHang!.TongMua += phieuTra.ThanhTien;
+                if (khachHang.CongNoHienTai < 0)
+                    khachHang.CongNoHienTai = 0;
 
-                // ✅ Xóa
+                khachHang.TongMua += tongTienTra;
+
                 _context.CongNos.RemoveRange(congNos);
                 _context.CTPhieuTras.RemoveRange(phieuTra.CTPhieuTras);
                 _context.PhieuTras.Remove(phieuTra);
@@ -374,5 +407,7 @@ namespace VETFEED.Backend.API.Repositories
                 return false;
             }
         }
+
+
     }
 }

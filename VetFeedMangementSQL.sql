@@ -7,7 +7,7 @@ END
 GO
 
 -- Tạo lại DB
-CREATE DATABASE VETFEED_MANAGEMENT;
+CREATE DATABASE VETFEED_MANAGEMENT; 
 GO
 
 USE VETFEED_MANAGEMENT;
@@ -444,7 +444,9 @@ CREATE TABLE CTPhieuTra (
 
     DonGiaHoan DECIMAL(18,2) NOT NULL DEFAULT 0 CHECK (DonGiaHoan >= 0),
 
-    GhiChu NVARCHAR(500),
+	DonViTra NVARCHAR(50) NOT NULL,
+    
+	GhiChu NVARCHAR(500),
 
     CONSTRAINT FK_CTPT_PT FOREIGN KEY (MaPT)
         REFERENCES PhieuTra(MaPT)
@@ -502,6 +504,3 @@ ON CongNo (NgayPhatSinh);
 -- Index truy vấn theo phiếu
 CREATE INDEX IDX_CongNo_MaPhieu
 ON CongNo (MaPhieu);
-
-
-

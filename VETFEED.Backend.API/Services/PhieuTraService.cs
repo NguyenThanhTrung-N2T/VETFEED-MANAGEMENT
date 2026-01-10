@@ -51,12 +51,16 @@ namespace VETFEED.Backend.API.Services
             }
         }
 
-        /// <summary>
-        /// Xóa phiếu trả
-        /// </summary>
+        //Xóa phiếu trả
         public async Task<bool> DeletePhieuTraAsync(Guid maPT)
         {
-            return await _phieuTraRepository.DeletePhieuTraAsync(maPT);
+            try
+            {
+                return await _phieuTraRepository.DeletePhieuTraAsync(maPT);
+            } catch (Exception ex)
+            {
+                throw new Exception("Lỗi khi xóa phiếu trả: " + ex.Message);
+            }
         }
     }
 }

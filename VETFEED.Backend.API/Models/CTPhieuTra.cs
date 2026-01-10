@@ -14,6 +14,7 @@ namespace VETFEED.Backend.API.Models
         public Guid MaLo { get; set; }
         public decimal SoLuongTra { get; set; }                   // Số lượng trả
         public decimal DonGiaHoan { get; set; }                   // Đơn giá hoàn (theo đơn vị giao dịch)
+        public string? DonViTra { get; set; }
         public string? GhiChu { get; set; }
 
         // Navigation
