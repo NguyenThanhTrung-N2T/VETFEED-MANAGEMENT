@@ -187,30 +187,23 @@ namespace VETFEED.Backend.API.Repositories
         }
 
         // kiem tra ton kho cua lo tai toan bo cac kho 
-        public async Task<bool> IsTonKhoEnoughAllKhoAsync(Guid maLo, decimal soLuongCan, string DonViTinh)
+        public async Task<bool> KiemTraTonKhoTheoLoAsync(Guid maLo,decimal soLuongCan)
         {
-            // kiem tra don vi tinh 
-            var sanPham = await _context.LoHangs.Where(lh => lh.MaLo == maLo).Join(_context.SanPhams, lh => lh.MaSP,
-                sp => sp.MaSP, (lh, sp) => sp).FirstOrDefaultAsync();
+            var loHangTonTai = await _context.LoHangs
+                .AnyAsync(lh => lh.MaLo == maLo);
 
-            if(sanPham == null)
-            {
-                throw new Exception("Sản phẩm của lô hàng không còn tồn tại !");
-            }
+            if (!loHangTonTai)
+                throw new Exception("Lô hàng không tồn tại!");
 
-            // lay ti le 
-            var tyle = await _context.QuyDoiDonVis.Where(dv => dv.MaSP == sanPham.MaSP && dv.DonViNhap == DonViTinh).FirstOrDefaultAsync();
-            if(tyle == null)
-            {
-                throw new Exception("Bảng quy đổi đơn vị của sản phẩm không tồn tại đơn vị này !");
-            }
+            //  Tổng tồn kho của lô trên toàn bộ kho (đơn vị cơ sở)
+            var tongTon = await _context.TonKhos
+                .Where(tk => tk.MaLo == maLo)
+                .SumAsync(tk => tk.SoLuongCoSo);
 
-            var soLuongCanTheoDVCS = tyle.TyLe * soLuongCan;
-
-            // lay ton ton kho
-            var tongTon = await _context.TonKhos.Where(t => t.MaLo == maLo).SumAsync(t => t.SoLuongCoSo); 
-            return tongTon >= soLuongCanTheoDVCS;
+            // So sánh trực tiếp
+            return tongTon >= soLuongCan;
         }
+
 
         // tao moi ban ghi ton kho
         //public async Task<bool> AddTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong)
@@ -238,7 +231,7 @@ namespace VETFEED.Backend.API.Repositories
         // public async Task<bool> AddOrUpdateTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong)
         // {
         //     var tonKho = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == maKho && tk.MaLo == maLo);
-            
+
         //     if (tonKho != null)
         //     {
         //         // Da ton tai: cong them so luong

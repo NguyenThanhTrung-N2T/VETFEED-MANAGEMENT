@@ -63,7 +63,7 @@ namespace VETFEED.Backend.API.Controllers
                 return BadRequest("Thông tin không đầy đủ hoặc không đúng định dạng !");
             }
             // kiem tra ton kho 
-            var result = await _tonKhoSerivce.IsTonKhoEnoughAllKhoAsync(request.MaLo, request.SoLuongCan, request.DonViBan!);
+            var result = await _tonKhoSerivce.IsTonKhoEnoughAllKhoAsync(request.MaLo, request.SoLuongCan);
             if (!result)
             {
                 return BadRequest("Tồn kho tại tất cả các kho không đủ !");

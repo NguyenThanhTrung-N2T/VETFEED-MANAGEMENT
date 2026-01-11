@@ -52,9 +52,9 @@ namespace VETFEED.Backend.API.Services
         }
 
         // kiem tra ton kho theo lo tai tat ca cac kho
-        public async Task<bool> IsTonKhoEnoughAllKhoAsync(Guid maLo, decimal soLuongCan, string DonViTinh)
+        public async Task<bool> IsTonKhoEnoughAllKhoAsync(Guid maLo, decimal soLuongCan)
         {
-            return await _tonKhoRepo.IsTonKhoEnoughAllKhoAsync(maLo, soLuongCan, DonViTinh);
+            return await _tonKhoRepo.KiemTraTonKhoTheoLoAsync(maLo, soLuongCan);
         }
     }
 }

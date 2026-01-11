@@ -39,9 +39,6 @@ namespace VETFEED.Backend.API.DTOs.PhieuBan
         [Range(0.01, double.MaxValue, ErrorMessage = "Số lượng phải lớn hơn 0 !")]
         public decimal SoLuong { get; set; }
 
-        [Required(ErrorMessage = "Đơn vị bán không được để trống !")]
-        public string? DonViBan { get; set; }
-
         [Required(ErrorMessage = "Đơn giá bán không được để trống !")]
         [Range(0, double.MaxValue, ErrorMessage = "Đơn giá không được âm !")]
         public decimal DonGia { get; set; }
