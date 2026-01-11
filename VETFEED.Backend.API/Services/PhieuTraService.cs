@@ -3,9 +3,6 @@ using VETFEED.Backend.API.Repositories;
 
 namespace VETFEED.Backend.API.Services
 {
-    /// <summary>
-    /// Service implementation phiếu trả hàng
-    /// </summary>
     public class PhieuTraService : IPhieuTraService
     {
         private readonly IPhieuTraRepository _phieuTraRepository;
@@ -62,5 +59,6 @@ namespace VETFEED.Backend.API.Services
                 throw new Exception("Lỗi khi xóa phiếu trả: " + ex.Message);
             }
         }
+
     }
 }

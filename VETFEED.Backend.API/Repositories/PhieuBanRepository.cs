@@ -278,7 +278,7 @@ namespace VETFEED.Backend.API.Repositories
 
             try
             {
-                // 1️⃣ Lấy phiếu bán + chi tiết + khách hàng
+                //  Lấy phiếu bán + chi tiết + khách hàng
                 var phieuBan = await _context.PhieuBans
                     .Include(pb => pb.KhachHang)
                     .Include(pb => pb.CTPhieuBans)
@@ -287,14 +287,14 @@ namespace VETFEED.Backend.API.Repositories
                 if (phieuBan == null)
                     throw new InvalidOperationException("Phiếu bán không tồn tại.");
 
-                // 2️⃣ Không cho xóa nếu đã có phiếu trả
+                // Không cho xóa nếu đã có phiếu trả
                 bool hasReturn = await _context.PhieuTras
                     .AnyAsync(pt => pt.MaPB == maPB);
 
                 if (hasReturn)
                     throw new InvalidOperationException("Phiếu bán đã có phiếu trả, không thể xóa.");
 
-                // 3️⃣ ROLLBACK TỒN KHO (CHỈ ĐƠN VỊ CƠ SỞ)
+                // ROLLBACK TỒN KHO (CHỈ ĐƠN VỊ CƠ SỞ)
                 foreach (var ct in phieuBan.CTPhieuBans!)
                 {
                     var tonKho = await _context.TonKhos
@@ -316,11 +316,11 @@ namespace VETFEED.Backend.API.Repositories
                         _context.TonKhos.Add(tonKho);
                     }
 
-                    // ✅ Hoàn lại đúng số lượng cơ sở đã xuất
+                    // Hoàn lại đúng số lượng cơ sở đã xuất
                     tonKho.SoLuongCoSo += ct.SoLuong;
                 }
 
-                // 4️⃣ ROLLBACK CÔNG NỢ (NẾU BÁN CÔNG NỢ)
+                //  ROLLBACK CÔNG NỢ (NẾU BÁN CÔNG NỢ)
                 if (phieuBan.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO)
                 {
                     var congNos = await _context.CongNos
@@ -339,12 +339,12 @@ namespace VETFEED.Backend.API.Repositories
                         _context.CongNos.RemoveRange(congNos);
                 }
 
-                // 5️⃣ ROLLBACK TỔNG MUA
+                // ROLLBACK TỔNG MUA
                 phieuBan.KhachHang!.TongMua -= phieuBan.ThanhTien;
                 if (phieuBan.KhachHang.TongMua < 0)
                     phieuBan.KhachHang.TongMua = 0;
 
-                // 6️⃣ XÓA DỮ LIỆU
+                // XÓA DỮ LIỆU
                 _context.CTPhieuBans.RemoveRange(phieuBan.CTPhieuBans);
                 _context.PhieuBans.Remove(phieuBan);
 
@@ -360,6 +360,50 @@ namespace VETFEED.Backend.API.Repositories
             }
         }
 
+        // lay lich su mua hang cua khach hang 
+        public async Task<KhachHangPhieuBanResponse?> GetPhieuBanByKhachHangAsync(Guid maKH)
+        {
+            var khachHang = await _context.KhachHangs
+                .Where(kh => kh.MaKH == maKH)
+                .Select(kh => new KhachHangPhieuBanResponse
+                {
+                    MaKH = kh.MaKH,
+                    MaKHCode = kh.MaKHCode!,
+                    TenKH = kh.TenKH!,
+                    SoDienThoai = kh.SoDienThoai,
+                    DiaChi = kh.DiaChi,
+                    LoaiKhachHang = kh.LoaiKhachHang.ToString(),
+                    TongMua = kh.TongMua,
+                    CongNoHienTai = kh.CongNoHienTai,
+                    HanMucCongNo = kh.HanMucCongNo
+                })
+                .FirstOrDefaultAsync();
+
+            if (khachHang == null)
+                return null;
+
+            khachHang.DanhSachPhieuBan = await _context.PhieuBans
+                .Where(pb => pb.MaKH == maKH)
+                .OrderByDescending(pb => pb.NgayBan)
+                .Select(pb => new PhieuBanListResponse
+                {
+                    MaPB = pb.MaPB,
+                    MaPBCode = pb.MaPBCode!,
+                    NgayBan = pb.NgayBan,
+
+                    TongTienHang = pb.TongTienHang,
+                    TienChietKhau = pb.TienChietKhau,
+                    ThanhTien = pb.ThanhTien,
+
+                    HinhThucThanhToan = pb.HinhThucThanhToan!.ToString(),
+                    TrangThaiThanhToan = pb.TrangThaiThanhToan!.ToString(),
+                    TienNo = pb.TienNo,
+                    GhiChu = pb.GhiChu
+                })
+                .ToListAsync();
+
+            return khachHang;
+        }
 
 
     }
