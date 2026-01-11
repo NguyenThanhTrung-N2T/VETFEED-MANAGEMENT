@@ -57,6 +57,9 @@ builder.Services.AddScoped<IPhieuBanService, PhieuBanService>();
 builder.Services.AddScoped<IPhieuTraRepository, PhieuTraRepository>();
 builder.Services.AddScoped<IPhieuTraService, PhieuTraService>();
 
+builder.Services.AddScoped<IQuyDoiDonViRepository, QuyDoiDonViRepository>();
+builder.Services.AddScoped<IQuyDoiDonViService, QuyDoiDonViService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
