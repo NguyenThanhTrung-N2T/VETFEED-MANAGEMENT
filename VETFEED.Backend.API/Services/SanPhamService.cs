@@ -28,6 +28,10 @@ namespace VETFEED.Backend.API.Services
             if (!Enum.TryParse<LoaiSanPhamEnum>(request.LoaiSanPham, true, out var loai))
                 throw new ArgumentException("LoaiSanPham không hợp lệ. Chỉ nhận: THUOC_THU_Y hoặc THUC_AN_CHAN_NUOI.");
 
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            var now = DateTime.Now;
+
             var entity = new SanPham
             {
                 MaSP = Guid.NewGuid(),
@@ -36,10 +40,33 @@ namespace VETFEED.Backend.API.Services
                 LoaiSanPham = loai,
                 DonViCoSo = request.DonViTinh,
                 GhiChu = request.GhiChu,
-                NgayTao = DateTime.Now
+                NgayTao = now
             };
 
-            return await _repo.CreateAsync(entity);
+            var created = await _repo.CreateAsync(entity);
+
+            if (request.GiaBanDau.HasValue)
+            {
+                var giaBanDau = request.GiaBanDau.Value;
+
+                var giaBan = new GiaBan
+                {
+                    MaGia = Guid.NewGuid(),
+                    MaSP = entity.MaSP,
+                    DonGiaBan = giaBanDau,
+                    TuNgay = now,
+                    DenNgay = null,
+                    NgayTao = now,
+                    GhiChu = "Giá khởi tạo khi tạo sản phẩm"
+                };
+
+                _context.GiaBans.Add(giaBan);
+                await _context.SaveChangesAsync();
+            }
+
+            await transaction.CommitAsync();
+
+            return (await _repo.GetByIdAsync(entity.MaSP))!;
         }
 
         public async Task<SanPhamResponse?> UpdateAsync(Guid maSP, SanPhamUpdateRequest request)

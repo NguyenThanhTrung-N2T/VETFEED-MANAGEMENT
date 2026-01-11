@@ -68,7 +68,12 @@ namespace VETFEED.Backend.API.Repositories
                 LoaiSanPham = x.LoaiSanPham.ToString(),
                 DonViTinh = x.DonViCoSo,
                 GhiChu = x.GhiChu,
-                NgayTao = x.NgayTao
+                NgayTao = x.NgayTao,
+                GiaHienTai = _context.GiaBans
+                    .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
+                    .OrderByDescending(g => g.TuNgay)
+                    .Select(g => (decimal?)g.DonGiaBan)
+                    .FirstOrDefault()
             }).ToListAsync();
 
             return new PagedResult<SanPhamResponse>
@@ -92,7 +97,12 @@ namespace VETFEED.Backend.API.Repositories
                     LoaiSanPham = x.LoaiSanPham.ToString(),
                     DonViTinh = x.DonViCoSo,
                     GhiChu = x.GhiChu,
-                    NgayTao = x.NgayTao
+                    NgayTao = x.NgayTao,
+                    GiaHienTai = _context.GiaBans
+                        .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
+                        .OrderByDescending(g => g.TuNgay)
+                        .Select(g => (decimal?)g.DonGiaBan)
+                        .FirstOrDefault()
                 }).FirstOrDefaultAsync();
         }
 
@@ -155,7 +165,12 @@ namespace VETFEED.Backend.API.Repositories
                     LoaiSanPham = x.LoaiSanPham.ToString(),
                     DonViTinh = x.DonViCoSo,
                     GhiChu = x.GhiChu,
-                    NgayTao = x.NgayTao
+                    NgayTao = x.NgayTao,
+                    GiaHienTai = _context.GiaBans
+                        .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
+                        .OrderByDescending(g => g.TuNgay)
+                        .Select(g => (decimal?)g.DonGiaBan)
+                        .FirstOrDefault()
                 })
                 .FirstOrDefaultAsync();
         }
