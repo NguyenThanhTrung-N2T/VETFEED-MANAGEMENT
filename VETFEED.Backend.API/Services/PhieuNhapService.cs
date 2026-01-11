@@ -28,6 +28,37 @@ namespace VETFEED.Backend.API.Services
             _quyDoiDonViRepo = quyDoiDonViRepo;
         }
 
+        /// <summary>
+        /// Validate đơn vị nhập có tồn tại trong QuyDoiDonVi cho sản phẩm không
+        /// </summary>
+        private async Task ValidateDonViNhapAsync(Guid maSP, string? donViNhap)
+        {
+            if (string.IsNullOrEmpty(donViNhap))
+                return; // Không cần validate nếu không có đơn vị nhập
+            
+            // Kiểm tra đơn vị nhập có tồn tại không
+            var tyLe = await _quyDoiDonViRepo.GetTyLeByMaSPAndDonViNhapAsync(maSP, donViNhap);
+            if (tyLe == null)
+            {
+                // Lấy danh sách đơn vị nhập hợp lệ
+                var quyDoiList = await _quyDoiDonViRepo.GetByMaSPAsync(maSP);
+                var validUnits = quyDoiList
+                    .Where(q => !string.IsNullOrEmpty(q.DonViNhap))
+                    .Select(q => q.DonViNhap)
+                    .Distinct()
+                    .ToList();
+                
+                if (validUnits.Any())
+                {
+                    throw new ArgumentException($"Đơn vị nhập '{donViNhap}' không tồn tại. Đơn vị nhập chỉ chấp nhận: {string.Join(", ", validUnits)}");
+                }
+                else
+                {
+                    throw new ArgumentException($"Đơn vị nhập '{donViNhap}' không tồn tại. Sản phẩm này chưa có cấu hình quy đổi đơn vị.");
+                }
+            }
+        }
+
         // Lấy tất cả phiếu nhập
         public async Task<IEnumerable<PhieuNhapResponse>> GetAllPhieuNhapsAsync()
         {
@@ -67,6 +98,8 @@ namespace VETFEED.Backend.API.Services
             {
                 foreach (var chiTiet in request.DanhSachChiTiet)
                 {
+                    // Validate đơn vị nhập
+                    await ValidateDonViNhapAsync(chiTiet.MaSP, chiTiet.DonViNhap);
                     // Tạo lô hàng mới
                     var loHangRequest = new LoHangRequest
                     {
@@ -220,6 +253,9 @@ namespace VETFEED.Backend.API.Services
                         // Validate: NgaySanXuat < HanSuDung
                         if (ctUpdate.NgaySanXuat.HasValue && ctUpdate.NgaySanXuat.Value >= ctUpdate.HanSuDung.Value)
                             throw new ArgumentException("Ngày sản xuất phải trước hạn sử dụng.");
+                        
+                        // Validate đơn vị nhập
+                        await ValidateDonViNhapAsync(ctUpdate.MaSP.Value, ctUpdate.DonViNhap);
 
                         // Tạo lô hàng mới
                         var loHangRequest = new LoHangRequest
@@ -247,6 +283,17 @@ namespace VETFEED.Backend.API.Services
                         // Kiểm tra CTPN có tồn tại trong DB không
                         if (!existingMaCTPNs.Contains(ctUpdate.MaCTPN))
                             throw new ArgumentException($"Không tìm thấy chi tiết phiếu nhập với mã {ctUpdate.MaCTPN}.");
+                        
+                        // Validate đơn vị nhập - cần lấy MaSP từ LoHang
+                        var existingCTPN = existingCTPNs.FirstOrDefault(ct => ct.MaCTPN == ctUpdate.MaCTPN);
+                        if (existingCTPN != null)
+                        {
+                            var loHangInfo = await _loHangRepo.GetLoHangEntityByIdAsync(existingCTPN.MaLo);
+                            if (loHangInfo != null)
+                            {
+                                await ValidateDonViNhapAsync(loHangInfo.MaSP, ctUpdate.DonViNhap);
+                            }
+                        }
 
                         // Cập nhật SoLuong, DonGia, DonViNhap cho CTPN
                         var updated = await _ctPhieuNhapRepo.UpdateCTPhieuNhapAsync(
