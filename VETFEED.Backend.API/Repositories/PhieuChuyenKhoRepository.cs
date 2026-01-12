@@ -126,7 +126,7 @@ namespace VETFEED.Backend.API.Repositories
 
                     var donGia = await _context.CTPhieuNhaps
                         .Where(ctpn => ctpn.MaLo == item.MaLo)
-                        .Select(ctpn => ctpn.DonGia)
+                        .Select(ctpn => ctpn.DonGiaCoSo)
                         .FirstOrDefaultAsync();
 
                     // tra ve danh sach chi tiet chuyen kho
@@ -142,7 +142,7 @@ namespace VETFEED.Backend.API.Repositories
                         HanSuDung = lo.HanSuDung,
                         GhiChu = item.GhiChu,
                         TrangThai = item.TrangThai.ToString(),
-                        DonGia = donGia
+                        DonGia =  donGia
                     });
                 }
 
@@ -277,7 +277,8 @@ namespace VETFEED.Backend.API.Repositories
                         MaTonKho = Guid.NewGuid(),
                         MaKho = maKhoNhan,
                         MaLo = ct.MaLo,
-                        SoLuongCoSo = ct.SoLuongChuyen
+                        SoLuongCoSo = ct.SoLuongChuyen,
+                        GiaVonBinhQuan = tonKhoXuat.GiaVonBinhQuan
                     });
                 }
             }
