@@ -1,3 +1,4 @@
+using VETFEED.Backend.API.Data;
 using VETFEED.Backend.API.DTOs.CTPhieuNhap;
 using VETFEED.Backend.API.DTOs.LoHang;
 using VETFEED.Backend.API.DTOs.PhieuNhap;
@@ -8,6 +9,7 @@ namespace VETFEED.Backend.API.Services
 {
     public class PhieuNhapService : IPhieuNhapService
     {
+        private readonly VetFeedManagementContext _context;
         private readonly IPhieuNhapRepository _phieuNhapRepo;
         private readonly ICTPhieuNhapRepository _ctPhieuNhapRepo;
         private readonly ILoHangRepository _loHangRepo;
@@ -15,17 +17,50 @@ namespace VETFEED.Backend.API.Services
         private readonly IQuyDoiDonViRepository _quyDoiDonViRepo;
 
         public PhieuNhapService(
+            VetFeedManagementContext context,
             IPhieuNhapRepository phieuNhapRepo,
             ICTPhieuNhapRepository ctPhieuNhapRepo,
             ILoHangRepository loHangRepo,
             ITonKhoRepository tonKhoRepo,
             IQuyDoiDonViRepository quyDoiDonViRepo)
         {
+            _context = context;
             _phieuNhapRepo = phieuNhapRepo;
             _ctPhieuNhapRepo = ctPhieuNhapRepo;
             _loHangRepo = loHangRepo;
             _tonKhoRepo = tonKhoRepo;
             _quyDoiDonViRepo = quyDoiDonViRepo;
+        }
+
+        /// <summary>
+        /// Validate đơn vị nhập có tồn tại trong QuyDoiDonVi cho sản phẩm không
+        /// </summary>
+        private async Task ValidateDonViNhapAsync(Guid maSP, string? donViNhap)
+        {
+            if (string.IsNullOrEmpty(donViNhap))
+                return; // Không cần validate nếu không có đơn vị nhập
+            
+            // Kiểm tra đơn vị nhập có tồn tại không
+            var tyLe = await _quyDoiDonViRepo.GetTyLeByMaSPAndDonViNhapAsync(maSP, donViNhap);
+            if (tyLe == null)
+            {
+                // Lấy danh sách đơn vị nhập hợp lệ
+                var quyDoiList = await _quyDoiDonViRepo.GetByMaSPAsync(maSP);
+                var validUnits = quyDoiList
+                    .Where(q => !string.IsNullOrEmpty(q.DonViNhap))
+                    .Select(q => q.DonViNhap)
+                    .Distinct()
+                    .ToList();
+                
+                if (validUnits.Any())
+                {
+                    throw new ArgumentException($"Đơn vị nhập '{donViNhap}' không tồn tại. Đơn vị nhập chỉ chấp nhận: {string.Join(", ", validUnits)}");
+                }
+                else
+                {
+                    throw new ArgumentException($"Đơn vị nhập '{donViNhap}' không tồn tại. Sản phẩm này chưa có cấu hình quy đổi đơn vị.");
+                }
+            }
         }
 
         // Lấy tất cả phiếu nhập
@@ -43,7 +78,7 @@ namespace VETFEED.Backend.API.Services
         // Tạo phiếu nhập mới với danh sách chi tiết
         public async Task<PhieuNhapDetailedResponse> CreatePhieuNhapAsync(PhieuNhapCreateRequest request)
         {
-            // Validation
+            // Validation trước khi bắt đầu transaction
             if (request.MaNCC == Guid.Empty)
                 throw new ArgumentException("Mã nhà cung cấp không hợp lệ.");
             if (request.MaKho == Guid.Empty)
@@ -51,75 +86,103 @@ namespace VETFEED.Backend.API.Services
             if (request.DanhSachChiTiet == null || !request.DanhSachChiTiet.Any())
                 throw new ArgumentException("Danh sách chi tiết phiếu nhập không được để trống.");
 
-            // 1. Tạo phiếu nhập với trạng thái DA_DAT
-            var phieuNhapRequest = new PhieuNhapRequest
+            // Sử dụng transaction để đảm bảo tính nhất quán dữ liệu
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                MaNCC = request.MaNCC,
-                MaKho = request.MaKho,
-                TrangThai = TrangThaiPhieuNhapEnum.DA_DAT.ToString(),
-                GhiChu = request.GhiChu
-            };
-            var phieuNhap = await _phieuNhapRepo.AddPhieuNhapAsync(phieuNhapRequest);
-
-            // 2. Tạo từng chi tiết (lô hàng + CTPN)
-            var danhSachChiTiet = new List<CTPhieuNhapResponse>();
-            if (request.DanhSachChiTiet != null && request.DanhSachChiTiet.Any())
-            {
-                foreach (var chiTiet in request.DanhSachChiTiet)
+                // 1. Tạo phiếu nhập với trạng thái DA_DAT
+                var phieuNhapRequest = new PhieuNhapRequest
                 {
-                    // Tạo lô hàng mới
-                    var loHangRequest = new LoHangRequest
-                    {
-                        MaSP = chiTiet.MaSP,
-                        NgaySanXuat = chiTiet.NgaySanXuat,
-                        HanSuDung = chiTiet.HanSuDung
-                    };
-                    var loHang = await _loHangRepo.AddLoHangAsync(loHangRequest);
+                    MaNCC = request.MaNCC,
+                    MaKho = request.MaKho,
+                    TrangThai = TrangThaiPhieuNhapEnum.DA_DAT.ToString(),
+                    GhiChu = request.GhiChu
+                };
+                var phieuNhap = await _phieuNhapRepo.AddPhieuNhapAsync(phieuNhapRequest);
 
-                    // Tạo chi tiết phiếu nhập (DonGia = 0 mặc định)
-                    var ctEntity = await _ctPhieuNhapRepo.AddCTPhieuNhapAsync(
-                        phieuNhap.MaPN,
-                        loHang.MaLo,
-                        chiTiet.SoLuong,
-                        (chiTiet.DonGia != null) ? chiTiet.DonGia.Value : 0,
-                        chiTiet.DonViNhap,
-                        0, // SoLuongQuyDoi - sẽ được tính khi nhận hàng
-                        0  // DonGiaCoSo - sẽ được tính khi nhận hàng
-                    );
-
-                    danhSachChiTiet.Add(new CTPhieuNhapResponse
+                // 2. Tạo từng chi tiết (lô hàng + CTPN)
+                var danhSachChiTiet = new List<CTPhieuNhapResponse>();
+                if (request.DanhSachChiTiet != null && request.DanhSachChiTiet.Any())
+                {
+                    var chiTietList = request.DanhSachChiTiet.ToList();
+                    for (int i = 0; i < chiTietList.Count; i++)
                     {
-                        MaCTPN = ctEntity.MaCTPN,
-                        MaPN = ctEntity.MaPN,
-                        MaLo = ctEntity.MaLo,
-                        MaLoCode = loHang.MaLoCode,
-                        TenSP = loHang.TenSP,
-                        NgaySanXuat = loHang.NgaySanXuat,
-                        HanSuDung = loHang.HanSuDung,
-                        SoLuong = ctEntity.SoLuong,
-                        DonGia = ctEntity.DonGia,
-                        DonViNhap = ctEntity.DonViNhap,
-                        SoLuongQuyDoi = ctEntity.SoLuongQuyDoi,
-                        DonGiaCoSo = ctEntity.DonGiaCoSo
-                    });
+                        var chiTiet = chiTietList[i];
+                        var soThuTu = i + 1; // Số thứ tự 1-based cho user
+
+                        // Validate đơn vị nhập với thông báo lỗi rõ ràng
+                        try
+                        {
+                            await ValidateDonViNhapAsync(chiTiet.MaSP, chiTiet.DonViNhap);
+                        }
+                        catch (ArgumentException ex)
+                        {
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: {ex.Message}");
+                        }
+
+                        // Tạo lô hàng mới
+                        var loHangRequest = new LoHangRequest
+                        {
+                            MaSP = chiTiet.MaSP,
+                            NgaySanXuat = chiTiet.NgaySanXuat,
+                            HanSuDung = chiTiet.HanSuDung
+                        };
+                        var loHang = await _loHangRepo.AddLoHangAsync(loHangRequest);
+
+                        // Tạo chi tiết phiếu nhập (DonGia = 0 mặc định)
+                        var ctEntity = await _ctPhieuNhapRepo.AddCTPhieuNhapAsync(
+                            phieuNhap.MaPN,
+                            loHang.MaLo,
+                            chiTiet.SoLuong,
+                            (chiTiet.DonGia != null) ? chiTiet.DonGia.Value : 0,
+                            chiTiet.DonViNhap,
+                            0, // SoLuongQuyDoi - sẽ được tính khi nhận hàng
+                            0  // DonGiaCoSo - sẽ được tính khi nhận hàng
+                        );
+
+                        danhSachChiTiet.Add(new CTPhieuNhapResponse
+                        {
+                            MaCTPN = ctEntity.MaCTPN,
+                            MaPN = ctEntity.MaPN,
+                            MaLo = ctEntity.MaLo,
+                            MaLoCode = loHang.MaLoCode,
+                            TenSP = loHang.TenSP,
+                            NgaySanXuat = loHang.NgaySanXuat,
+                            HanSuDung = loHang.HanSuDung,
+                            SoLuong = ctEntity.SoLuong,
+                            DonGia = ctEntity.DonGia,
+                            DonViNhap = ctEntity.DonViNhap,
+                            SoLuongQuyDoi = ctEntity.SoLuongQuyDoi,
+                            DonGiaCoSo = ctEntity.DonGiaCoSo
+                        });
+                    }
                 }
-            }
 
-            // 3. Trả về response chi tiết
-            return new PhieuNhapDetailedResponse
+                // Commit transaction sau khi tất cả thao tác thành công
+                await transaction.CommitAsync();
+
+                // 3. Trả về response chi tiết
+                return new PhieuNhapDetailedResponse
+                {
+                    MaPN = phieuNhap.MaPN,
+                    MaPNCode = phieuNhap.MaPNCode,
+                    MaNCC = phieuNhap.MaNCC,
+                    TenNCC = phieuNhap.TenNCC,
+                    MaKho = phieuNhap.MaKho,
+                    TenKho = phieuNhap.TenKho,
+                    ThanhTien = 0, // DonGia = 0 nên ThanhTien = 0
+                    TrangThai = phieuNhap.TrangThai,
+                    GhiChu = phieuNhap.GhiChu,
+                    NgayCapNhat = phieuNhap.NgayCapNhat,
+                    DanhSachChiTiet = danhSachChiTiet
+                };
+            }
+            catch
             {
-                MaPN = phieuNhap.MaPN,
-                MaPNCode = phieuNhap.MaPNCode,
-                MaNCC = phieuNhap.MaNCC,
-                TenNCC = phieuNhap.TenNCC,
-                MaKho = phieuNhap.MaKho,
-                TenKho = phieuNhap.TenKho,
-                ThanhTien = 0, // DonGia = 0 nên ThanhTien = 0
-                TrangThai = phieuNhap.TrangThai,
-                GhiChu = phieuNhap.GhiChu,
-                NgayCapNhat = phieuNhap.NgayCapNhat,
-                DanhSachChiTiet = danhSachChiTiet
-            };
+                // Rollback transaction nếu có lỗi
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         /* Update phiếu nhập
@@ -174,6 +237,11 @@ namespace VETFEED.Backend.API.Services
             if (currentStatus == TrangThaiPhieuNhapEnum.DA_HUY && newStatus == TrangThaiPhieuNhapEnum.DA_NHAN)
                 throw new InvalidOperationException("Phiếu nhập đã hủy không thể chuyển sang trạng thái Đã nhận.");
 
+            // Sử dụng transaction để đảm bảo tính nhất quán dữ liệu
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+
             // 4. So sánh danh sách chi tiết trong DB với request
             var existingCTPNs = await _ctPhieuNhapRepo.GetCTPhieuNhapEntitiesByMaPNAsync(id);
             var existingMaCTPNs = existingCTPNs.Select(ct => ct.MaCTPN).ToHashSet();
@@ -200,26 +268,40 @@ namespace VETFEED.Backend.API.Services
             // 5. Xử lý từng chi tiết: THÊM MỚI hoặc CẬP NHẬT
             if (request.DanhSachChiTiet != null && request.DanhSachChiTiet.Any())
             {
-                foreach (var ctUpdate in request.DanhSachChiTiet)
+                var ctUpdateList = request.DanhSachChiTiet.ToList();
+                for (int i = 0; i < ctUpdateList.Count; i++)
                 {
+                    var ctUpdate = ctUpdateList[i];
+                    var soThuTu = i + 1; // Số thứ tự 1-based cho user
+
                     if (ctUpdate.MaCTPN == Guid.Empty)
                     {
                         // ===== THÊM MỚI CTPN =====
                         // Validate: MaSP bắt buộc khi tạo mới
                         if (ctUpdate.MaSP == null || ctUpdate.MaSP == Guid.Empty)
-                            throw new ArgumentException("Mã sản phẩm là bắt buộc khi thêm mới chi tiết phiếu nhập.");
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Mã sản phẩm là bắt buộc khi thêm mới chi tiết phiếu nhập.");
                         
                         // Validate: HanSuDung bắt buộc khi tạo mới
                         if (!ctUpdate.HanSuDung.HasValue)
-                            throw new ArgumentException("Hạn sử dụng là bắt buộc khi thêm mới chi tiết phiếu nhập.");
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Hạn sử dụng là bắt buộc khi thêm mới chi tiết phiếu nhập.");
                         
                         // Validate: HanSuDung phải trong tương lai
                         if (ctUpdate.HanSuDung.Value <= DateTime.Now)
-                            throw new ArgumentException("Hạn sử dụng phải là ngày trong tương lai.");
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Hạn sử dụng phải là ngày trong tương lai.");
                         
                         // Validate: NgaySanXuat < HanSuDung
                         if (ctUpdate.NgaySanXuat.HasValue && ctUpdate.NgaySanXuat.Value >= ctUpdate.HanSuDung.Value)
-                            throw new ArgumentException("Ngày sản xuất phải trước hạn sử dụng.");
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Ngày sản xuất phải trước hạn sử dụng.");
+                        
+                        // Validate đơn vị nhập với thông báo lỗi rõ ràng
+                        try
+                        {
+                            await ValidateDonViNhapAsync(ctUpdate.MaSP.Value, ctUpdate.DonViNhap);
+                        }
+                        catch (ArgumentException ex)
+                        {
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: {ex.Message}");
+                        }
 
                         // Tạo lô hàng mới
                         var loHangRequest = new LoHangRequest
@@ -246,7 +328,25 @@ namespace VETFEED.Backend.API.Services
                         // ===== CẬP NHẬT CTPN ĐÃ CÓ =====
                         // Kiểm tra CTPN có tồn tại trong DB không
                         if (!existingMaCTPNs.Contains(ctUpdate.MaCTPN))
-                            throw new ArgumentException($"Không tìm thấy chi tiết phiếu nhập với mã {ctUpdate.MaCTPN}.");
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Không tìm thấy chi tiết phiếu nhập với mã {ctUpdate.MaCTPN}.");
+                        
+                        // Validate đơn vị nhập - cần lấy MaSP từ LoHang
+                        var existingCTPN = existingCTPNs.FirstOrDefault(ct => ct.MaCTPN == ctUpdate.MaCTPN);
+                        if (existingCTPN != null)
+                        {
+                            var loHangInfo = await _loHangRepo.GetLoHangEntityByIdAsync(existingCTPN.MaLo);
+                            if (loHangInfo != null)
+                            {
+                                try
+                                {
+                                    await ValidateDonViNhapAsync(loHangInfo.MaSP, ctUpdate.DonViNhap);
+                                }
+                                catch (ArgumentException ex)
+                                {
+                                    throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: {ex.Message}");
+                                }
+                            }
+                        }
 
                         // Cập nhật SoLuong, DonGia, DonViNhap cho CTPN
                         var updated = await _ctPhieuNhapRepo.UpdateCTPhieuNhapAsync(
@@ -353,12 +453,22 @@ namespace VETFEED.Backend.API.Services
             };
             await _phieuNhapRepo.UpdatePhieuNhapAsync(id, updateRequest);
 
-            // 9. Trả về response chi tiết
-            var result = await _phieuNhapRepo.GetPhieuNhapByIdAsync(id);
-            if (result == null)
-                throw new InvalidOperationException("Không thể lấy thông tin phiếu nhập sau khi cập nhật.");
-            
-            return result;
+                // Commit transaction sau khi tất cả thao tác thành công
+                await transaction.CommitAsync();
+
+                // 9. Trả về response chi tiết
+                var result = await _phieuNhapRepo.GetPhieuNhapByIdAsync(id);
+                if (result == null)
+                    throw new InvalidOperationException("Không thể lấy thông tin phiếu nhập sau khi cập nhật.");
+                
+                return result;
+            }
+            catch
+            {
+                // Rollback transaction nếu có lỗi
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         /* Delete phiếu nhập
@@ -377,19 +487,35 @@ namespace VETFEED.Backend.API.Services
             if (phieuNhap.TrangThai == TrangThaiPhieuNhapEnum.DA_NHAN)
                 throw new InvalidOperationException("Phiếu nhập đã nhận không thể xóa.");
 
-            // 3. Batch xóa tất cả LoHang liên quan
-            var danhSachCTPN = await _ctPhieuNhapRepo.GetCTPhieuNhapEntitiesByMaPNAsync(id);
-            var maLoList = danhSachCTPN.Select(ct => ct.MaLo).ToList();
-            if (maLoList.Any())
+            // Sử dụng transaction để đảm bảo tính nhất quán dữ liệu
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                await _loHangRepo.DeleteLoHangsByIdsAsync(maLoList);
+                // 3. Batch xóa tất cả LoHang liên quan
+                var danhSachCTPN = await _ctPhieuNhapRepo.GetCTPhieuNhapEntitiesByMaPNAsync(id);
+                var maLoList = danhSachCTPN.Select(ct => ct.MaLo).ToList();
+                if (maLoList.Any())
+                {
+                    await _loHangRepo.DeleteLoHangsByIdsAsync(maLoList);
+                }
+
+                // 4. Batch xóa tất cả CTPhieuNhap (không có cascade delete)
+                await _ctPhieuNhapRepo.DeleteCTPhieuNhapsByMaPNAsync(id);
+
+                // 5. Xóa phiếu nhập
+                var result = await _phieuNhapRepo.DeletePhieuNhapAsync(id);
+
+                // Commit transaction sau khi tất cả thao tác thành công
+                await transaction.CommitAsync();
+
+                return result;
             }
-
-            // 4. Batch xóa tất cả CTPhieuNhap (không có cascade delete)
-            await _ctPhieuNhapRepo.DeleteCTPhieuNhapsByMaPNAsync(id);
-
-            // 5. Xóa phiếu nhập
-            return await _phieuNhapRepo.DeletePhieuNhapAsync(id);
+            catch
+            {
+                // Rollback transaction nếu có lỗi
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
     }
