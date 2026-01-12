@@ -11,5 +11,6 @@ namespace VETFEED.Backend.API.DTOs.SanPham
         public string? DonViTinh { get; set; }
         public string? GhiChu { get; set; }
         public DateTime NgayTao { get; set; }
+        public decimal? GiaHienTai { get; set; }
     }
 }

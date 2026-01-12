@@ -29,7 +29,7 @@ namespace VETFEED.Backend.API.Repositories
         Task<bool> DecreaseTonKhoAsync(Guid MaKho, Guid MaLo, decimal soLuong);
 
         // kiem tra ton kho theo lo tai cac kho
-        Task<bool> IsTonKhoEnoughAllKhoAsync(Guid maLo, decimal soLuongCan, string DonViTinh);
+        Task<bool> KiemTraTonKhoTheoLoAsync(Guid maLo, decimal soLuongCan);
 
 
 

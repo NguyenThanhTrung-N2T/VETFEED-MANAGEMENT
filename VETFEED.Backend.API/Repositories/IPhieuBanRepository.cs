@@ -16,5 +16,8 @@ namespace VETFEED.Backend.API.Repositories
 
         // Xóa phiếu bán
         Task<bool> DeletePhieuBanAsync(Guid maPB);
+
+        // lay lich su mua hang cua khach hang
+        Task<KhachHangPhieuBanResponse?> GetPhieuBanByKhachHangAsync(Guid maKH);
     }
 }

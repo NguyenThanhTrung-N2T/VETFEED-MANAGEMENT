@@ -130,167 +130,90 @@ namespace VETFEED.Backend.API.Repositories
 
             try
             {
-                // Kiểm tra khách hàng tồn tại
-                var khachHang = await _context.KhachHangs.FindAsync(request.MaKH);
-                if (khachHang == null)
-                    throw new Exception("Khách hàng không tồn tại!");
+                var khachHang = await _context.KhachHangs.FindAsync(request.MaKH)
+                    ?? throw new Exception("Khách hàng không tồn tại!");
 
-                // Kiểm tra hạn mức công nợ TRƯỚC khi tạo phiếu
                 if (request.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO)
                 {
-                    // Tính tạm thành tiền để kiểm tra
-                    var tongTienHangTam = decimal.Zero;
-                    
-                    // Gom nhóm chi tiết theo lô để tính tạm tiền
-                    var chiTietTheoLoTam = request.DanhSachChiTiet!
-                        .GroupBy(ct => ct.MaLo)
-                        .ToList();
+                    var tongTienHangTam = request.DanhSachChiTiet!
+                        .Sum(ct => ct.SoLuong * ct.DonGia);
 
-                    foreach (var groupLoHang in chiTietTheoLoTam)
-                    {
-                        var tongSoLuongCanBan = groupLoHang.Sum(ct => ct.SoLuong);
-                        var chiTietRequest = request.DanhSachChiTiet!.First(ct => ct.MaLo == groupLoHang.Key);
-                        var thanhTienSanPham = tongSoLuongCanBan * chiTietRequest.DonGia;
-                        tongTienHangTam += thanhTienSanPham;
-                    }
-
-                    // Tính tạm thành tiền sau chiết khấu
                     var tienChietKhauTam = tongTienHangTam * (request.ChietKhauPhanTram / 100);
                     var thanhTienTam = tongTienHangTam - tienChietKhauTam;
                     var tienNoTam = thanhTienTam - request.TienCoc;
 
-                    // Kiểm tra hạn mức công nợ
                     var congNoMoi = khachHang.CongNoHienTai + tienNoTam;
                     if (congNoMoi > khachHang.HanMucCongNo)
-                    {
-                        var congNoVuotMuc = congNoMoi - khachHang.HanMucCongNo;
-                        throw new Exception($"Khách hàng sẽ vượt hạn mức công nợ! " +
-                            $"Công nợ hiện tại: {khachHang.CongNoHienTai:N0}đ, " +
-                            $"Sẽ nợ thêm: {tienNoTam:N0}đ, " +
-                            $"Tổng sẽ nợ: {congNoMoi:N0}đ, " +
-                            $"Hạn mức: {khachHang.HanMucCongNo:N0}đ, " +
-                            $"Vượt mức: {congNoVuotMuc:N0}đ");
-                    }
+                        throw new Exception("Khách hàng vượt hạn mức công nợ!");
                 }
 
-                //  Xử lý tồn kho theo từng lô
                 var chiTietPhieuBanList = new List<CTPhieuBan>();
-                var tongTienHang = decimal.Zero;
+                decimal tongTienHang = 0;
 
-                // Gom nhóm chi tiết theo lô để dễ xử lý
                 var chiTietTheoLo = request.DanhSachChiTiet!
-                    .GroupBy(ct => ct.MaLo)
+                    .GroupBy(x => x.MaLo)
                     .ToList();
 
-                foreach (var groupLoHang in chiTietTheoLo)
+                foreach (var group in chiTietTheoLo)
                 {
-                    var maLo = groupLoHang.Key;
-                    var tongSoLuongCanBan = groupLoHang.Sum(ct => ct.SoLuong);
+                    var maLo = group.Key;
+                    var soLuongCanBan = group.Sum(x => x.SoLuong);
 
-                    // Lấy thông tin lô hàng
                     var loHang = await _context.LoHangs
                         .Include(lh => lh.SanPham)
-                        .FirstOrDefaultAsync(lh => lh.MaLo == maLo);
+                        .FirstOrDefaultAsync(lh => lh.MaLo == maLo)
+                        ?? throw new Exception("Lô hàng không tồn tại");
 
-                    if (loHang == null)
-                        throw new Exception($"Lô hàng {maLo} không tồn tại!");
-
-                    // Tính quy đổi để kiểm tra tồn kho đúng
-                    // Lấy quy đổi từ request (có thể là Thùng, Hộp, v.v.)
-                    var chiTietRequestDauTien = request.DanhSachChiTiet!.First(ct => ct.MaLo == maLo);
-                    var quyDoiKiemTra = await _context.QuyDoiDonVis
-                        .FirstOrDefaultAsync(qd => qd.MaSP == loHang.MaSP && qd.DonViNhap == chiTietRequestDauTien.DonViBan);
-
-                    //Tính số lượng cần bán theo đơn vị cơ sở
-                    decimal tongSoLuongCanBanCoSo = tongSoLuongCanBan;
-                    
-                    // Nếu đơn vị bán = đơn vị cơ sở, không cần quy đổi
-                    // Nếu đơn vị bán ≠ đơn vị cơ sở, tính quy đổi
-                    if (quyDoiKiemTra != null)
-                    {
-                        // Có quy đổi → Nhân với TyLe
-                        tongSoLuongCanBanCoSo = tongSoLuongCanBan * quyDoiKiemTra.TyLe;
-                    }
-                    else if (chiTietRequestDauTien.DonViBan != loHang.SanPham!.DonViCoSo)
-                    {
-                        // Không có quy đổi nhưng đơn vị bán ≠ đơn vị cơ sở
-                        throw new Exception($"Sản phẩm {loHang.SanPham.TenSP}: Không tìm được quy đổi từ {chiTietRequestDauTien.DonViBan} sang {loHang.SanPham.DonViCoSo}!");
-                    }
-
-                    //Kiểm tra tồn kho từ tất cả các kho
-                    var tonKhoTheoKho = await _context.TonKhos
+                    // Lấy tồn kho theo lô (nhiều kho)
+                    var tonKhoList = await _context.TonKhos
                         .Where(tk => tk.MaLo == maLo)
-                        .Include(tk => tk.KhoHang)
                         .OrderBy(tk => tk.SoLuongCoSo)
                         .ToListAsync();
 
-                    // Kiểm tra tổng tồn kho đủ không
-                    var tongTonKho = tonKhoTheoKho.Sum(tk => tk.SoLuongCoSo);
-                    if (tongTonKho < tongSoLuongCanBanCoSo)
-                        throw new Exception($"Lô {loHang.MaLoCode}: Tồn kho không đủ! Cần {tongSoLuongCanBanCoSo} {loHang.SanPham!.DonViCoSo}, tồn {tongTonKho} {loHang.SanPham.DonViCoSo}");
+                    var tongTonKho = tonKhoList.Sum(tk => tk.SoLuongCoSo);
+                    if (tongTonKho < soLuongCanBan)
+                        throw new Exception($"Lô {loHang.MaLoCode} không đủ tồn kho");
 
-                    // Tạo chi tiết phiếu bán từ các kho khác nhau
-                    var soLuongConLai = tongSoLuongCanBanCoSo;
+                    var soLuongConLai = soLuongCanBan;
+                    var chiTietRequest = group.First();
 
-                    foreach (var tonKho in tonKhoTheoKho)
+                    tongTienHang += soLuongCanBan * chiTietRequest.DonGia;
+
+                    foreach (var tonKho in tonKhoList)
                     {
-                        if (soLuongConLai <= 0)
-                            break;
+                        if (soLuongConLai <= 0) break;
 
-                        // Lấy số lượng từ kho này (theo đơn vị cơ sở)
-                        var soLuongLayTuKhoNay = Math.Min(soLuongConLai, tonKho.SoLuongCoSo);
+                        var layTuKho = Math.Min(soLuongConLai, tonKho.SoLuongCoSo);
 
-                        // Lấy thông tin quy đổi đơn vị từ request
-                        var chiTietRequest = request.DanhSachChiTiet!.First(ct => ct.MaLo == maLo);
-
-                        // Tính thành tiền dựa trên SỐ LƯỢNG REQUEST (tròn)
-                        var thanhTienSanPham = tongSoLuongCanBan * chiTietRequest.DonGia;
-                        
-                        var giaVonCoSo = tonKho.GiaVonBinhQuan;
-                        var thanhTienVon = soLuongLayTuKhoNay * giaVonCoSo;
-
-                        // Tạo chi tiết phiếu bán
-                        var chiTietPhieuBan = new CTPhieuBan
+                        chiTietPhieuBanList.Add(new CTPhieuBan
                         {
                             MaCTPB = Guid.NewGuid(),
                             MaKho = tonKho.MaKho,
                             MaLo = maLo,
-                            SoLuong = tongSoLuongCanBan,
+                            SoLuong = layTuKho,
                             DonGia = chiTietRequest.DonGia,
-                            DonViBan = chiTietRequest.DonViBan,
-                            SoLuongQuyDoi = soLuongLayTuKhoNay,
-                            GiaVonCoSo = giaVonCoSo,
-                            ThanhTienVon = thanhTienVon,
+                            DonViBan = loHang.SanPham!.DonViCoSo,
+                            SoLuongQuyDoi = layTuKho,
+                            GiaVonCoSo = tonKho.GiaVonBinhQuan,
+                            ThanhTienVon = layTuKho * tonKho.GiaVonBinhQuan,
                             GhiChu = chiTietRequest.GhiChu
-                        };
+                        });
 
-                        chiTietPhieuBanList.Add(chiTietPhieuBan);
-                        
-                        //Chỉ cộng tiền lần đầu (khi lấy từ kho đầu tiên)
-                        if (chiTietPhieuBanList.Count == 1 || 
-                            (chiTietPhieuBanList.Count > 1 && chiTietPhieuBanList[^2].MaLo != maLo))
-                        {
-                            tongTienHang += thanhTienSanPham;
-                        }
-                        
-                        soLuongConLai -= soLuongLayTuKhoNay;
-
-                        // Trừ tồn kho (trừ theo số lượng đơn vị cơ sở)
-                        tonKho.SoLuongCoSo -= soLuongLayTuKhoNay;
+                        tonKho.SoLuongCoSo -= layTuKho;
+                        soLuongConLai -= layTuKho;
                     }
                 }
 
-                // Tính chiết khấu và thành tiền
+
                 var tienChietKhau = tongTienHang * (request.ChietKhauPhanTram / 100);
                 var thanhTien = tongTienHang - tienChietKhau;
                 var tienNo = thanhTien - request.TienCoc;
 
-                // Xác định trạng thái thanh toán
-                var trangThaiThanhToan = request.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO 
-                    ? TrangThaiThanhToanEnum.CHUA_THANH_TOAN 
+                var trangThaiThanhToan =
+                    request.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO
+                    ? TrangThaiThanhToanEnum.CHUA_THANH_TOAN
                     : TrangThaiThanhToanEnum.DA_THANH_TOAN;
 
-                // Tạo phiếu bán
                 var phieuBan = new PhieuBan
                 {
                     MaPBCode = await CodeGenerator.GeneratePhieuBanCodeAsync(_context),
@@ -308,50 +231,37 @@ namespace VETFEED.Backend.API.Repositories
                     GhiChu = request.GhiChu
                 };
 
-                // ADD PHIẾU BÁN TRƯỚC
                 _context.PhieuBans.Add(phieuBan);
                 await _context.SaveChangesAsync();
 
-                // Thêm chi tiết vào phiếu (SAU khi phiếu đã có MaPB)
-                foreach (var chiTiet in chiTietPhieuBanList)
-                {
-                    chiTiet.MaPB = phieuBan.MaPB;
-                }
-
+                chiTietPhieuBanList.ForEach(ct => ct.MaPB = phieuBan.MaPB);
                 _context.CTPhieuBans.AddRange(chiTietPhieuBanList);
 
-                // Nếu thanh toán bằng công nợ, tạo record công nợ
-                if (request.HinhThucThanhToan == HinhThucThanhToanEnum.CHUYEN_KHOAN || request.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO)
+
+                if (request.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO && tienNo > 0)
                 {
-                    if (tienNo > 0)
+                    _context.CongNos.Add(new CongNo
                     {
-                        var congNo = new CongNo
-                        {
-                            MaCongNo = Guid.NewGuid(),
-                            LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
-                            MaDoiTuong = request.MaKH,
-                            MaPhieu = phieuBan.MaPB,
-                            SoTien = tienNo,
-                            NgayPhatSinh = DateTime.Now,
-                            HanThanhToan = request.HanTra,
-                            GhiChu = $"Công nợ từ phiếu bán {phieuBan.MaPBCode}"
-                        };
+                        MaCongNo = Guid.NewGuid(),
+                        LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
+                        MaDoiTuong = request.MaKH,
+                        MaPhieu = phieuBan.MaPB,
+                        SoTien = tienNo,
+                        NgayPhatSinh = DateTime.Now,
+                        HanThanhToan = request.HanTra,
+                        GhiChu = $"Công nợ từ phiếu bán {phieuBan.MaPBCode}"
+                    });
 
-                        _context.CongNos.Add(congNo);
-
-                        //Cập nhật công nợ hiện tại của khách hàng
-                        khachHang.CongNoHienTai += tienNo;
-                    }
+                    khachHang.CongNoHienTai += tienNo;
                 }
 
-                //Cập nhật tổng mua của khách hàng (dù thanh toán bằng cách nào)
                 khachHang.TongMua += thanhTien;
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // Trả về chi tiết phiếu bán
-                return await GetChiTietPhieuBanAsync(phieuBan.MaPB) ?? throw new Exception("Lỗi khi tạo phiếu bán!");
+                return await GetChiTietPhieuBanAsync(phieuBan.MaPB)
+                    ?? throw new Exception("Lỗi tạo phiếu bán");
             }
             catch
             {
@@ -360,6 +270,7 @@ namespace VETFEED.Backend.API.Repositories
             }
         }
 
+
         // Xóa phieuu bán
         public async Task<bool> DeletePhieuBanAsync(Guid maPB)
         {
@@ -367,7 +278,7 @@ namespace VETFEED.Backend.API.Repositories
 
             try
             {
-                // Lấy phiếu bán + chi tiết + khách hàng
+                //  Lấy phiếu bán + chi tiết + khách hàng
                 var phieuBan = await _context.PhieuBans
                     .Include(pb => pb.KhachHang)
                     .Include(pb => pb.CTPhieuBans)
@@ -376,20 +287,24 @@ namespace VETFEED.Backend.API.Repositories
                 if (phieuBan == null)
                     throw new InvalidOperationException("Phiếu bán không tồn tại.");
 
-                // Kiểm tra phiếu trả hàng liên quan
-                var hasReturns = await _context.PhieuTras
+                // Không cho xóa nếu đã có phiếu trả
+                bool hasReturn = await _context.PhieuTras
                     .AnyAsync(pt => pt.MaPB == maPB);
-                if (hasReturns)
-                    throw new InvalidOperationException("Phiếu bán đã có phiếu trả liên quan, không thể xóa.");
 
-                //  Rollback tồn kho
+                if (hasReturn)
+                    throw new InvalidOperationException("Phiếu bán đã có phiếu trả, không thể xóa.");
+
+                // ROLLBACK TỒN KHO (CHỈ ĐƠN VỊ CƠ SỞ)
                 foreach (var ct in phieuBan.CTPhieuBans!)
                 {
                     var tonKho = await _context.TonKhos
-                        .FirstOrDefaultAsync(tk => tk.MaKho == ct.MaKho && tk.MaLo == ct.MaLo);
+                        .FirstOrDefaultAsync(tk =>
+                            tk.MaKho == ct.MaKho &&
+                            tk.MaLo == ct.MaLo);
 
                     if (tonKho == null)
                     {
+                        // Trường hợp hiếm: tồn kho đã bị xóa
                         tonKho = new TonKho
                         {
                             MaTonKho = Guid.NewGuid(),
@@ -401,52 +316,93 @@ namespace VETFEED.Backend.API.Repositories
                         _context.TonKhos.Add(tonKho);
                     }
 
-                    tonKho.SoLuongCoSo += ct.SoLuongQuyDoi; // cộng trả lại số lượng đã xuất
+                    // Hoàn lại đúng số lượng cơ sở đã xuất
+                    tonKho.SoLuongCoSo += ct.SoLuong;
                 }
 
-                // rollback cong no va tong mua cua khach hang
+                //  ROLLBACK CÔNG NỢ (NẾU BÁN CÔNG NỢ)
                 if (phieuBan.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO)
                 {
-                    // lay cong no
                     var congNos = await _context.CongNos
-                        .Where(cn => cn.MaPhieu == phieuBan.MaPB
-                                  && cn.LoaiDoiTuong == LoaiDoiTuongCongNoEnum.KHACH_HANG)
+                        .Where(cn =>
+                            cn.MaPhieu == phieuBan.MaPB &&
+                            cn.LoaiDoiTuong == LoaiDoiTuongCongNoEnum.KHACH_HANG)
                         .ToListAsync();
 
-                    // Tổng số tiền công nợ cần rollback
-                    var totalDebtRollback = congNos.Sum(cn => cn.SoTien);
+                    decimal tongRollback = congNos.Sum(cn => cn.SoTien);
 
-                    // Rollback công nợ hiện tại của khách hàng
-                    phieuBan.KhachHang!.CongNoHienTai -= totalDebtRollback;
-                    if (phieuBan.KhachHang!.CongNoHienTai < 0)
-                        phieuBan.KhachHang!.CongNoHienTai = 0;
+                    phieuBan.KhachHang!.CongNoHienTai -= tongRollback;
+                    if (phieuBan.KhachHang.CongNoHienTai < 0)
+                        phieuBan.KhachHang.CongNoHienTai = 0;
 
-                    // Xóa record công nợ của phiếu bán trong bảng CongNos
-                    if (congNos.Count > 0)
+                    if (congNos.Any())
                         _context.CongNos.RemoveRange(congNos);
                 }
 
-                // Rollback tổng mua của khách hàng
+                // ROLLBACK TỔNG MUA
                 phieuBan.KhachHang!.TongMua -= phieuBan.ThanhTien;
-                if (phieuBan.KhachHang!.TongMua < 0)
-                    phieuBan.KhachHang!.TongMua = 0;
+                if (phieuBan.KhachHang.TongMua < 0)
+                    phieuBan.KhachHang.TongMua = 0;
 
-
-                // Xóa chi tiết và phiếu bán
+                // XÓA DỮ LIỆU
                 _context.CTPhieuBans.RemoveRange(phieuBan.CTPhieuBans);
                 _context.PhieuBans.Remove(phieuBan);
 
-                // Lưu thay đổi
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return true; // ✅ báo thành công
+                return true;
             }
             catch
             {
                 await transaction.RollbackAsync();
-                return false; // ✅ báo thất bại
+                return false;
             }
+        }
+
+        // lay lich su mua hang cua khach hang 
+        public async Task<KhachHangPhieuBanResponse?> GetPhieuBanByKhachHangAsync(Guid maKH)
+        {
+            var khachHang = await _context.KhachHangs
+                .Where(kh => kh.MaKH == maKH)
+                .Select(kh => new KhachHangPhieuBanResponse
+                {
+                    MaKH = kh.MaKH,
+                    MaKHCode = kh.MaKHCode!,
+                    TenKH = kh.TenKH!,
+                    SoDienThoai = kh.SoDienThoai,
+                    DiaChi = kh.DiaChi,
+                    LoaiKhachHang = kh.LoaiKhachHang.ToString(),
+                    TongMua = kh.TongMua,
+                    CongNoHienTai = kh.CongNoHienTai,
+                    HanMucCongNo = kh.HanMucCongNo
+                })
+                .FirstOrDefaultAsync();
+
+            if (khachHang == null)
+                return null;
+
+            khachHang.DanhSachPhieuBan = await _context.PhieuBans
+                .Where(pb => pb.MaKH == maKH)
+                .OrderByDescending(pb => pb.NgayBan)
+                .Select(pb => new PhieuBanListResponse
+                {
+                    MaPB = pb.MaPB,
+                    MaPBCode = pb.MaPBCode!,
+                    NgayBan = pb.NgayBan,
+
+                    TongTienHang = pb.TongTienHang,
+                    TienChietKhau = pb.TienChietKhau,
+                    ThanhTien = pb.ThanhTien,
+
+                    HinhThucThanhToan = pb.HinhThucThanhToan!.ToString(),
+                    TrangThaiThanhToan = pb.TrangThaiThanhToan!.ToString(),
+                    TienNo = pb.TienNo,
+                    GhiChu = pb.GhiChu
+                })
+                .ToListAsync();
+
+            return khachHang;
         }
 
 

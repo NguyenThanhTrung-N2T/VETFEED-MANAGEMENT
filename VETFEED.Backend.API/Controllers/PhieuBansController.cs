@@ -97,5 +97,19 @@ namespace VETFEED.Backend.API.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+        // GET: api/phieubans/khachhang/{maKH}
+        [HttpGet("khachhang/{maKH}")]
+        [ProducesResponseType(typeof(KhachHangPhieuBanResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetPhieuBanTheoKhachHang(Guid maKH)
+        {
+            var result = await _phieuBanService.GetPhieuBanTheoKhachHangAsync(maKH);
+
+            if (result == null)
+                return NotFound("Khách hàng không tồn tại");
+
+            return Ok(result);
+        }
     }
 }

@@ -61,5 +61,19 @@ namespace VETFEED.Backend.API.Services
                 throw new Exception("Xảy ra lỗi khi xóa phiếu bán !", ex);
             }
         }
+
+        // lay lich su mua hang cua khach hang
+        public async Task<KhachHangPhieuBanResponse> GetPhieuBanTheoKhachHangAsync(Guid maKH)
+        {
+            if (maKH == Guid.Empty)
+                throw new ArgumentException("Mã khách hàng không hợp lệ");
+
+            var result = await _phieuBanRepo.GetPhieuBanByKhachHangAsync(maKH);
+
+            if (result == null)
+                throw new KeyNotFoundException("Không tìm thấy khách hàng");
+
+            return result;
+        }
     }
 }

@@ -114,7 +114,7 @@ namespace VETFEED.Backend.API.Repositories
 
             try
             {
-                // Load phiếu bán gốc + KH + chi tiết + lô + sản phẩm
+                // Load phiếu bán gốc + KH + CT + lô + sản phẩm
                 var phieuBanGoc = await _context.PhieuBans
                     .Include(pb => pb.KhachHang!)
                     .Include(pb => pb.CTPhieuBans!)
@@ -128,7 +128,7 @@ namespace VETFEED.Backend.API.Repositories
                 var khachHang = phieuBanGoc.KhachHang!;
                 decimal tongTienTra = 0m;
 
-                // Tạo phiếu trả 
+                //  Tạo phiếu trả
                 var phieuTra = new PhieuTra
                 {
                     MaPTCode = await CodeGenerator.GeneratePhieuTraCodeAsync(_context),
@@ -142,12 +142,16 @@ namespace VETFEED.Backend.API.Repositories
                 _context.PhieuTras.Add(phieuTra);
                 await _context.SaveChangesAsync();
 
-                // Duyệt từng lô trong request (1 CTPhieuTra cho mỗi lô)
+                // Duyệt từng lô trả
                 foreach (var chiTietTraRequest in request.DanhSachChiTiet!)
                 {
                     var maLo = chiTietTraRequest.MaLo;
-                    var soLuongTraTheoDonViBan = chiTietTraRequest.SoLuong;
-                    var donViTra = chiTietTraRequest.DonViTra;
+
+                    // SỐ LƯỢNG ĐÃ LÀ ĐƠN VỊ CƠ SỞ
+                    var soLuongTraCoSo = chiTietTraRequest.SoLuong;
+
+                    if (soLuongTraCoSo <= 0)
+                        throw new Exception("Số lượng trả không hợp lệ");
 
                     var ctBanCuaLo = phieuBanGoc.CTPhieuBans!
                         .Where(ct => ct.MaLo == maLo)
@@ -160,26 +164,13 @@ namespace VETFEED.Backend.API.Repositories
                     var sanPham = loHang.SanPham!;
                     var donGiaBan = ctBanCuaLo.First().DonGia;
 
-                    // Quy đổi đơn vị trả → đơn vị cơ sở
-                    decimal tyLeQuyDoi = 1m;
-                    if (!string.Equals(donViTra, sanPham.DonViCoSo, StringComparison.OrdinalIgnoreCase))
-                    {
-                        var qd = await _context.QuyDoiDonVis
-                            .FirstOrDefaultAsync(x => x.MaSP == sanPham.MaSP && x.DonViNhap == donViTra);
-
-                        if (qd == null)
-                            throw new Exception($"Không tìm thấy quy đổi từ {donViTra} sang {sanPham.DonViCoSo} cho sản phẩm {sanPham.TenSP}!");
-
-                        tyLeQuyDoi = qd.TyLe;
-                    }
-
-                    var soLuongTraCoSo = soLuongTraTheoDonViBan * tyLeQuyDoi;
+                    // Tổng số lượng đã bán (đơn vị cơ sở)
                     var tongSoLuongBanCoSo = ctBanCuaLo.Sum(ct => ct.SoLuongQuyDoi);
 
                     if (soLuongTraCoSo > tongSoLuongBanCoSo + 0.0001m)
                         throw new Exception($"Số lượng trả vượt quá số lượng đã bán của lô {maLo}!");
 
-                    // Phân bổ tồn kho theo các kho đã xuất
+                    //  Phân bổ trả về các kho đã xuất
                     var soLuongConLai = soLuongTraCoSo;
                     var ghiChuPhanBo = new List<string>();
 
@@ -187,71 +178,82 @@ namespace VETFEED.Backend.API.Repositories
                     {
                         if (soLuongConLai <= 0) break;
 
-                        var tk = await _context.TonKhos
+                        var tonKho = await _context.TonKhos
                             .Include(t => t.KhoHang)
-                            .FirstOrDefaultAsync(t => t.MaKho == ctBan.MaKho && t.MaLo == maLo);
+                            .FirstOrDefaultAsync(t =>
+                                t.MaKho == ctBan.MaKho &&
+                                t.MaLo == maLo);
 
-                        if (tk == null)
-                            throw new Exception($"Không tìm thấy tồn kho cho kho {ctBan.MaKho} và lô {maLo}!");
+                        if (tonKho == null)
+                            throw new Exception($"Không tìm thấy tồn kho kho {ctBan.MaKho} cho lô {maLo}");
 
-                        var soLuongTraVaoKhoNayCoSo = Math.Min(soLuongConLai, ctBan.SoLuongQuyDoi);
-                        tk.SoLuongCoSo += soLuongTraVaoKhoNayCoSo;
+                        var soLuongTraVaoKho = Math.Min(soLuongConLai, ctBan.SoLuongQuyDoi);
 
-                        var soLuongTraTheoDonVi = soLuongTraVaoKhoNayCoSo / tyLeQuyDoi;
-                        ghiChuPhanBo.Add($"Kho {tk.KhoHang?.TenKho}: +{soLuongTraVaoKhoNayCoSo} {sanPham.DonViCoSo} (~{soLuongTraTheoDonVi} {donViTra})");
+                        tonKho.SoLuongCoSo += soLuongTraVaoKho;
+                        tonKho.NgayCapNhat = DateTime.Now;
 
-                        soLuongConLai -= soLuongTraVaoKhoNayCoSo;
+                        ghiChuPhanBo.Add(
+                            $"Kho {tonKho.KhoHang?.TenKho}: +{soLuongTraVaoKho} {sanPham.DonViCoSo}"
+                        );
+
+                        soLuongConLai -= soLuongTraVaoKho;
                     }
 
                     if (soLuongConLai > 0.0001m)
-                        throw new Exception($"Không thể phân bổ trả hết cho lô {maLo}. Còn thiếu {soLuongConLai} {sanPham.DonViCoSo}.");
+                        throw new Exception($"Không thể phân bổ trả hết cho lô {maLo}");
 
-                    // Tạo 1 CTPhieuTra duy nhất cho lô
+                    //  Tạo CT Phiếu Trả (1 dòng / lô)
                     var ctPhieuTra = new CTPhieuTra
                     {
                         MaCTPT = Guid.NewGuid(),
                         MaPT = phieuTra.MaPT,
                         MaLo = maLo,
-                        SoLuongTra = soLuongTraTheoDonViBan,
+                        SoLuongTra = soLuongTraCoSo, // đơn vị cơ sở
                         DonGiaHoan = donGiaBan,
-                        DonViTra = donViTra,
+                        DonViTra = sanPham.DonViCoSo,
                         GhiChu = $"{chiTietTraRequest.GhiChu} | Phân bổ: {string.Join("; ", ghiChuPhanBo)}"
                     };
                     _context.CTPhieuTras.Add(ctPhieuTra);
 
-                    tongTienTra += (soLuongTraTheoDonViBan * donGiaBan);
+                    tongTienTra += soLuongTraCoSo * donGiaBan;
                 }
 
                 // Cập nhật tổng tiền phiếu trả
                 phieuTra.ThanhTien = tongTienTra;
 
-                // Công nợ
+                // Xử lý công nợ + hoàn tiền
                 if (tongTienTra > khachHang.CongNoHienTai)
                 {
                     var tienTraNo = khachHang.CongNoHienTai;
                     var tienHoanThem = tongTienTra - tienTraNo;
 
-                    _context.CongNos.Add(new CongNo
+                    if (tienTraNo > 0)
                     {
-                        MaCongNo = Guid.NewGuid(),
-                        LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
-                        MaDoiTuong = khachHang.MaKH,
-                        MaPhieu = phieuTra.MaPT,
-                        SoTien = -tienTraNo,
-                        NgayPhatSinh = DateTime.Now,
-                        GhiChu = $"GIAM TIEN: Trả nợ từ phiếu trả {phieuTra.MaPTCode}"
-                    });
+                        _context.CongNos.Add(new CongNo
+                        {
+                            MaCongNo = Guid.NewGuid(),
+                            LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
+                            MaDoiTuong = khachHang.MaKH,
+                            MaPhieu = phieuTra.MaPT,
+                            SoTien = -tienTraNo,
+                            NgayPhatSinh = DateTime.Now,
+                            GhiChu = $"GIAM NO: Phiếu trả {phieuTra.MaPTCode}"
+                        });
+                    }
 
-                    _context.CongNos.Add(new CongNo
+                    if (tienHoanThem > 0)
                     {
-                        MaCongNo = Guid.NewGuid(),
-                        LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
-                        MaDoiTuong = khachHang.MaKH,
-                        MaPhieu = phieuTra.MaPT,
-                        SoTien = -tienHoanThem,
-                        NgayPhatSinh = DateTime.Now,
-                        GhiChu = $"HOAN TIEN: Hoàn tiền thừa từ phiếu trả {phieuTra.MaPTCode}"
-                    });
+                        _context.CongNos.Add(new CongNo
+                        {
+                            MaCongNo = Guid.NewGuid(),
+                            LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
+                            MaDoiTuong = khachHang.MaKH,
+                            MaPhieu = phieuTra.MaPT,
+                            SoTien = -tienHoanThem,
+                            NgayPhatSinh = DateTime.Now,
+                            GhiChu = $"HOAN TIEN: Phiếu trả {phieuTra.MaPTCode}"
+                        });
+                    }
 
                     khachHang.CongNoHienTai = 0;
                 }
@@ -265,22 +267,24 @@ namespace VETFEED.Backend.API.Repositories
                         MaPhieu = phieuTra.MaPT,
                         SoTien = -tongTienTra,
                         NgayPhatSinh = DateTime.Now,
-                        GhiChu = $"GIAM TIEN: Giảm nợ từ phiếu trả {phieuTra.MaPTCode}"
+                        GhiChu = $"GIAM NO: Phiếu trả {phieuTra.MaPTCode}"
                     });
 
                     khachHang.CongNoHienTai -= tongTienTra;
-                    if (khachHang.CongNoHienTai < 0) khachHang.CongNoHienTai = 0;
+                    if (khachHang.CongNoHienTai < 0)
+                        khachHang.CongNoHienTai = 0;
                 }
 
-                // Cập nhật tổng mua
+                //  Rollback tổng mua
                 khachHang.TongMua -= tongTienTra;
-                if (khachHang.TongMua < 0) khachHang.TongMua = 0;
+                if (khachHang.TongMua < 0)
+                    khachHang.TongMua = 0;
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // Trả về chi tiết phiếu trả vừa tạo
-                return await GetChiTietPhieuTraAsync(phieuTra.MaPT) ?? throw new Exception("Lỗi khi lấy chi tiết phiếu trả vừa tạo!");
+                return await GetChiTietPhieuTraAsync(phieuTra.MaPT)
+                    ?? throw new Exception("Không lấy được chi tiết phiếu trả");
             }
             catch
             {
@@ -288,6 +292,7 @@ namespace VETFEED.Backend.API.Repositories
                 throw;
             }
         }
+
 
 
         //Xóa phiếu trả
@@ -308,16 +313,20 @@ namespace VETFEED.Backend.API.Repositories
                 var khachHang = phieuTra.KhachHang!;
                 var tongTienTra = phieuTra.ThanhTien;
 
-                // Lấy toàn bộ CT phiếu bán gốc (để biết các kho liên quan)
+                // Lấy toàn bộ CT phiếu bán gốc
                 var ctPhieuBan = await _context.CTPhieuBans
-                    .Include(x => x.LoHang)
-                        .ThenInclude(lo => lo!.SanPham)
                     .Where(x => x.MaPB == phieuTra.MaPB)
                     .ToListAsync();
 
                 foreach (var ctTra in phieuTra.CTPhieuTras!)
                 {
-                    // Các CT bán của đúng lô
+                    // SỐ LƯỢNG CẦN TRỪ (ĐƠN VỊ CƠ SỞ)
+                    var soLuongCanTru = ctTra.SoLuongTra;
+
+                    if (soLuongCanTru <= 0)
+                        throw new Exception("Số lượng rollback không hợp lệ");
+
+                    // Các CT bán của đúng lô (các kho đã xuất)
                     var ctBanTheoLo = ctPhieuBan
                         .Where(x => x.MaLo == ctTra.MaLo)
                         .ToList();
@@ -325,33 +334,13 @@ namespace VETFEED.Backend.API.Repositories
                     if (!ctBanTheoLo.Any())
                         throw new Exception("Không tìm thấy chi tiết phiếu bán cho lô trả");
 
-                    var sanPham = ctBanTheoLo.First().LoHang!.SanPham!;
-                    decimal tyLe = 1m;
+                    var maKhoLienQuan = ctBanTheoLo.Select(x => x.MaKho).Distinct().ToList();
 
-                    if (!string.Equals(
-                        ctTra.DonViTra!.Trim(),
-                        sanPham.DonViCoSo!.Trim(),
-                        StringComparison.OrdinalIgnoreCase))
-                    {
-                        var qd = await _context.QuyDoiDonVis.FirstOrDefaultAsync(x =>
-                            x.MaSP == sanPham.MaSP &&
-                            x.DonViNhap == ctTra.DonViTra);
-
-                        if (qd == null)
-                            throw new Exception($"Không tìm thấy quy đổi cho đơn vị {ctTra.DonViTra}");
-
-                        tyLe = qd.TyLe; // ví dụ: 1 hộp = 10 viên
-                    }
-
-                    var soLuongCanTru = ctTra.SoLuongTra * tyLe;
-
-                    if (soLuongCanTru <= 0)
-                        throw new Exception("Số lượng rollback không hợp lệ");
-
+                    // Lấy tồn kho các kho liên quan
                     var tonKhos = await _context.TonKhos
                         .Where(t =>
                             t.MaLo == ctTra.MaLo &&
-                            ctBanTheoLo.Select(x => x.MaKho).Contains(t.MaKho))
+                            maKhoLienQuan.Contains(t.MaKho))
                         .OrderBy(t => t.SoLuongCoSo) // trừ kho nhỏ trước
                         .ToListAsync();
 
@@ -366,7 +355,7 @@ namespace VETFEED.Backend.API.Repositories
                         var tru = Math.Min(tk.SoLuongCoSo, soLuongCanTru);
 
                         tk.SoLuongCoSo -= tru;
-                        tk.NgayCapNhat = DateTime.UtcNow;
+                        tk.NgayCapNhat = DateTime.Now;
 
                         soLuongCanTru -= tru;
                     }
@@ -375,23 +364,25 @@ namespace VETFEED.Backend.API.Repositories
                         throw new Exception("Rollback tồn kho không đủ số lượng");
                 }
 
+                // Rollback công nợ
                 var congNos = await _context.CongNos
                     .Where(cn => cn.MaPhieu == phieuTra.MaPT)
                     .ToListAsync();
 
                 foreach (var cn in congNos)
                 {
-                    if (cn.SoTien < 0)
-                        khachHang.CongNoHienTai += Math.Abs(cn.SoTien);
-                    else
-                        khachHang.CongNoHienTai -= cn.SoTien;
+                    // Phiếu trả luôn tạo số âm → xóa thì cộng lại
+                    khachHang.CongNoHienTai += Math.Abs(cn.SoTien);
                 }
 
+                // an toàn dữ liệu
                 if (khachHang.CongNoHienTai < 0)
                     khachHang.CongNoHienTai = 0;
 
+                // Rollback tổng mua
                 khachHang.TongMua += tongTienTra;
 
+                // Xóa dữ liệu
                 _context.CongNos.RemoveRange(congNos);
                 _context.CTPhieuTras.RemoveRange(phieuTra.CTPhieuTras);
                 _context.PhieuTras.Remove(phieuTra);
@@ -407,6 +398,7 @@ namespace VETFEED.Backend.API.Repositories
                 return false;
             }
         }
+
 
 
     }

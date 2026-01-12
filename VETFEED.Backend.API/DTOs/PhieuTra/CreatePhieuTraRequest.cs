@@ -26,9 +26,6 @@ namespace VETFEED.Backend.API.DTOs.PhieuTra
         [Range(1, double.MaxValue, ErrorMessage = "Số lượng phải > 0")]
         public decimal SoLuong { get; set; }
 
-        [Required(ErrorMessage = "Đơn vị trả không được để trống !")]
-        public string DonViTra { get; set; } = string.Empty;
-
         public string? GhiChu { get; set; }
     }
 }
