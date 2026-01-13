@@ -173,6 +173,28 @@ namespace VETFEED.Backend.API.Repositories
         {
             return await _context.LoHangs.AnyAsync(lh => lh.MaLo == MaLo);
         }
+
+        //Lấy lô hàng đã hết hạn sử dụng
+        public async Task<LoHangResponse?> GetOutDatedLoHangs()
+        {
+            var currentDate = DateTime.Now;
+            var loHang = await _context.LoHangs
+                .AsNoTracking()
+                .Include(l => l.SanPham)
+                .Where(l => l.HanSuDung < currentDate)
+                .OrderBy(l => l.HanSuDung)
+                .FirstOrDefaultAsync();
+            if (loHang == null) return null;
+            return new LoHangResponse
+            {
+                MaLo = loHang.MaLo,
+                MaLoCode = loHang.MaLoCode,
+                MaSP = loHang.MaSP,
+                TenSP = loHang.SanPham?.TenSP,
+                NgaySanXuat = loHang.NgaySanXuat,
+                HanSuDung = loHang.HanSuDung
+            };
+        }
     }
 }
 

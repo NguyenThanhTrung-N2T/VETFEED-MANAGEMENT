@@ -53,5 +53,10 @@ namespace VETFEED.Backend.API.Services
         {
             return await _repo.DeleteLoHangAsync(id);
         }
+
+        public async Task<LoHangResponse?> GetOutDatedLoHangs()
+        {
+            return await _repo.GetOutDatedLoHangs();
+        }
     }
 }

@@ -132,5 +132,18 @@ namespace VETFEED.Backend.API.Controllers
                 return NotFound(new { message = "Không tìm thấy lô hàng để xóa" });
             return NoContent();
         }
+
+        /// <summary>
+        /// Lấy lô hang đã hết hạn sử dụng
+        /// </summary>
+        /// <returns>Danh sách lô hàng hết hạn (nếu có)</returns>
+        /// <response code="200">Danh sách lô hàng</response>
+        [HttpGet("outdated")]
+        [ProducesResponseType(typeof(LoHangResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetOutDatedLoHangs()
+        {
+            var result = await _service.GetOutDatedLoHangs();
+            return Ok(result);
+        }
     }
 }
