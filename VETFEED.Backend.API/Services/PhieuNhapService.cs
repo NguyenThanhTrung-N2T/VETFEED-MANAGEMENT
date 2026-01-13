@@ -110,6 +110,14 @@ namespace VETFEED.Backend.API.Services
                         var chiTiet = chiTietList[i];
                         var soThuTu = i + 1; // Số thứ tự 1-based cho user
 
+                        // Validate: HanSuDung phải trong tương lai
+                        if (chiTiet.HanSuDung <= DateTime.Now)
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Hạn sử dụng phải là ngày trong tương lai.");
+                        
+                        // Validate: NgaySanXuat < HanSuDung (nếu có NSX)
+                        if (chiTiet.NgaySanXuat.HasValue && chiTiet.NgaySanXuat.Value >= chiTiet.HanSuDung)
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Ngày sản xuất phải trước hạn sử dụng.");
+
                         // Validate đơn vị nhập với thông báo lỗi rõ ràng
                         try
                         {
@@ -228,10 +236,6 @@ namespace VETFEED.Backend.API.Services
             {
                 newStatus = currentStatus; // Giữ nguyên trạng thái cũ nếu không cung cấp
             }
-
-            // Không cho phép thay đổi từ DA_NHAN
-            if (currentStatus == TrangThaiPhieuNhapEnum.DA_NHAN)
-                throw new InvalidOperationException("Phiếu nhập đã nhận không thể chuyển sang trạng thái khác.");
             
             // DA_HUY có thể chuyển sang DA_DAT nhưng KHÔNG được chuyển sang DA_NHAN
             if (currentStatus == TrangThaiPhieuNhapEnum.DA_HUY && newStatus == TrangThaiPhieuNhapEnum.DA_NHAN)
@@ -408,14 +412,16 @@ namespace VETFEED.Backend.API.Services
 
                     // Quy đổi số lượng theo đơn vị bán hàng
                     // Nếu không có quy đổi, mặc định TyLe = 1
-                    var quyDoiList = await _quyDoiDonViRepo.GetByMaSPAsync(loHang.MaSP);
                     decimal tyLe = 1;
                     
-                    // Lấy tỷ lệ đầu tiên nếu có
-                    var quyDoi = quyDoiList.FirstOrDefault();
-                    if (quyDoi != null)
+                    // Lấy tỷ lệ theo DonViNhap đã chọn khi nhập phiếu
+                    if (!string.IsNullOrEmpty(ct.DonViNhap))
                     {
-                        tyLe = quyDoi.TyLe;
+                        var tyLeResult = await _quyDoiDonViRepo.GetTyLeByMaSPAndDonViNhapAsync(loHang.MaSP, ct.DonViNhap);
+                        if (tyLeResult.HasValue)
+                        {
+                            tyLe = tyLeResult.Value;
+                        }
                     }
 
                     // Số lượng quy đổi về đơn vị cơ sở = SoLuong nhập * TyLe
