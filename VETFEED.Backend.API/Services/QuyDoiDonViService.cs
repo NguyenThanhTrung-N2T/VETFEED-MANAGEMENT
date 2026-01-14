@@ -92,10 +92,8 @@ namespace VETFEED.Backend.API.Services
             entity.DonViNhap = donViNhap;
             entity.TyLe = request.TyLe;
 
-            // --- CHỖ QUAN TRỌNG ---
             var updated = await _repo.UpdateAsync(entity);
-            if (updated == null) return null;       // thêm check này
-            // ----------------------
+            if (updated == null) return null;     
 
             var sp = await _context.SanPhams.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaSP == entity.MaSP);
@@ -133,7 +131,7 @@ namespace VETFEED.Backend.API.Services
                 DonViCoSo = sp.DonViCoSo,
                 DonViNhapList = list.Select(q => new DonViQuyDoiItem
                 {
-                    DonVi = q.DonViNhap ?? string.Empty,
+                    DonViNhap = q.DonViNhap ?? string.Empty,
                     TyLe = q.TyLe
                 }).ToList()
             };

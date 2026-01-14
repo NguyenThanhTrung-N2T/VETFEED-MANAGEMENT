@@ -6,6 +6,7 @@ namespace VETFEED.Backend.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ApiExplorerSettings(IgnoreApi = true)] 
     public class QuyDoiDonVisController : ControllerBase
     {
         private readonly IQuyDoiDonViService _service;

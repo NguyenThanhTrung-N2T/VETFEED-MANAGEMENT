@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-
+using VETFEED.Backend.API.Enums;
 namespace VETFEED.Backend.API.DTOs.KhachHang
 {
     public class KhachHangCreateRequest
@@ -16,7 +16,7 @@ namespace VETFEED.Backend.API.DTOs.KhachHang
         public decimal? HanMucCongNo { get; set; }
 
         [Required]
-        public string TrangThai { get; set; } = null!; // HOAT_DONG | KHOA
+        public TrangThaiKhachHangEnum TrangThai { get; set; } // HOAT_DONG | KHOA
 
         public string? GhiChu { get; set; }
     }

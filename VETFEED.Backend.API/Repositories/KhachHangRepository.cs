@@ -63,10 +63,11 @@ namespace VETFEED.Backend.API.Repositories
 
             q = q.OrderByDescending(x => x.NgayTao);
 
-            if (query.Page.HasValue && query.PageSize.HasValue && query.Page > 0 && query.PageSize > 0)
+            if (query.Page.HasValue && query.PageSize.HasValue
+                && query.Page.Value > 0 && query.PageSize.Value > 0)
             {
                 q = q.Skip((query.Page.Value - 1) * query.PageSize.Value)
-                     .Take(query.PageSize.Value);
+                    .Take(query.PageSize.Value);
             }
 
             var items = await q.Select(x => new KhachHangResponse
