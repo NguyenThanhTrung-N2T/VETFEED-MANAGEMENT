@@ -1,5 +1,6 @@
 using System;
-
+using System.Collections.Generic;
+using VETFEED.Backend.API.DTOs.QuyDoiDonVi;  
 namespace VETFEED.Backend.API.DTOs.SanPham
 {
     public class SanPhamResponse
@@ -8,9 +9,10 @@ namespace VETFEED.Backend.API.DTOs.SanPham
         public string? MaSPCode { get; set; }
         public string? TenSP { get; set; }
         public string? LoaiSanPham { get; set; }
-        public string? DonViTinh { get; set; }
+        public string? DonViCoSo { get; set; }
         public string? GhiChu { get; set; }
         public DateTime NgayTao { get; set; }
-        public decimal? GiaHienTai { get; set; }
+        public decimal? DonGia { get; set; }
+        public List<DonViQuyDoiItem> DonViQuyDoi { get; set; } = new();
     }
 }

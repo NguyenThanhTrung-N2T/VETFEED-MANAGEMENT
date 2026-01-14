@@ -35,7 +35,7 @@ namespace VETFEED.Backend.API.DTOs.QuyDoiDonVi
 
     public class DonViQuyDoiItem
     {
-        public string DonVi { get; set; } = null!;
+        public string DonViNhap { get; set; } = null!;
         public decimal TyLe { get; set; }
     }
 

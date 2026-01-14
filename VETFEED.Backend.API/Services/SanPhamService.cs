@@ -25,7 +25,7 @@ namespace VETFEED.Backend.API.Services
 
         public async Task<SanPhamResponse> CreateAsync(SanPhamCreateRequest request)
         {
-            if (!Enum.TryParse<LoaiSanPhamEnum>(request.LoaiSanPham, true, out var loai))
+            if (!Enum.TryParse<LoaiSanPhamEnum>(request.LoaiSanPham.Trim(), true, out var loai))
                 throw new ArgumentException("LoaiSanPham không hợp lệ. Chỉ nhận: THUOC_THU_Y hoặc THUC_AN_CHAN_NUOI.");
 
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -71,7 +71,7 @@ namespace VETFEED.Backend.API.Services
 
         public async Task<SanPhamResponse?> UpdateAsync(Guid maSP, SanPhamUpdateRequest request)
         {
-            if (!Enum.TryParse<LoaiSanPhamEnum>(request.LoaiSanPham, true, out var loai))
+            if (!Enum.TryParse<LoaiSanPhamEnum>(request.LoaiSanPham.Trim(), true, out var loai))
                 throw new ArgumentException("LoaiSanPham không hợp lệ. Chỉ nhận: THUOC_THU_Y hoặc THUC_AN_CHAN_NUOI.");
 
             using var transaction = await _context.Database.BeginTransactionAsync();

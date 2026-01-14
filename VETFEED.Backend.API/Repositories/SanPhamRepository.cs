@@ -5,7 +5,7 @@ using VETFEED.Backend.API.DTOs.SanPham;
 using VETFEED.Backend.API.Models;
 using VETFEED.Backend.API.Enums;
 using System;
-
+using VETFEED.Backend.API.DTOs.QuyDoiDonVi; 
 namespace VETFEED.Backend.API.Repositories
 {
     public class SanPhamRepository : ISanPhamRepository
@@ -49,32 +49,43 @@ namespace VETFEED.Backend.API.Repositories
 
             var total = await q.CountAsync();
 
-            if (query.Page.HasValue && query.PageSize.HasValue && query.Page > 0 && query.PageSize > 0)
+            if (query.Page.HasValue && query.PageSize.HasValue
+                && query.Page.Value > 0 && query.PageSize.Value > 0)
             {
                 q = q.OrderByDescending(x => x.NgayTao)
-                     .Skip((query.Page.Value - 1) * query.PageSize.Value)
-                     .Take(query.PageSize.Value);
+                    .Skip((query.Page.Value - 1) * query.PageSize.Value)
+                    .Take(query.PageSize.Value);
             }
             else
             {
                 q = q.OrderByDescending(x => x.NgayTao);
             }
 
-            var items = await q.Select(x => new SanPhamResponse
+            var items = await q
+            .Include(x => x.QuyDoiDonVis)
+            .Select(x => new SanPhamResponse
             {
                 MaSP = x.MaSP,
                 MaSPCode = x.MaSPCode,
                 TenSP = x.TenSP,
                 LoaiSanPham = x.LoaiSanPham.ToString(),
-                DonViTinh = x.DonViCoSo,
+                DonViCoSo = x.DonViCoSo,
                 GhiChu = x.GhiChu,
                 NgayTao = x.NgayTao,
-                GiaHienTai = _context.GiaBans
+                DonGia = _context.GiaBans
                     .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
                     .OrderByDescending(g => g.TuNgay)
                     .Select(g => (decimal?)g.DonGiaBan)
-                    .FirstOrDefault()
-            }).ToListAsync();
+                    .FirstOrDefault(),
+                DonViQuyDoi = x.QuyDoiDonVis
+                    .Select(q => new DonViQuyDoiItem
+                    {
+                        DonViNhap = q.DonViNhap ?? string.Empty,
+                        TyLe = q.TyLe
+                    }).ToList()
+            })
+            .ToListAsync();
+
 
             return new PagedResult<SanPhamResponse>
             {
@@ -87,23 +98,32 @@ namespace VETFEED.Backend.API.Repositories
 
         public async Task<SanPhamResponse?> GetByIdAsync(Guid maSP)
         {
-            return await _context.SanPhams.AsNoTracking()
-                .Where(x => x.MaSP == maSP)
-                .Select(x => new SanPhamResponse
-                {
-                    MaSP = x.MaSP,
-                    MaSPCode = x.MaSPCode,
-                    TenSP = x.TenSP,
-                    LoaiSanPham = x.LoaiSanPham.ToString(),
-                    DonViTinh = x.DonViCoSo,
-                    GhiChu = x.GhiChu,
-                    NgayTao = x.NgayTao,
-                    GiaHienTai = _context.GiaBans
-                        .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
-                        .OrderByDescending(g => g.TuNgay)
-                        .Select(g => (decimal?)g.DonGiaBan)
-                        .FirstOrDefault()
-                }).FirstOrDefaultAsync();
+           return await _context.SanPhams.AsNoTracking()
+            .Include(x => x.QuyDoiDonVis)
+            .Where(x => x.MaSP == maSP)
+            .Select(x => new SanPhamResponse
+            {
+                MaSP = x.MaSP,
+                MaSPCode = x.MaSPCode,
+                TenSP = x.TenSP,
+                LoaiSanPham = x.LoaiSanPham.ToString(),
+                DonViCoSo = x.DonViCoSo,
+                GhiChu = x.GhiChu,
+                NgayTao = x.NgayTao,
+                DonGia = _context.GiaBans
+                    .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
+                    .OrderByDescending(g => g.TuNgay)
+                    .Select(g => (decimal?)g.DonGiaBan)
+                    .FirstOrDefault(),
+                DonViQuyDoi = x.QuyDoiDonVis
+                    .Select(q => new DonViQuyDoiItem
+                    {
+                        DonViNhap = q.DonViNhap ?? string.Empty,
+                        TyLe = q.TyLe
+                    }).ToList()
+            })
+            .FirstOrDefaultAsync();
+
         }
 
         public async Task<SanPhamResponse> CreateAsync(SanPham entity)
@@ -139,15 +159,21 @@ namespace VETFEED.Backend.API.Repositories
 
         public async Task<bool> HasReferencesAsync(Guid maSP)
         {
-            var hasGia = await _context.GiaBans.AnyAsync(x => x.MaSP == maSP);
-            if (hasGia) return true;
+            // 1. Chỉ chặn xoá nếu còn đơn giá hiện hành (DenNgay == null)
+            var hasGiaHienHanh = await _context.GiaBans
+                .AnyAsync(x => x.MaSP == maSP && x.DenNgay == null);
+            if (hasGiaHienHanh) return true;
 
+            // 2. Có lô nào của sản phẩm không?
             var hasLo = await _context.LoHangs.AnyAsync(x => x.MaSP == maSP);
             if (hasLo) return true;
 
+            // 3. Có map NCC–SP không?
             var hasNcsp = await _context.NhaCungCapSanPhams.AnyAsync(x => x.MaSP == maSP);
             return hasNcsp;
         }
+
+
         public async Task<SanPhamResponse?> GetByCodeAsync(string maSPCode)
         {
             if (string.IsNullOrWhiteSpace(maSPCode))
@@ -156,6 +182,7 @@ namespace VETFEED.Backend.API.Repositories
             var code = maSPCode.Trim();
 
             return await _context.SanPhams.AsNoTracking()
+                .Include(x => x.QuyDoiDonVis)
                 .Where(x => x.MaSPCode == code)
                 .Select(x => new SanPhamResponse
                 {
@@ -163,14 +190,20 @@ namespace VETFEED.Backend.API.Repositories
                     MaSPCode = x.MaSPCode,
                     TenSP = x.TenSP,
                     LoaiSanPham = x.LoaiSanPham.ToString(),
-                    DonViTinh = x.DonViCoSo,
+                    DonViCoSo = x.DonViCoSo,
                     GhiChu = x.GhiChu,
                     NgayTao = x.NgayTao,
-                    GiaHienTai = _context.GiaBans
+                    DonGia = _context.GiaBans
                         .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
                         .OrderByDescending(g => g.TuNgay)
                         .Select(g => (decimal?)g.DonGiaBan)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    DonViQuyDoi = x.QuyDoiDonVis
+                        .Select(q => new DonViQuyDoiItem
+                        {
+                            DonViNhap = q.DonViNhap ?? string.Empty,
+                            TyLe = q.TyLe
+                        }).ToList()
                 })
                 .FirstOrDefaultAsync();
         }
