@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.KhachHang;
 using VETFEED.Backend.API.Services;
-
+using VETFEED.Backend.API.DTOs.Common;
 namespace VETFEED.Backend.API.Controllers
 {
     [Route("api/[controller]")]
@@ -15,14 +15,13 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         [HttpGet]
-
-        public async Task<IActionResult> Search([FromQuery] KhachHangQuery query)
+        public async Task<ActionResult<PagedResult<KhachHangResponse>>> Search([FromQuery] KhachHangQuery query)
         {
             var result = await _service.SearchAsync(query);
             return Ok(result);
         }
         [HttpGet("by-code/{maKHCode}")]
-        public async Task<IActionResult> GetByCode(string maKHCode)
+        public async Task<ActionResult<KhachHangResponse>> GetByCode(string maKHCode)
         {
             var kh = await _service.GetByCodeAsync(maKHCode);
             if (kh == null) return NotFound("Không tìm thấy khách hàng.");
@@ -30,14 +29,14 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         [HttpGet("by-phone")]
-        public async Task<IActionResult> GetByPhone([FromQuery] string phone)
+        public async Task<ActionResult<KhachHangResponse>> GetByPhone([FromQuery] string phone)
         {
             var kh = await _service.GetByPhoneAsync(phone);
             if (kh == null) return NotFound("Không tìm thấy khách hàng.");
             return Ok(kh);
         }
         [HttpGet("{maKH:guid}")]
-        public async Task<IActionResult> GetById(Guid maKH)
+        public async Task<ActionResult<KhachHangResponse>> GetById(Guid maKH)
         {
             var kh = await _service.GetByIdAsync(maKH);
             if (kh == null) return NotFound("Không tìm thấy khách hàng.");
@@ -45,7 +44,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] KhachHangCreateRequest request)
+        public async Task<ActionResult<KhachHangResponse>> Create([FromBody] KhachHangCreateRequest request)
         {
             try
             {
@@ -59,7 +58,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         [HttpPut("{maKH:guid}")]
-        public async Task<IActionResult> Update(Guid maKH, [FromBody] KhachHangUpdateRequest request)
+        public async Task<ActionResult<KhachHangResponse>> Update(Guid maKH, [FromBody] KhachHangUpdateRequest request)
         {
             try
             {
@@ -74,7 +73,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         [HttpDelete("{maKH:guid}")]
-        public async Task<IActionResult> Delete(Guid maKH)
+        public async Task<ActionResult> Delete(Guid maKH)
         {
             var (ok, error) = await _service.DeleteAsync(maKH);
             if (!ok) return BadRequest(error);
