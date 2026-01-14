@@ -159,11 +159,6 @@ namespace VETFEED.Backend.API.Repositories
 
         public async Task<bool> HasReferencesAsync(Guid maSP)
         {
-            // 1. Chỉ chặn xoá nếu còn đơn giá hiện hành (DenNgay == null)
-            var hasGiaHienHanh = await _context.GiaBans
-                .AnyAsync(x => x.MaSP == maSP && x.DenNgay == null);
-            if (hasGiaHienHanh) return true;
-
             // 2. Có lô nào của sản phẩm không?
             var hasLo = await _context.LoHangs.AnyAsync(x => x.MaSP == maSP);
             if (hasLo) return true;
