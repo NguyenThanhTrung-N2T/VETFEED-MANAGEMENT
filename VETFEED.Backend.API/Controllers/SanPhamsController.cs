@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.SanPham;
 using VETFEED.Backend.API.Services;
-
+using VETFEED.Backend.API.DTOs.Common;
 namespace VETFEED.Backend.API.Controllers {
     [Route("api/[controller]")]
     [ApiController]
@@ -14,7 +14,7 @@ namespace VETFEED.Backend.API.Controllers {
 
         // GET: api/SanPhams?...
         [HttpGet]
-        public async Task<ActionResult<List<SanPhamResponse>>> Search(
+        public async Task<ActionResult<PagedResult<SanPhamResponse>>> Search(
             [FromQuery] SanPhamQuery query) {
             var result = await _service.SearchAsync(query);
             return Ok(result);
