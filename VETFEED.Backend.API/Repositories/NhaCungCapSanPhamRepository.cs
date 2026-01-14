@@ -177,5 +177,28 @@ namespace VETFEED.Backend.API.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
+        // Lấy entities theo nhà cung cấp (để xử lý trong transaction)
+        public async Task<IEnumerable<NhaCungCapSanPham>> GetEntitiesByNhaCungCapAsync(Guid maNCC)
+        {
+            return await _context.NhaCungCapSanPhams
+                .Where(x => x.MaNCC == maNCC)
+                .ToListAsync();
+        }
+
+        // Xóa tất cả liên kết NCC-SP của một nhà cung cấp (cascade delete)
+        public async Task<int> DeleteByNhaCungCapAsync(Guid maNCC)
+        {
+            var entities = await _context.NhaCungCapSanPhams
+                .Where(x => x.MaNCC == maNCC)
+                .ToListAsync();
+            
+            if (!entities.Any()) return 0;
+            
+            _context.NhaCungCapSanPhams.RemoveRange(entities);
+            await _context.SaveChangesAsync();
+            return entities.Count;
+        }
     }
 }
+

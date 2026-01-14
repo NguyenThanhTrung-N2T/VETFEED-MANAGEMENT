@@ -1,3 +1,14 @@
+// ============================================================================
+// DEPRECATED: Service này đã bị vô hiệu hóa vì NhaCungCapSanPham được quản lý 
+// trực tiếp thông qua NhaCungCapService.
+// 
+// Các chức năng CRUD của NCC-SP đã được tích hợp vào NhaCungCapService:
+// - AddNhaCungCapAsync: Tạo NCC kèm danh sách sản phẩm
+// - UpdateNhaCungCapAsync: Thêm/Sửa/Xóa sản phẩm thông qua SanPhams list
+// - DeleteNhaCungCapAsync: Cascade xóa tất cả NCC-SP
+// ============================================================================
+
+/*
 using VETFEED.Backend.API.DTOs.NhaCungCapSanPham;
 using VETFEED.Backend.API.Enums;
 using VETFEED.Backend.API.Repositories;
@@ -67,3 +78,4 @@ namespace VETFEED.Backend.API.Services
         }
     }
 }
+*/

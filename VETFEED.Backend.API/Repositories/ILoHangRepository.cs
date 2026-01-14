@@ -23,6 +23,8 @@ namespace VETFEED.Backend.API.Repositories
 
         // Xoa nhieu LoHang cung luc (batch delete)
         Task<int> DeleteLoHangsByIdsAsync(IEnumerable<Guid> maLoList);
+
+        Task<LoHangResponse?> GetOutDatedLoHangs();
     }
 }
 

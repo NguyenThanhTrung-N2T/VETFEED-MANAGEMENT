@@ -1,3 +1,11 @@
+// ============================================================================
+// DEPRECATED: Interface này đã bị vô hiệu hóa vì NhaCungCapSanPham được quản lý 
+// trực tiếp thông qua INhaCungCapService.
+// 
+// Repository INhaCungCapSanPhamRepository vẫn được sử dụng nội bộ bởi NhaCungCapService.
+// ============================================================================
+
+/*
 using VETFEED.Backend.API.DTOs.NhaCungCapSanPham;
 
 namespace VETFEED.Backend.API.Services
@@ -13,3 +21,4 @@ namespace VETFEED.Backend.API.Services
         Task<bool> DeleteNhaCungCapSanPhamAsync(Guid id);
     }
 }
+*/

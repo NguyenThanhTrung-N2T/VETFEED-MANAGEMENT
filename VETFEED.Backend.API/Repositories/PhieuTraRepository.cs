@@ -4,6 +4,7 @@ using VETFEED.Backend.API.DTOs.PhieuTra;
 using VETFEED.Backend.API.Models;
 using VETFEED.Backend.API.Utils;
 using VETFEED.Backend.API.Enums;
+using VETFEED.Backend.API.DTOs.LoHang;
 
 namespace VETFEED.Backend.API.Repositories
 {
@@ -397,6 +398,67 @@ namespace VETFEED.Backend.API.Repositories
                 await transaction.RollbackAsync();
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Lấy số lượng có thể trả được cho một phiếu bán.
+        /// Tính toán: SoLuongCoTheTra = SoLuongDaBan - SoLuongDaTra (từ các phiếu trả trước)
+        /// </summary>
+        public async Task<ReturnableQuantityResponse?> GetReturnableQuantityAsync(Guid maPB)
+        {
+            // 1. Lấy phiếu bán gốc kèm chi tiết
+            var phieuBan = await _context.PhieuBans
+                .Include(pb => pb.CTPhieuBans!)
+                    .ThenInclude(ct => ct.LoHang)
+                        .ThenInclude(lo => lo!.SanPham)
+                .FirstOrDefaultAsync(pb => pb.MaPB == maPB);
+
+            if (phieuBan == null)
+                return null;
+
+            // 2. Lấy tất cả phiếu trả liên quan đến phiếu bán này
+            var phieuTras = await _context.PhieuTras
+                .Include(pt => pt.CTPhieuTras)
+                .Where(pt => pt.MaPB == maPB)
+                .ToListAsync();
+
+            // 3. Tính tổng số lượng đã trả theo từng lô
+            var soLuongDaTraTheoLo = phieuTras
+                .SelectMany(pt => pt.CTPhieuTras ?? new List<CTPhieuTra>())
+                .GroupBy(ct => ct.MaLo)
+                .ToDictionary(g => g.Key, g => g.Sum(ct => ct.SoLuongTra));
+
+            // 4. Build response với thông tin từng lô
+            var danhSachLoHang = phieuBan.CTPhieuBans!
+                .GroupBy(ct => ct.MaLo)
+                .Select(g =>
+                {
+                    var loHang = g.First().LoHang!;
+                    var sanPham = loHang.SanPham!;
+                    var soLuongDaBan = g.Sum(ct => ct.SoLuongQuyDoi);
+                    var soLuongDaTra = soLuongDaTraTheoLo.GetValueOrDefault(g.Key, 0m);
+                    var soLuongCoTheTra = soLuongDaBan - soLuongDaTra;
+
+                    return new ReturnableLoHangItem
+                    {
+                        MaLo = g.Key,
+                        MaLoCode = loHang.MaLoCode,
+                        TenSanPham = sanPham.TenSP,
+                        DonViCoSo = sanPham.DonViCoSo,
+                        HanSuDung = loHang.HanSuDung,
+                        SoLuongDaBan = soLuongDaBan,
+                        SoLuongDaTra = soLuongDaTra,
+                        SoLuongCoTheTra = soLuongCoTheTra > 0 ? soLuongCoTheTra : 0
+                    };
+                })
+                .ToList();
+
+            return new ReturnableQuantityResponse
+            {
+                MaPB = phieuBan.MaPB,
+                MaPBCode = phieuBan.MaPBCode,
+                DanhSachLoHang = danhSachLoHang
+            };
         }
 
 

@@ -19,5 +19,12 @@ namespace VETFEED.Backend.API.Services
 
         //Xóa phiếu trả hàng
         Task<bool> DeletePhieuTraAsync(Guid maPT);
+
+        /// <summary>
+        /// Lấy số lượng có thể trả được cho một phiếu bán.
+        /// API này giúp validate trước khi tạo phiếu trả để tránh trả vượt quá.
+        /// </summary>
+        Task<ReturnableQuantityResponse?> GetReturnableQuantityAsync(Guid maPB);
     }
 }
+

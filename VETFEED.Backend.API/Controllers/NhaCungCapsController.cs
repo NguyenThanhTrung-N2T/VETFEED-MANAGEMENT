@@ -51,16 +51,23 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         /// <summary>
-        /// Thêm mới nhà cung cấp
+        /// Thêm mới nhà cung cấp kèm danh sách sản phẩm (nếu có)
         /// </summary>
         /// <param name="request">Thông tin nhà cung cấp cần thêm</param>
         /// <returns>Nhà cung cấp vừa được tạo</returns>
+        /// <remarks>
+        /// **Xử lý danh sách SanPhams (không bắt buộc):**
+        /// - Nếu SanPhams = null hoặc rỗng: chỉ tạo nhà cung cấp
+        /// - Nếu có SanPhams: tạo nhà cung cấp và tạo liên kết NCC-SP
+        /// 
+        /// **Sử dụng transaction** để đảm bảo tính nhất quán dữ liệu.
+        /// </remarks>
         /// <response code="201">Tạo nhà cung cấp thành công</response>
         /// <response code="400">Dữ liệu không hợp lệ</response>
         [HttpPost]
-        [ProducesResponseType(typeof(NhaCungCapResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(NhaCungCapDetailedResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Create([FromBody] NhaCungCapRequest request)
+        public async Task<IActionResult> Create([FromBody] NhaCungCapCreateRequest request)
         {
             try
             {
@@ -74,19 +81,29 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         /// <summary>
-        /// Cập nhật thông tin nhà cung cấp
+        /// Cập nhật thông tin nhà cung cấp và danh sách sản phẩm
         /// </summary>
         /// <param name="id">Mã nhà cung cấp cần cập nhật</param>
-        /// <param name="request">Thông tin cập nhật</param>
-        /// <returns>Thông tin nhà cung cấp sau khi cập nhật</returns>
+        /// <param name="request">Thông tin cập nhật bao gồm danh sách sản phẩm (nếu có)</param>
+        /// <returns>Thông tin chi tiết nhà cung cấp sau khi cập nhật</returns>
+        /// <remarks>
+        /// **Xử lý danh sách SanPhams (giống PhieuNhap):**
+        /// - Nếu SanPhams = null: chỉ cập nhật thông tin nhà cung cấp, KHÔNG thay đổi danh sách SP
+        /// - Nếu SanPhams = []: xóa TẤT CẢ sản phẩm của nhà cung cấp
+        /// - NCCSP trong DB nhưng KHÔNG có trong request: **XÓA**
+        /// - MaNCSP = null/Guid.Empty: **thêm mới** sản phẩm
+        /// - MaNCSP có giá trị: **cập nhật** sản phẩm
+        /// 
+        /// **Sử dụng transaction** để đảm bảo tính nhất quán dữ liệu.
+        /// </remarks>
         /// <response code="200">Cập nhật thành công</response>
         /// <response code="400">Dữ liệu không hợp lệ</response>
         /// <response code="404">Không tìm thấy nhà cung cấp</response>
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(NhaCungCapResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(NhaCungCapDetailedResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Update(Guid id, [FromBody] NhaCungCapRequest request)
+        public async Task<IActionResult> Update(Guid id, [FromBody] NhaCungCapUpdateRequest request)
         {
             try
             {
@@ -106,6 +123,11 @@ namespace VETFEED.Backend.API.Controllers
         /// </summary>
         /// <param name="id">Mã nhà cung cấp cần xóa</param>
         /// <returns>Không có nội dung trả về</returns>
+        /// <remarks>
+        /// **Cascade delete**: Xóa nhà cung cấp sẽ tự động xóa tất cả liên kết NCC-SP liên quan.
+        /// 
+        /// **Sử dụng transaction** để đảm bảo tính nhất quán dữ liệu.
+        /// </remarks>
         /// <response code="204">Xóa thành công</response>
         /// <response code="404">Không tìm thấy nhà cung cấp</response>
         [HttpDelete("{id}")]

@@ -60,5 +60,14 @@ namespace VETFEED.Backend.API.Services
             }
         }
 
+        /// <summary>
+        /// Lấy số lượng có thể trả được cho một phiếu bán.
+        /// </summary>
+        public async Task<ReturnableQuantityResponse?> GetReturnableQuantityAsync(Guid maPB)
+        {
+            return await _phieuTraRepository.GetReturnableQuantityAsync(maPB);
+        }
+
     }
 }
+

@@ -10,5 +10,6 @@ namespace VETFEED.Backend.API.Services
         Task<LoHangResponse> AddLoHangAsync(LoHangRequest request);
         Task<LoHangResponse?> UpdateLoHangAsync(Guid id, LoHangRequest request);
         Task<bool> DeleteLoHangAsync(Guid id);
+        Task<LoHangResponse?> GetOutDatedLoHangs();
     }
 }
