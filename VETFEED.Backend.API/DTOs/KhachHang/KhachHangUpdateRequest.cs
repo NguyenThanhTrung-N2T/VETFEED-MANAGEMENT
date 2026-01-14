@@ -11,7 +11,7 @@ namespace VETFEED.Backend.API.DTOs.KhachHang
         public string? DiaChi { get; set; }
 
         [Required]
-        public string LoaiKhachHang { get; set; } = null!;
+        public LoaiKhachHangEnum LoaiKhachHang { get; set; } 
 
         public decimal? HanMucCongNo { get; set; }
 

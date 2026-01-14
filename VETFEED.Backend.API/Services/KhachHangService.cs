@@ -25,9 +25,7 @@ namespace VETFEED.Backend.API.Services
 
         public async Task<KhachHangResponse> CreateAsync(KhachHangCreateRequest request)
         {
-        if (!Enum.TryParse<LoaiKhachHangEnum>(request.LoaiKhachHang.Trim(), true, out var loai))
-            throw new ArgumentException("LoaiKhachHang không hợp lệ. Chỉ nhận: CA_NHAN | TRANG_TRAI | DAI_LY.");
-
+        var loai = request.LoaiKhachHang;
         var trangThai = request.TrangThai;
 
             if (!string.IsNullOrWhiteSpace(request.SoDienThoai))
@@ -58,9 +56,7 @@ namespace VETFEED.Backend.API.Services
 
         public async Task<KhachHangResponse?> UpdateAsync(Guid maKH, KhachHangUpdateRequest request)
         {
-            if (!Enum.TryParse<LoaiKhachHangEnum>(request.LoaiKhachHang.Trim(), true, out var loai))
-            throw new ArgumentException("LoaiKhachHang không hợp lệ. Chỉ nhận: CA_NHAN | TRANG_TRAI | DAI_LY.");
-
+            var loai = request.LoaiKhachHang;
             var trangThai = request.TrangThai;
 
             if (!string.IsNullOrWhiteSpace(request.SoDienThoai))
