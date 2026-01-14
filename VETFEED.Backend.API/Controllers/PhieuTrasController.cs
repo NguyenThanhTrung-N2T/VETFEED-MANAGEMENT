@@ -104,5 +104,43 @@ namespace VETFEED.Backend.API.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Lấy số lượng có thể trả được cho một phiếu bán.
+        /// API này giúp FE validate trước khi tạo phiếu trả để tránh trả vượt quá số lượng đã bán.
+        /// </summary>
+        /// <param name="maPB">Mã phiếu bán (GUID)</param>
+        /// <returns>Danh sách các lô với số lượng có thể trả</returns>
+        /// <remarks>
+        /// **Công thức tính:**
+        /// - SoLuongCoTheTra = SoLuongDaBan - SoLuongDaTra (từ các phiếu trả trước)
+        /// 
+        /// **Use case:**
+        /// - Gọi API này trước khi tạo phiếu trả để biết số lượng tối đa có thể trả cho mỗi lô
+        /// - FE có thể validate và hiển thị warning nếu user nhập số lượng vượt quá
+        /// </remarks>
+        /// <response code="200">Trả về danh sách lô và số lượng có thể trả</response>
+        /// <response code="404">Không tìm thấy phiếu bán</response>
+        /// <response code="500">Lỗi server</response>
+        [HttpGet("returnable-quantity/{maPB}")]
+        [ProducesResponseType(typeof(ReturnableQuantityResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetReturnableQuantity(Guid maPB)
+        {
+            try
+            {
+                var result = await _service.GetReturnableQuantityAsync(maPB);
+                if (result == null)
+                    return NotFound(new { error = "Phiếu bán không tồn tại!" });
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 }
+

@@ -26,5 +26,12 @@ namespace VETFEED.Backend.API.Repositories
         /// Xóa phiếu trả
         /// </summary>
         Task<bool> DeletePhieuTraAsync(Guid maPT);
+
+        /// <summary>
+        /// Lấy số lượng có thể trả được cho một phiếu bán.
+        /// Tính toán: SoLuongCoTheTra = SoLuongDaBan - SoLuongDaTra (từ các phiếu trả trước)
+        /// </summary>
+        Task<ReturnableQuantityResponse?> GetReturnableQuantityAsync(Guid maPB);
     }
 }
+
