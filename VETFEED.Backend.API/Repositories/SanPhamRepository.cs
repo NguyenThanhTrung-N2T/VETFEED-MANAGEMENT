@@ -20,8 +20,7 @@ namespace VETFEED.Backend.API.Repositories
         {
             var q = _context.SanPhams
             .AsNoTracking()
-            .Where(x => x.TrangThai == TrangThaiSanPhamEnum.HoatDong)
-            .AsQueryable();
+            .Where(x => x.TrangThai == TrangThaiSanPhamEnum.HoatDong);
 
             if (!string.IsNullOrWhiteSpace(query.Keyword))
             {
@@ -103,7 +102,7 @@ namespace VETFEED.Backend.API.Repositories
         {
            return await _context.SanPhams.AsNoTracking()
             .Include(x => x.QuyDoiDonVis)
-            .Where(x => x.MaSP == maSP)
+            .Where(x => x.MaSP == maSP && x.TrangThai == TrangThaiSanPhamEnum.HoatDong)
             .Select(x => new SanPhamResponse
             {
                 MaSP = x.MaSP,
@@ -138,7 +137,7 @@ namespace VETFEED.Backend.API.Repositories
 
         public async Task<SanPhamResponse?> UpdateAsync(Guid maSP, SanPhamUpdateRequest request)
         {
-            var sp = await _context.SanPhams.FirstOrDefaultAsync(x => x.MaSP == maSP);
+            var sp = await _context.SanPhams.FirstOrDefaultAsync(x => x.MaSP == maSP && x.TrangThai == TrangThaiSanPhamEnum.HoatDong);
             if (sp == null) return null;
 
             sp.TenSP = request.TenSP;
@@ -181,7 +180,7 @@ namespace VETFEED.Backend.API.Repositories
 
             return await _context.SanPhams.AsNoTracking()
                 .Include(x => x.QuyDoiDonVis)
-                .Where(x => x.MaSPCode == code)
+                .Where(x => x.MaSPCode == code && x.TrangThai == TrangThaiSanPhamEnum.HoatDong )
                 .Select(x => new SanPhamResponse
                 {
                     MaSP = x.MaSP,
