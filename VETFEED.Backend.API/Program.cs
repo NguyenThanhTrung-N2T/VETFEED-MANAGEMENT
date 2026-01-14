@@ -28,7 +28,9 @@ builder.Services.AddScoped<INhaCungCapRepository, NhaCungCapRepository>();
 builder.Services.AddScoped<INhaCungCapService, NhaCungCapService>();
 
 builder.Services.AddScoped<INhaCungCapSanPhamRepository, NhaCungCapSanPhamRepository>();
-builder.Services.AddScoped<INhaCungCapSanPhamService, NhaCungCapSanPhamService>();
+// DEPRECATED: NhaCungCapSanPham được quản lý thông qua NhaCungCapService
+// builder.Services.AddScoped<INhaCungCapSanPhamService, NhaCungCapSanPhamService>();
+
 
 builder.Services.AddScoped<ILoHangRepository, LoHangRepository>();
 builder.Services.AddScoped<ILoHangService, LoHangService>();

@@ -1,3 +1,14 @@
+// ============================================================================
+// DEPRECATED: Controller này đã bị vô hiệu hóa vì NhaCungCapSanPham được quản lý 
+// trực tiếp thông qua NhaCungCapsController.
+// 
+// Các chức năng CRUD của NCC-SP đã được tích hợp vào:
+// - POST /api/NhaCungCaps: Tạo NCC kèm danh sách sản phẩm
+// - PUT /api/NhaCungCaps/{id}: Thêm/Sửa/Xóa sản phẩm thông qua SanPhams list
+// - DELETE /api/NhaCungCaps/{id}: Cascade xóa tất cả NCC-SP
+// ============================================================================
+
+/*
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.NhaCungCapSanPham;
 using VETFEED.Backend.API.Services;
@@ -148,3 +159,4 @@ namespace VETFEED.Backend.API.Controllers
         }
     }
 }
+*/
