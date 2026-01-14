@@ -75,7 +75,6 @@ namespace VETFEED.Backend.API.Repositories
                 DonViCoSo = x.DonViCoSo,
                 GhiChu = x.GhiChu,
                 NgayTao = x.NgayTao,
-                TrangThai = x.TrangThai.ToString(),
                 DonGia = _context.GiaBans
                     .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
                     .OrderByDescending(g => g.TuNgay)
@@ -114,7 +113,6 @@ namespace VETFEED.Backend.API.Repositories
                 DonViCoSo = x.DonViCoSo,
                 GhiChu = x.GhiChu,
                 NgayTao = x.NgayTao,
-                TrangThai = x.TrangThai.ToString(),
                 DonGia = _context.GiaBans
                     .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
                     .OrderByDescending(g => g.TuNgay)
@@ -193,7 +191,6 @@ namespace VETFEED.Backend.API.Repositories
                     DonViCoSo = x.DonViCoSo,
                     GhiChu = x.GhiChu,
                     NgayTao = x.NgayTao,
-                    TrangThai = x.TrangThai.ToString(),
                     DonGia = _context.GiaBans
                         .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
                         .OrderByDescending(g => g.TuNgay)
