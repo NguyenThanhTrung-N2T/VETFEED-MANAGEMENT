@@ -13,6 +13,7 @@ namespace VETFEED.Backend.API.DTOs.SanPham
         public string? GhiChu { get; set; }
         public DateTime NgayTao { get; set; }
         public decimal? DonGia { get; set; }
+        public string? TrangThai { get; set; }
         public List<DonViQuyDoiItem> DonViQuyDoi { get; set; } = new();
     }
 }
