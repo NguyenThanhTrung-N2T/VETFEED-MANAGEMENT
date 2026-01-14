@@ -24,5 +24,31 @@ namespace VETFEED.Backend.API.Controllers
             // tra ve client
             return Ok(result);
         }
+
+        // GET : api/congnos/{maDoiTuong}/detail
+        [HttpGet("{maDoiTuong}/detail")]
+        public async Task<IActionResult> GetCongNoHistory(Guid maDoiTuong)
+        {
+            // lay lich su cong no cua doi tuong theo ma doi tuong
+            var result = await _congNoService.GetCongNoHistoryAsync(maDoiTuong);
+            // tra ve client
+            return Ok(result);
+        }
+
+        // POST : api/congnos : tao cong no moi
+        [HttpPost]
+        public async Task<IActionResult> CreateCongNoAsync([FromBody] CreateCongNoRequest request)
+        {
+            try
+            {
+                await _congNoService.CreateCongNoAsync(request);
+                return CreatedAtAction(nameof(GetCongNoHistory), new { maDoiTuong = request.MaDoiTuong }, request);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
     }
 }
