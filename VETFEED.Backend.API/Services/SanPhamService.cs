@@ -40,7 +40,8 @@ namespace VETFEED.Backend.API.Services
                 LoaiSanPham = loai,
                 DonViCoSo = request.DonViTinh,
                 GhiChu = request.GhiChu,
-                NgayTao = now
+                NgayTao = now,
+                TrangThai = TrangThaiSanPhamEnum.HoatDong 
             };
 
             var created = await _repo.CreateAsync(entity);
@@ -102,6 +103,8 @@ namespace VETFEED.Backend.API.Services
             {
                 spEntity.LoaiSanPham = loai;
                 spEntity.DonViCoSo = request.DonViTinh;
+                spEntity.TrangThai = request.TrangThai;
+
                 await _context.SaveChangesAsync();
             }
 

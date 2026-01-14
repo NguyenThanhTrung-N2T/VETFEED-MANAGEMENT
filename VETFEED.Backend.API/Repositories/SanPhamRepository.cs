@@ -18,7 +18,10 @@ namespace VETFEED.Backend.API.Repositories
 
         public async Task<PagedResult<SanPhamResponse>> SearchAsync(SanPhamQuery query)
         {
-            var q = _context.SanPhams.AsNoTracking().AsQueryable();
+            var q = _context.SanPhams
+            .AsNoTracking()
+            .Where(x => x.TrangThai == TrangThaiSanPhamEnum.HoatDong)
+            .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(query.Keyword))
             {
@@ -72,6 +75,7 @@ namespace VETFEED.Backend.API.Repositories
                 DonViCoSo = x.DonViCoSo,
                 GhiChu = x.GhiChu,
                 NgayTao = x.NgayTao,
+                TrangThai = x.TrangThai.ToString(),
                 DonGia = _context.GiaBans
                     .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
                     .OrderByDescending(g => g.TuNgay)
@@ -110,6 +114,7 @@ namespace VETFEED.Backend.API.Repositories
                 DonViCoSo = x.DonViCoSo,
                 GhiChu = x.GhiChu,
                 NgayTao = x.NgayTao,
+                TrangThai = x.TrangThai.ToString(),
                 DonGia = _context.GiaBans
                     .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
                     .OrderByDescending(g => g.TuNgay)
@@ -152,7 +157,7 @@ namespace VETFEED.Backend.API.Repositories
             var sp = await _context.SanPhams.FirstOrDefaultAsync(x => x.MaSP == maSP);
             if (sp == null) return false;
 
-            _context.SanPhams.Remove(sp);
+            sp.TrangThai = TrangThaiSanPhamEnum.KhongHoatDong;
             await _context.SaveChangesAsync();
             return true;
         }
@@ -188,6 +193,7 @@ namespace VETFEED.Backend.API.Repositories
                     DonViCoSo = x.DonViCoSo,
                     GhiChu = x.GhiChu,
                     NgayTao = x.NgayTao,
+                    TrangThai = x.TrangThai.ToString(),
                     DonGia = _context.GiaBans
                         .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
                         .OrderByDescending(g => g.TuNgay)

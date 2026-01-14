@@ -18,7 +18,7 @@ namespace VETFEED.Backend.API.Models
         public string? DonViCoSo { get; set; }                // Đơn vị cơ sở (viên, kg, lít...)
         public string? GhiChu { get; set; }
         public DateTime NgayTao { get; set; }
-
+        public TrangThaiSanPhamEnum TrangThai { get; set; } = TrangThaiSanPhamEnum.HoatDong;
         // Navigation
         public ICollection<NhaCungCapSanPham>? NhaCungCapSanPhams { get; set; }
         public ICollection<GiaBan>? GiaBans { get; set; }
