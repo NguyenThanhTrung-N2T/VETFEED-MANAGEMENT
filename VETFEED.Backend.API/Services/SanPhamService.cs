@@ -180,7 +180,7 @@ namespace VETFEED.Backend.API.Services
             if (exists == null) return (false, "Không tìm thấy sản phẩm.");
 
             if (await _repo.HasReferencesAsync(maSP))
-                return (false, "Không thể xóa sản phẩm vì đã phát sinh dữ liệu liên quan (Giá bán / Lô hàng / Nhà cung cấp sản phẩm).");
+                return (false, "Không thể xóa sản phẩm vì đã phát sinh dữ liệu liên quan (Lô hàng / Nhà cung cấp sản phẩm).");
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
