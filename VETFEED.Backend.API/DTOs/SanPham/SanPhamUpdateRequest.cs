@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-
+using VETFEED.Backend.API.DTOs.QuyDoiDonVi;
 namespace VETFEED.Backend.API.DTOs.SanPham
 {
     public class SanPhamUpdateRequest
@@ -13,5 +13,6 @@ namespace VETFEED.Backend.API.DTOs.SanPham
         public string? DonViTinh { get; set; }
         public string? GhiChu { get; set; }
         public decimal? GiaMoi { get; set; }
+        public List<DonViQuyDoiItem> DonViQuyDoi { get; set; } = new();
     }
 }
