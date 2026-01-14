@@ -44,16 +44,13 @@ namespace VETFEED.Backend.API.Services
             };
 
             var created = await _repo.CreateAsync(entity);
-
             if (request.GiaBanDau.HasValue)
             {
-                var giaBanDau = request.GiaBanDau.Value;
-
                 var giaBan = new GiaBan
                 {
                     MaGia = Guid.NewGuid(),
                     MaSP = entity.MaSP,
-                    DonGiaBan = giaBanDau,
+                    DonGiaBan = request.GiaBanDau.Value,
                     TuNgay = now,
                     DenNgay = null,
                     NgayTao = now,
@@ -61,6 +58,26 @@ namespace VETFEED.Backend.API.Services
                 };
 
                 _context.GiaBans.Add(giaBan);
+                await _context.SaveChangesAsync();
+            }
+
+            // NEW: tạo các dòng QuyDoiDonVi
+            if (request.DonViQuyDoi != null && request.DonViQuyDoi.Any())
+            {
+                foreach (var dv in request.DonViQuyDoi)
+                {
+                    if (string.IsNullOrWhiteSpace(dv.DonViNhap)) continue;
+
+                    var unit = new QuyDoiDonVi
+                    {
+                        MaQD = Guid.NewGuid(),
+                        MaSP = entity.MaSP,
+                        DonViNhap = dv.DonViNhap.Trim(),
+                        TyLe = dv.TyLe
+                    };
+                    _context.QuyDoiDonVis.Add(unit);
+                }
+
                 await _context.SaveChangesAsync();
             }
 
@@ -85,6 +102,35 @@ namespace VETFEED.Backend.API.Services
             {
                 spEntity.LoaiSanPham = loai;
                 spEntity.DonViCoSo = request.DonViTinh;
+                await _context.SaveChangesAsync();
+            }
+
+            var oldUnits = await _context.QuyDoiDonVis
+                .Where(u => u.MaSP == maSP)
+                .ToListAsync();
+
+            if (oldUnits.Any())
+            {
+                _context.QuyDoiDonVis.RemoveRange(oldUnits);
+                await _context.SaveChangesAsync();
+            }
+
+            if (request.DonViQuyDoi != null && request.DonViQuyDoi.Any())
+            {
+                foreach (var dv in request.DonViQuyDoi)
+                {
+                    if (string.IsNullOrWhiteSpace(dv.DonViNhap)) continue;
+
+                    var unit = new QuyDoiDonVi
+                    {
+                        MaQD = Guid.NewGuid(),
+                        MaSP = maSP,
+                        DonViNhap = dv.DonViNhap.Trim(),
+                        TyLe = dv.TyLe
+                    };
+                    _context.QuyDoiDonVis.Add(unit);
+                }
+
                 await _context.SaveChangesAsync();
             }
 
@@ -136,9 +182,30 @@ namespace VETFEED.Backend.API.Services
             if (await _repo.HasReferencesAsync(maSP))
                 return (false, "Không thể xóa sản phẩm vì đã phát sinh dữ liệu liên quan (Giá bán / Lô hàng / Nhà cung cấp sản phẩm).");
 
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            var units = await _context.QuyDoiDonVis
+                .Where(u => u.MaSP == maSP)
+                .ToListAsync();
+
+            if (units.Any())
+            {
+                _context.QuyDoiDonVis.RemoveRange(units);
+                await _context.SaveChangesAsync();
+            }
+
             var ok = await _repo.DeleteAsync(maSP);
-            return ok ? (true, null) : (false, "Xóa thất bại.");
+
+            if (!ok)
+            {
+                await transaction.RollbackAsync();
+                return (false, "Xóa thất bại.");
+            }
+
+            await transaction.CommitAsync();
+            return (true, null);
         }
+
         public Task<SanPhamResponse?> GetByCodeAsync(string maSPCode)
         {
             if (string.IsNullOrWhiteSpace(maSPCode))
