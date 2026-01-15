@@ -401,67 +401,44 @@ namespace VETFEED.Backend.API.Repositories
         }
 
         /// <summary>
-        /// Lấy số lượng có thể trả được cho một phiếu bán.
-        /// Tính toán: SoLuongCoTheTra = SoLuongDaBan - SoLuongDaTra (từ các phiếu trả trước)
+        /// Kiểm tra có thể trả hàng được không.
+        /// Trả về true nếu số lượng cần trả <= (số lượng đã bán - số lượng đã trả trước đó)
         /// </summary>
-        public async Task<ReturnableQuantityResponse?> GetReturnableQuantityAsync(Guid maPB)
+        public async Task<bool> CheckReturnableAsync(Guid maPB, Guid maLo, decimal soLuong)
         {
-            // 1. Lấy phiếu bán gốc kèm chi tiết
+            // 1. Lấy phiếu bán gốc kèm chi tiết cho lô cụ thể
             var phieuBan = await _context.PhieuBans
                 .Include(pb => pb.CTPhieuBans!)
-                    .ThenInclude(ct => ct.LoHang)
-                        .ThenInclude(lo => lo!.SanPham)
                 .FirstOrDefaultAsync(pb => pb.MaPB == maPB);
 
             if (phieuBan == null)
-                return null;
+                return false; // Phiếu bán không tồn tại
 
-            // 2. Lấy tất cả phiếu trả liên quan đến phiếu bán này
-            var phieuTras = await _context.PhieuTras
-                .Include(pt => pt.CTPhieuTras)
-                .Where(pt => pt.MaPB == maPB)
-                .ToListAsync();
-
-            // 3. Tính tổng số lượng đã trả theo từng lô
-            var soLuongDaTraTheoLo = phieuTras
-                .SelectMany(pt => pt.CTPhieuTras ?? new List<CTPhieuTra>())
-                .GroupBy(ct => ct.MaLo)
-                .ToDictionary(g => g.Key, g => g.Sum(ct => ct.SoLuongTra));
-
-            // 4. Build response với thông tin từng lô
-            var danhSachLoHang = phieuBan.CTPhieuBans!
-                .GroupBy(ct => ct.MaLo)
-                .Select(g =>
-                {
-                    var loHang = g.First().LoHang!;
-                    var sanPham = loHang.SanPham!;
-                    var soLuongDaBan = g.Sum(ct => ct.SoLuongQuyDoi);
-                    var soLuongDaTra = soLuongDaTraTheoLo.GetValueOrDefault(g.Key, 0m);
-                    var soLuongCoTheTra = soLuongDaBan - soLuongDaTra;
-
-                    return new ReturnableLoHangItem
-                    {
-                        MaLo = g.Key,
-                        MaLoCode = loHang.MaLoCode,
-                        TenSanPham = sanPham.TenSP,
-                        DonViCoSo = sanPham.DonViCoSo,
-                        HanSuDung = loHang.HanSuDung,
-                        SoLuongDaBan = soLuongDaBan,
-                        SoLuongDaTra = soLuongDaTra,
-                        SoLuongCoTheTra = soLuongCoTheTra > 0 ? soLuongCoTheTra : 0
-                    };
-                })
+            // 2. Tính tổng số lượng đã bán của lô này trong phiếu bán
+            var ctBanCuaLo = phieuBan.CTPhieuBans!
+                .Where(ct => ct.MaLo == maLo)
                 .ToList();
 
-            return new ReturnableQuantityResponse
-            {
-                MaPB = phieuBan.MaPB,
-                MaPBCode = phieuBan.MaPBCode,
-                DanhSachLoHang = danhSachLoHang
-            };
+            if (!ctBanCuaLo.Any())
+                return false; // Lô không có trong phiếu bán
+
+            var soLuongDaBan = ctBanCuaLo.Sum(ct => ct.SoLuongQuyDoi);
+
+            // 3. Tính tổng số lượng đã trả của lô này từ các phiếu trả trước
+            var soLuongDaTra = await _context.CTPhieuTras
+                .Include(ct => ct.PhieuTra)
+                .Where(ct => ct.PhieuTra!.MaPB == maPB && ct.MaLo == maLo)
+                .SumAsync(ct => ct.SoLuongTra);
+
+            // 4. Tính số lượng còn có thể trả
+            var soLuongCoTheTra = soLuongDaBan - soLuongDaTra;
+
+            // 5. Kiểm tra số lượng cần trả có hợp lệ không
+            return soLuong <= soLuongCoTheTra;
         }
 
 
 
     }
 }
+
