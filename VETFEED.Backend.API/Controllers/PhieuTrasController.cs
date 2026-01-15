@@ -106,34 +106,38 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         /// <summary>
-        /// Lấy số lượng có thể trả được cho một phiếu bán.
+        /// Kiểm tra có thể trả hàng được không.
         /// API này giúp FE validate trước khi tạo phiếu trả để tránh trả vượt quá số lượng đã bán.
         /// </summary>
-        /// <param name="maPB">Mã phiếu bán (GUID)</param>
-        /// <returns>Danh sách các lô với số lượng có thể trả</returns>
+        /// <param name="request">Thông tin kiểm tra: MaPB, MaLo, SoLuong</param>
+        /// <returns>true nếu có thể trả, false nếu không</returns>
         /// <remarks>
-        /// **Công thức tính:**
-        /// - SoLuongCoTheTra = SoLuongDaBan - SoLuongDaTra (từ các phiếu trả trước)
+        /// **Logic kiểm tra:**
+        /// - Lấy tổng số lượng đã bán của lô trong phiếu bán
+        /// - Lấy tổng số lượng đã trả của lô từ các phiếu trả trước
+        /// - Tính: SoLuongCoTheTra = SoLuongDaBan - SoLuongDaTra
+        /// - Trả về true nếu SoLuong <= SoLuongCoTheTra
         /// 
-        /// **Use case:**
-        /// - Gọi API này trước khi tạo phiếu trả để biết số lượng tối đa có thể trả cho mỗi lô
-        /// - FE có thể validate và hiển thị warning nếu user nhập số lượng vượt quá
+        /// **Trường hợp trả về false:**
+        /// - Phiếu bán không tồn tại
+        /// - Lô không có trong phiếu bán
+        /// - Số lượng cần trả > số lượng có thể trả
         /// </remarks>
-        /// <response code="200">Trả về danh sách lô và số lượng có thể trả</response>
-        /// <response code="404">Không tìm thấy phiếu bán</response>
+        /// <response code="200">Trả về true/false</response>
+        /// <response code="400">Dữ liệu không hợp lệ</response>
         /// <response code="500">Lỗi server</response>
-        [HttpGet("returnable-quantity/{maPB}")]
-        [ProducesResponseType(typeof(ReturnableQuantityResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpPost("check-returnable")]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetReturnableQuantity(Guid maPB)
+        public async Task<IActionResult> CheckReturnable([FromBody] CheckReturnableRequest request)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(new { error = "Dữ liệu không hợp lệ!" });
+
             try
             {
-                var result = await _service.GetReturnableQuantityAsync(maPB);
-                if (result == null)
-                    return NotFound(new { error = "Phiếu bán không tồn tại!" });
-
+                var result = await _service.CheckReturnableAsync(request);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -143,4 +147,3 @@ namespace VETFEED.Backend.API.Controllers
         }
     }
 }
-

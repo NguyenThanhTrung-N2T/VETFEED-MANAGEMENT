@@ -28,10 +28,11 @@ namespace VETFEED.Backend.API.Repositories
         Task<bool> DeletePhieuTraAsync(Guid maPT);
 
         /// <summary>
-        /// Lấy số lượng có thể trả được cho một phiếu bán.
-        /// Tính toán: SoLuongCoTheTra = SoLuongDaBan - SoLuongDaTra (từ các phiếu trả trước)
+        /// Kiểm tra có thể trả hàng được không.
+        /// Trả về true nếu số lượng cần trả <= (số lượng đã bán - số lượng đã trả trước đó)
         /// </summary>
-        Task<ReturnableQuantityResponse?> GetReturnableQuantityAsync(Guid maPB);
+        Task<bool> CheckReturnableAsync(Guid maPB, Guid maLo, decimal soLuong);
     }
 }
+
 
