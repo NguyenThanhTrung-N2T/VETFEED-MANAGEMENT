@@ -294,8 +294,6 @@ namespace VETFEED.Backend.API.Repositories
             }
         }
 
-
-
         //Xóa phiếu trả
         public async Task<bool> DeletePhieuTraAsync(Guid maPT)
         {
