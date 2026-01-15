@@ -118,6 +118,7 @@ namespace VETFEED.Backend.API.Services
                     MaCongNo = Guid.NewGuid(),
                     MaDoiTuong = request.MaDoiTuong,
                     MaPhieu = maPhieu,
+                    LoaiDoiTuong = isKhachHang ? LoaiDoiTuongCongNoEnum.KHACH_HANG : LoaiDoiTuongCongNoEnum.NHA_CUNG_CAP,
                     SoTien = request.SoTien,
                     NgayPhatSinh = request.NgayPhatSinh,
                     HanThanhToan = request.HanThanhToan,
@@ -170,6 +171,7 @@ namespace VETFEED.Backend.API.Services
                         MaDoiTuong = request.MaDoiTuong,
                         MaPhieu = maPhieu,
                         SoTien = -soTienCanTra,
+                        LoaiDoiTuong = isKhachHang ? LoaiDoiTuongCongNoEnum.KHACH_HANG : LoaiDoiTuongCongNoEnum.NHA_CUNG_CAP,
                         NgayPhatSinh = request.NgayPhatSinh,
                         GhiChu = request.GhiChu
                     });
@@ -197,6 +199,7 @@ namespace VETFEED.Backend.API.Services
                             MaDoiTuong = request.MaDoiTuong,
                             MaPhieu = cn.MaPhieu,
                             SoTien = -soTru,
+                            LoaiDoiTuong = isKhachHang ? LoaiDoiTuongCongNoEnum.KHACH_HANG : LoaiDoiTuongCongNoEnum.NHA_CUNG_CAP,
                             NgayPhatSinh = request.NgayPhatSinh,
                             GhiChu = request.GhiChu
                         });

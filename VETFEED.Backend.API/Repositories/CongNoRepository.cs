@@ -18,83 +18,85 @@ namespace VETFEED.Backend.API.Repositories
         // lay cong nợ theo khach hang 
         public async Task<List<CongNoTongHopResponse>> GetTongHopCongNoAsync()
         {
-            var khQuery =
-                from cn in _context.CongNos
-                join kh in _context.KhachHangs
-                    on cn.MaDoiTuong equals kh.MaKH
-                where cn.LoaiDoiTuong == LoaiDoiTuongCongNoEnum.KHACH_HANG
-                group cn by new
-                {
-                    kh.MaKH,
-                    kh.MaKHCode,
-                    kh.TenKH
-                }
-                into g
-                let tongPhatSinh = g.Where(x => x.SoTien > 0).Sum(x => (decimal?)x.SoTien) ?? 0
-                let daThanhToan = g.Where(x => x.SoTien < 0).Sum(x => (decimal?)Math.Abs(x.SoTien)) ?? 0
-                let duNo = tongPhatSinh - daThanhToan
-                select new CongNoTongHopResponse
-                {
-                    MaDoiTuong = g.Key.MaKH,
-                    MaDoiTuongCode = g.Key.MaKHCode,
-                    TenDoiTuong = g.Key.TenKH,
-                    LoaiDoiTuong = "KHACH_HANG",
+            var today = DateTime.Today;
 
-                    TongPhatSinh = tongPhatSinh,
-                    DaThanhToan = daThanhToan,
-                    DuNo = duNo < 0 ? 0 : duNo,
-
-                    // HẠN SỚM NHẤT CỦA CÁC KHOẢN NỢ CHƯA TRẢ HẾT
-                    HanThanhToanGanNhat = duNo > 0
-                        ? g.Where(x => x.SoTien > 0 && x.HanThanhToan != null)
-                           .Min(x => x.HanThanhToan)
-                        : null,
-
-                    CoQuaHan = duNo > 0
-                        && g.Where(x => x.SoTien > 0 && x.HanThanhToan != null)
-                             .Min(x => x.HanThanhToan) < DateTime.Today
-                };
-
-            var nccQuery =
-                from cn in _context.CongNos
-                join ncc in _context.NhaCungCaps
-                    on cn.MaDoiTuong equals ncc.MaNCC
-                where cn.LoaiDoiTuong == LoaiDoiTuongCongNoEnum.NHA_CUNG_CAP
-                group cn by new
-                {
-                    ncc.MaNCC,
-                    ncc.MaNCCCode,
-                    ncc.TenNCC
-                }
-                into g
-                let tongPhatSinh = g.Where(x => x.SoTien > 0).Sum(x => (decimal?)x.SoTien) ?? 0
-                let daThanhToan = g.Where(x => x.SoTien < 0).Sum(x => (decimal?)Math.Abs(x.SoTien)) ?? 0
-                let duNo = tongPhatSinh - daThanhToan
-                select new CongNoTongHopResponse
-                {
-                    MaDoiTuong = g.Key.MaNCC,
-                    MaDoiTuongCode = g.Key.MaNCCCode,
-                    TenDoiTuong = g.Key.TenNCC,
-                    LoaiDoiTuong = "NHA_CUNG_CAP",
-
-                    TongPhatSinh = tongPhatSinh,
-                    DaThanhToan = daThanhToan,
-                    DuNo = duNo < 0 ? 0 : duNo,
-
-                    HanThanhToanGanNhat = duNo > 0
-                        ? g.Where(x => x.SoTien > 0 && x.HanThanhToan != null)
-                           .Min(x => x.HanThanhToan)
-                        : null,
-
-                    CoQuaHan = duNo > 0
-                        && g.Where(x => x.SoTien > 0 && x.HanThanhToan != null)
-                             .Min(x => x.HanThanhToan) < DateTime.Today
-                };
-
-            return await khQuery
-                .Union(nccQuery)
+            // Lấy toàn bộ công nợ về memory
+            var congNoList = await _context.CongNos
                 .ToListAsync();
+
+            var result = new List<CongNoTongHopResponse>();
+
+            // KHÁCH HÀNG
+            var khQuery = congNoList
+                .Where(cn => cn.LoaiDoiTuong == LoaiDoiTuongCongNoEnum.KHACH_HANG)
+                .Join(_context.KhachHangs, cn => cn.MaDoiTuong, kh => kh.MaKH, (cn, kh) => new { cn, kh })
+                .GroupBy(x => new { x.kh.MaKH, x.kh.MaKHCode, x.kh.TenKH })
+                .Select(g =>
+                {
+                    var tongPhatSinh = g.Where(x => x.cn.SoTien > 0).Sum(x => x.cn.SoTien);
+                    var daThanhToan = g.Where(x => x.cn.SoTien < 0).Sum(x => Math.Abs(x.cn.SoTien));
+                    var duNo = tongPhatSinh - daThanhToan;
+
+                    DateTime? hanGanNhat = null;
+                    if (duNo > 0)
+                    {
+                        hanGanNhat = g.Where(x => x.cn.SoTien > 0 && x.cn.HanThanhToan != null)
+                                      .Min(x => x.cn.HanThanhToan);
+                    }
+
+                    return new CongNoTongHopResponse
+                    {
+                        MaDoiTuong = g.Key.MaKH,
+                        MaDoiTuongCode = g.Key.MaKHCode!,
+                        TenDoiTuong = g.Key.TenKH!,
+                        LoaiDoiTuong = "KHACH_HANG",
+                        TongPhatSinh = tongPhatSinh,
+                        DaThanhToan = daThanhToan,
+                        DuNo = duNo < 0 ? 0 : duNo,
+                        HanThanhToanGanNhat = hanGanNhat,
+                        CoQuaHan = duNo > 0 && hanGanNhat != null && hanGanNhat < today
+                    };
+                });
+
+            // NCC
+            var nccQuery = congNoList
+                .Where(cn => cn.LoaiDoiTuong == LoaiDoiTuongCongNoEnum.NHA_CUNG_CAP)
+                .Join(_context.NhaCungCaps, cn => cn.MaDoiTuong, ncc => ncc.MaNCC, (cn, ncc) => new { cn, ncc })
+                .GroupBy(x => new { x.ncc.MaNCC, x.ncc.MaNCCCode, x.ncc.TenNCC })
+                .Select(g =>
+                {
+                    var tongPhatSinh = g.Where(x => x.cn.SoTien > 0).Sum(x => x.cn.SoTien);
+                    var daThanhToan = g.Where(x => x.cn.SoTien < 0).Sum(x => Math.Abs(x.cn.SoTien));
+                    var duNo = tongPhatSinh - daThanhToan;
+
+                    DateTime? hanGanNhat = null;
+                    if (duNo > 0)
+                    {
+                        hanGanNhat = g.Where(x => x.cn.SoTien > 0 && x.cn.HanThanhToan != null)
+                                      .Min(x => x.cn.HanThanhToan);
+                    }
+
+                    return new CongNoTongHopResponse
+                    {
+                        MaDoiTuong = g.Key.MaNCC,
+                        MaDoiTuongCode = g.Key.MaNCCCode!,
+                        TenDoiTuong = g.Key.TenNCC!,
+                        LoaiDoiTuong = "NHA_CUNG_CAP",
+                        TongPhatSinh = tongPhatSinh,
+                        DaThanhToan = daThanhToan,
+                        DuNo = duNo < 0 ? 0 : duNo,
+                        HanThanhToanGanNhat = hanGanNhat,
+                        CoQuaHan = duNo > 0 && hanGanNhat != null && hanGanNhat < today
+                    };
+                });
+
+            result.AddRange(khQuery);
+            result.AddRange(nccQuery);
+
+            // Chỉ lấy đối tượng còn nợ
+            return result.ToList();
         }
+
 
 
         // lay lịch sử công nợ của đối tượng theo mã đối tượng
