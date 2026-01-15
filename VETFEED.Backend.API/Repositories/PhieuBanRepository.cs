@@ -130,8 +130,21 @@ namespace VETFEED.Backend.API.Repositories
 
             try
             {
+                // kiem tra khach hang
                 var khachHang = await _context.KhachHangs.FindAsync(request.MaKH)
                     ?? throw new Exception("Khách hàng không tồn tại!");
+
+                if (request.HinhThucThanhToan != HinhThucThanhToanEnum.CONG_NO)
+                {
+                    if (request.TienCoc > 0)
+                        throw new Exception("Thanh toán tiền mặt/chuyển khoản không được có tiền cọc");
+                }
+                else
+                {
+                    if (request.HanTra == null)
+                        throw new Exception("Bán công nợ bắt buộc phải có hạn trả");
+                }
+
 
                 if (request.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO)
                 {
@@ -207,7 +220,13 @@ namespace VETFEED.Backend.API.Repositories
 
                 var tienChietKhau = tongTienHang * (request.ChietKhauPhanTram / 100);
                 var thanhTien = tongTienHang - tienChietKhau;
-                var tienNo = thanhTien - request.TienCoc;
+
+                decimal tienNo = 0;
+                if (request.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO)
+                {
+                    tienNo = thanhTien - request.TienCoc;
+                }
+
 
                 var trangThaiThanhToan =
                     request.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO
