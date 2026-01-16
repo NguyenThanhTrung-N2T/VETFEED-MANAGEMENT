@@ -27,7 +27,8 @@ namespace VETFEED.Backend.API.Repositories
                 DiaChi = n.DiaChi,
                 TrangThai = n.TrangThai.ToString(),
                 GhiChu = n.GhiChu,
-                NgayTao = n.NgayTao
+                NgayTao = n.NgayTao,
+                SanPhamCount = _context.NhaCungCapSanPhams.Count(sp => sp.MaNCC == n.MaNCC)
             }).ToListAsync();
         }
 
