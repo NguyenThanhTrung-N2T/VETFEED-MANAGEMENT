@@ -17,7 +17,7 @@ namespace VETFEED.Backend.API.Controllers
         // GET : api/congnos/summary : lay cong no tong hop cua tat ca doi tuong
         [HttpGet("summary")]
         [ProducesResponseType(typeof(List<CongNoTongHopResponse>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetTongHopCongNo()
+        public async Task<ActionResult<List<CongNoTongHopResponse>>> GetTongHopCongNo()
         {
             // lay cong no tong hop cua tat ca doi tuong
             var result = await _congNoService.GetTongHopCongNoAsync();
@@ -27,7 +27,7 @@ namespace VETFEED.Backend.API.Controllers
 
         // GET : api/congnos/{maDoiTuong}/detail
         [HttpGet("{maDoiTuong}/detail")]
-        public async Task<IActionResult> GetCongNoHistory(Guid maDoiTuong)
+        public async Task<ActionResult<List<CongNoHistoryResponse>>> GetCongNoHistory(Guid maDoiTuong)
         {
             // lay lich su cong no cua doi tuong theo ma doi tuong
             var result = await _congNoService.GetCongNoHistoryAsync(maDoiTuong);
