@@ -23,14 +23,13 @@ namespace VETFEED.Backend.API.Repositories
                 .Select(x => new NhaCungCapSanPhamResponse
                 {
                     MaNCSP = x.MaNCSP,
-                    MaNCC = x.MaNCC,
-                    TenNCC = x.NhaCungCap != null ? x.NhaCungCap.TenNCC : null,
                     MaSP = x.MaSP,
-                    TenSP = x.SanPham != null ? x.SanPham.TenSP : null,
-                    GiaNhapMacDinh = x.GiaNhapMacDinh,
-                    TrangThai = x.TrangThai.ToString(),
+                    TenSanPham = x.SanPham != null ? x.SanPham.TenSP : null,
+                    MaSanPhamCode = x.SanPham != null ? x.SanPham.MaSPCode : null,
+                    DonViCoSo = x.SanPham != null ? x.SanPham.DonViCoSo : null,
+                    GiaNhapMacDinh = x.GiaNhapMacDinh ?? 0,
                     GhiChu = x.GhiChu,
-                    NgayTao = x.NgayTao
+                    TrangThai = x.TrangThai.ToString()
                 }).ToListAsync();
         }
 
@@ -47,14 +46,13 @@ namespace VETFEED.Backend.API.Repositories
             return new NhaCungCapSanPhamResponse
             {
                 MaNCSP = x.MaNCSP,
-                MaNCC = x.MaNCC,
-                TenNCC = x.NhaCungCap?.TenNCC,
                 MaSP = x.MaSP,
-                TenSP = x.SanPham?.TenSP,
-                GiaNhapMacDinh = x.GiaNhapMacDinh,
-                TrangThai = x.TrangThai.ToString(),
+                TenSanPham = x.SanPham?.TenSP,
+                MaSanPhamCode = x.SanPham?.MaSPCode,
+                DonViCoSo = x.SanPham?.DonViCoSo,
+                GiaNhapMacDinh = x.GiaNhapMacDinh ?? 0,
                 GhiChu = x.GhiChu,
-                NgayTao = x.NgayTao
+                TrangThai = x.TrangThai.ToString()
             };
         }
 
@@ -68,14 +66,13 @@ namespace VETFEED.Backend.API.Repositories
                 .Select(x => new NhaCungCapSanPhamResponse
                 {
                     MaNCSP = x.MaNCSP,
-                    MaNCC = x.MaNCC,
-                    TenNCC = x.NhaCungCap != null ? x.NhaCungCap.TenNCC : null,
                     MaSP = x.MaSP,
-                    TenSP = x.SanPham != null ? x.SanPham.TenSP : null,
-                    GiaNhapMacDinh = x.GiaNhapMacDinh,
-                    TrangThai = x.TrangThai.ToString(),
+                    TenSanPham = x.SanPham != null ? x.SanPham.TenSP : null,
+                    MaSanPhamCode = x.SanPham != null ? x.SanPham.MaSPCode : null,
+                    DonViCoSo = x.SanPham != null ? x.SanPham.DonViCoSo : null,
+                    GiaNhapMacDinh = x.GiaNhapMacDinh ?? 0,
                     GhiChu = x.GhiChu,
-                    NgayTao = x.NgayTao
+                    TrangThai = x.TrangThai.ToString()
                 }).ToListAsync();
         }
 
@@ -89,14 +86,13 @@ namespace VETFEED.Backend.API.Repositories
                 .Select(x => new NhaCungCapSanPhamResponse
                 {
                     MaNCSP = x.MaNCSP,
-                    MaNCC = x.MaNCC,
-                    TenNCC = x.NhaCungCap != null ? x.NhaCungCap.TenNCC : null,
                     MaSP = x.MaSP,
-                    TenSP = x.SanPham != null ? x.SanPham.TenSP : null,
-                    GiaNhapMacDinh = x.GiaNhapMacDinh,
-                    TrangThai = x.TrangThai.ToString(),
+                    TenSanPham = x.SanPham != null ? x.SanPham.TenSP : null,
+                    MaSanPhamCode = x.SanPham != null ? x.SanPham.MaSPCode : null,
+                    DonViCoSo = x.SanPham != null ? x.SanPham.DonViCoSo : null,
+                    GiaNhapMacDinh = x.GiaNhapMacDinh ?? 0,
                     GhiChu = x.GhiChu,
-                    NgayTao = x.NgayTao
+                    TrangThai = x.TrangThai.ToString()
                 }).ToListAsync();
         }
 
@@ -124,14 +120,13 @@ namespace VETFEED.Backend.API.Repositories
             return new NhaCungCapSanPhamResponse
             {
                 MaNCSP = entity.MaNCSP,
-                MaNCC = entity.MaNCC,
-                TenNCC = entity.NhaCungCap?.TenNCC,
                 MaSP = entity.MaSP,
-                TenSP = entity.SanPham?.TenSP,
-                GiaNhapMacDinh = entity.GiaNhapMacDinh,
-                TrangThai = entity.TrangThai.ToString(),
+                TenSanPham = entity.SanPham?.TenSP,
+                MaSanPhamCode = entity.SanPham?.MaSPCode,
+                DonViCoSo = entity.SanPham?.DonViCoSo,
+                GiaNhapMacDinh = entity.GiaNhapMacDinh ?? 0,
                 GhiChu = entity.GhiChu,
-                NgayTao = entity.NgayTao
+                TrangThai = entity.TrangThai.ToString()
             };
         }
 
@@ -156,14 +151,13 @@ namespace VETFEED.Backend.API.Repositories
             return new NhaCungCapSanPhamResponse
             {
                 MaNCSP = entity.MaNCSP,
-                MaNCC = entity.MaNCC,
-                TenNCC = entity.NhaCungCap?.TenNCC,
                 MaSP = entity.MaSP,
-                TenSP = entity.SanPham?.TenSP,
-                GiaNhapMacDinh = entity.GiaNhapMacDinh,
-                TrangThai = entity.TrangThai.ToString(),
+                TenSanPham = entity.SanPham?.TenSP,
+                MaSanPhamCode = entity.SanPham?.MaSPCode,
+                DonViCoSo = entity.SanPham?.DonViCoSo,
+                GiaNhapMacDinh = entity.GiaNhapMacDinh ?? 0,
                 GhiChu = entity.GhiChu,
-                NgayTao = entity.NgayTao
+                TrangThai = entity.TrangThai.ToString()
             };
         }
 
