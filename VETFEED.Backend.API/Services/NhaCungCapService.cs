@@ -120,10 +120,10 @@ namespace VETFEED.Backend.API.Services
         }
 
         /* Update nhà cung cấp
-           Logic xử lý SanPhams:
-           - NCCSP trong DB nhưng KHÔNG có trong request (theo MaNCSP): sẽ bị XÓA
-           - NCCSP trong request với MaNCSP = null/Guid.Empty: THÊM MỚI
-           - NCCSP trong request với MaNCSP có giá trị: CẬP NHẬT
+           Logic xử lý SanPhams (dựa trên MaSP):
+           - SP trong DB nhưng KHÔNG có trong request (theo MaSP): sẽ bị XÓA
+           - SP trong request nhưng KHÔNG có trong DB: THÊM MỚI
+           - SP trong request và có trong DB: CẬP NHẬT
          */
         public async Task<NhaCungCapDetailedResponse?> UpdateNhaCungCapAsync(Guid id, NhaCungCapUpdateRequest request)
         {
@@ -174,18 +174,16 @@ namespace VETFEED.Backend.API.Services
                 {
                     // Lấy danh sách NCCSP hiện có trong DB
                     var existingNCCSPs = await _sanPhamRepo.GetEntitiesByNhaCungCapAsync(id);
-                    var existingMaNCCSPs = existingNCCSPs.Select(sp => sp.MaNCSP).ToHashSet();
+                    // Tạo dictionary MaSP -> MaNCSP để tra cứu nhanh
+                    var existingMaSPToMaNCSP = existingNCCSPs.ToDictionary(sp => sp.MaSP, sp => sp.MaNCSP);
 
-                    // Lọc ra các MaNCSP trong request (bỏ qua null và Guid.Empty vì đó là NCCSP mới)
-                    var requestMaNCCSPs = request.SanPhams
-                        .Where(sp => sp.MaNCSP.HasValue && sp.MaNCSP.Value != Guid.Empty)
-                        .Select(sp => sp.MaNCSP!.Value)
-                        .ToHashSet();
+                    // Lấy danh sách MaSP từ request
+                    var requestMaSPs = request.SanPhams.Select(sp => sp.MaSP).ToHashSet();
 
-                    // XÓA: NCCSP trong DB nhưng KHÔNG có trong request
+                    // XÓA: NCCSP trong DB nhưng KHÔNG có trong request (theo MaSP)
                     foreach (var existingNCSP in existingNCCSPs)
                     {
-                        if (!requestMaNCCSPs.Contains(existingNCSP.MaNCSP))
+                        if (!requestMaSPs.Contains(existingNCSP.MaSP))
                         {
                             await _sanPhamRepo.DeleteNhaCungCapSanPhamAsync(existingNCSP.MaNCSP);
                         }
@@ -195,7 +193,6 @@ namespace VETFEED.Backend.API.Services
                     for (int i = 0; i < request.SanPhams.Count; i++)
                     {
                         var sp = request.SanPhams[i];
-                        var hasMaNCSP = sp.MaNCSP.HasValue && sp.MaNCSP.Value != Guid.Empty;
 
                         var sanPhamRequest = new NhaCungCapSanPhamRequest
                         {
@@ -206,18 +203,14 @@ namespace VETFEED.Backend.API.Services
                             GhiChu = sp.GhiChu
                         };
 
-                        if (hasMaNCSP)
+                        if (existingMaSPToMaNCSP.TryGetValue(sp.MaSP, out var existingMaNCSP))
                         {
-                            // CẬP NHẬT: MaNCSP có giá trị
-                            // Kiểm tra MaNCSP có tồn tại trong DB không
-                            if (!existingMaNCCSPs.Contains(sp.MaNCSP!.Value))
-                                throw new ArgumentException($"Sản phẩm thứ {i + 1}: Không tìm thấy liên kết NCC-SP với mã {sp.MaNCSP}.");
-                            
-                            await _sanPhamRepo.UpdateNhaCungCapSanPhamAsync(sp.MaNCSP!.Value, sanPhamRequest);
+                            // CẬP NHẬT: MaSP đã tồn tại trong DB
+                            await _sanPhamRepo.UpdateNhaCungCapSanPhamAsync(existingMaNCSP, sanPhamRequest);
                         }
                         else
                         {
-                            // THÊM MỚI: MaNCSP = null/Empty
+                            // THÊM MỚI: MaSP chưa tồn tại trong DB
                             await _sanPhamRepo.AddNhaCungCapSanPhamAsync(sanPhamRequest);
                         }
                     }
