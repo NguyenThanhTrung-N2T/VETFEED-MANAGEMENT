@@ -65,6 +65,9 @@ builder.Services.AddScoped<IQuyDoiDonViService, QuyDoiDonViService>();
 builder.Services.AddScoped<ICongNoRepository, CongNoRepository>();
 builder.Services.AddScoped<ICongNoService, CongNoService>();
 
+builder.Services.AddScoped<IBaoCaoRepository, BaoCaoRepository>();
+builder.Services.AddScoped<IBaoCaoService, BaoCaoService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
