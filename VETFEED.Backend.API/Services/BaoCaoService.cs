@@ -12,10 +12,16 @@ namespace VETFEED.Backend.API.Services
             _baoCaoRepository = baoCaoRepository;
         }
 
-        // doanh thu từ ngày from đến ngày to
+        //Lấy phân tích doanh thu theo khoảng thời gian
         public async Task<DoanhThuPhanTichResponse> GetDoanhThuPhanTichAsync(DateTime from, DateTime to)
         {
             return await _baoCaoRepository.GetDoanhThuPhanTichAsync(from, to);
+        }
+
+        // Lấy danh sách chi tiết đơn hàng doanh thu với phân trang
+        public async Task<DoanhThuDonHangResponse> GetDoanhThuDonHangAsync(DateTime from, DateTime to, int page, int limit)
+        {
+            return await _baoCaoRepository.GetDoanhThuDonHangAsync(from, to, page, limit);
         }
     }
 }

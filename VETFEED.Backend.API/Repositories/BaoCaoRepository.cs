@@ -52,5 +52,53 @@ namespace VETFEED.Backend.API.Repositories
                 XuHuongChart = xuHuongChart
             };
         }
+
+        //Lấy danh sách chi tiết đơn hàng doanh thu với phân trang
+        public async Task<DoanhThuDonHangResponse> GetDoanhThuDonHangAsync(DateTime from, DateTime to, int page, int limit)
+        {
+            // Query chi tiết phiếu bán với các join cần thiết
+            var query = _context.CTPhieuBans
+                .Include(ct => ct.PhieuBan)
+                    .ThenInclude(pb => pb!.KhachHang)
+                .Include(ct => ct.LoHang)
+                    .ThenInclude(lh => lh!.SanPham)
+                .Where(ct => ct.PhieuBan!.NgayBan >= from && ct.PhieuBan.NgayBan <= to)
+                .OrderByDescending(ct => ct.PhieuBan!.NgayBan);
+
+            // Đếm tổng số items
+            var totalItems = await query.CountAsync();
+
+            // Tính tổng số trang
+            var totalPages = (int)Math.Ceiling((double)totalItems / limit);
+
+            // Lấy dữ liệu với phân trang
+            var data = await query
+                .Skip((page - 1) * limit)
+                .Take(limit)
+                .Select(ct => new DoanhThuDonHangItemResponse
+                {
+                    MaPhieuBanCode = ct.PhieuBan!.MaPBCode,
+                    Ngay = ct.PhieuBan.NgayBan,
+                    TenSanPham = ct.LoHang!.SanPham!.TenSP,
+                    MaSPCode = ct.LoHang.SanPham.MaSPCode,
+                    TenKhachHang = ct.PhieuBan.KhachHang!.TenKH,
+                    SoLuong = ct.SoLuong,
+                    DonGia = ct.DonGia,
+                    ThanhTien = ct.SoLuong * ct.DonGia
+                })
+                .ToListAsync();
+
+            return new DoanhThuDonHangResponse
+            {
+                Data = data,
+                Meta = new PaginationMeta
+                {
+                    Page = page,
+                    Limit = limit,
+                    Total_Items = totalItems,
+                    Total_Pages = totalPages
+                }
+            };
+        }
     }
 }
