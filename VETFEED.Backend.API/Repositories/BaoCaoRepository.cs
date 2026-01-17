@@ -100,5 +100,53 @@ namespace VETFEED.Backend.API.Repositories
                 }
             };
         }
+
+        // Lấy phân tích lợi nhuận theo khoảng thời gian
+        public async Task<LoiNhuanPhanTichResponse> GetLoiNhuanPhanTichAsync(DateTime from, DateTime to)
+        {
+            // Query chi tiết phiếu bán với các join cần thiết
+            var chiTietPhieuBans = await _context.CTPhieuBans
+                .Include(ct => ct.PhieuBan)
+                .Include(ct => ct.LoHang)
+                    .ThenInclude(lh => lh!.SanPham)
+                .Where(ct => ct.PhieuBan!.NgayBan >= from && ct.PhieuBan.NgayBan <= to)
+                .ToListAsync();
+
+            // Tính tổng quan
+            var tongDoanhThu = chiTietPhieuBans.Sum(ct => ct.SoLuong * ct.DonGia);
+            var tongChiPhi = chiTietPhieuBans.Sum(ct => ct.ThanhTienVon);
+            var tongLoiNhuan = tongDoanhThu - tongChiPhi;
+            var tiSuat = tongDoanhThu > 0 ? Math.Round((tongLoiNhuan / tongDoanhThu) * 100, 2) : 0;
+
+            // Tính lợi nhuận theo sản phẩm và lấy top 5
+            var topSanPham = chiTietPhieuBans
+                .GroupBy(ct => new
+                {
+                    MaSP = ct.LoHang!.SanPham!.MaSP,
+                    TenSP = ct.LoHang.SanPham.TenSP
+                })
+                .Select(g => new TopSanPhamLoiNhuanResponse
+                {
+                    TenSanPham = g.Key.TenSP,
+                    DoanhThu = g.Sum(ct => ct.SoLuong * ct.DonGia),
+                    ChiPhi = g.Sum(ct => ct.ThanhTienVon),
+                    LoiNhuan = g.Sum(ct => ct.SoLuong * ct.DonGia) - g.Sum(ct => ct.ThanhTienVon)
+                })
+                .OrderByDescending(sp => sp.LoiNhuan)
+                .Take(5)
+                .ToList();
+
+            return new LoiNhuanPhanTichResponse
+            {
+                TongQuan = new LoiNhuanTongQuanResponse
+                {
+                    DoanhThu = tongDoanhThu,
+                    ChiPhi = tongChiPhi,
+                    LoiNhuan = tongLoiNhuan,
+                    TiSuat = tiSuat
+                },
+                TopSanPhamChart = topSanPham
+            };
+        }
     }
 }

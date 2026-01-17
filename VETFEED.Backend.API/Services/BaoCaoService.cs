@@ -23,5 +23,11 @@ namespace VETFEED.Backend.API.Services
         {
             return await _baoCaoRepository.GetDoanhThuDonHangAsync(from, to, page, limit);
         }
+
+        // Lấy phân tích lợi nhuận theo khoảng thời gian
+        public async Task<LoiNhuanPhanTichResponse> GetLoiNhuanPhanTichAsync(DateTime from, DateTime to)
+        {
+            return await _baoCaoRepository.GetLoiNhuanPhanTichAsync(from, to);
+        }
     }
 }

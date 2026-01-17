@@ -58,5 +58,23 @@ namespace VETFEED.Backend.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        //GET api/baocaos/loinhuan/phantich?from=2026-01-09&to=2026-01-16 : Lấy phân tích lợi nhuận theo khoảng thời gian
+        [HttpGet("loinhuan/phantich")]
+        [ProducesResponseType(typeof(LoiNhuanPhanTichResponse), StatusCodes.Status200OK)]
+        public async Task<ActionResult<LoiNhuanPhanTichResponse>> GetLoiNhuanPhanTich(
+            [FromQuery] DateTime from,
+            [FromQuery] DateTime to)
+        {
+            try
+            {
+                var result = await _baoCaoService.GetLoiNhuanPhanTichAsync(from, to);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
