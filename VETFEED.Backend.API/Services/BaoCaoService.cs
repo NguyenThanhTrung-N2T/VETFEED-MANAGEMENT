@@ -29,5 +29,11 @@ namespace VETFEED.Backend.API.Services
         {
             return await _baoCaoRepository.GetLoiNhuanPhanTichAsync(from, to);
         }
+
+        // Lấy danh sách lợi nhuận theo sản phẩm với phân trang và sắp xếp
+        public async Task<LoiNhuanSanPhamResponse> GetLoiNhuanSanPhamAsync(DateTime from, DateTime to, int page, int limit, string sortBy, string order)
+        {
+            return await _baoCaoRepository.GetLoiNhuanSanPhamAsync(from, to, page, limit, sortBy, order);
+        }
     }
 }

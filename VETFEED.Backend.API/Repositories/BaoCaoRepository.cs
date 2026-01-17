@@ -148,5 +148,84 @@ namespace VETFEED.Backend.API.Repositories
                 TopSanPhamChart = topSanPham
             };
         }
+
+        // Lấy danh sách lợi nhuận theo sản phẩm với phân trang và sắp xếp
+        public async Task<LoiNhuanSanPhamResponse> GetLoiNhuanSanPhamAsync(DateTime from, DateTime to, int page, int limit, string sortBy, string order)
+        {
+            // Query và group by sản phẩm
+            var query = _context.CTPhieuBans
+                .Include(ct => ct.PhieuBan)
+                .Include(ct => ct.LoHang)
+                    .ThenInclude(lh => lh!.SanPham)
+                .Where(ct => ct.PhieuBan != null && ct.PhieuBan.NgayBan >= from && ct.PhieuBan.NgayBan <= to)
+                .Where(ct => ct.LoHang != null && ct.LoHang.SanPham != null) // Null safety
+                .GroupBy(ct => new
+                {
+                    MaSP = ct.LoHang!.SanPham!.MaSP,
+                    MaSPCode = ct.LoHang.SanPham.MaSPCode,
+                    TenSP = ct.LoHang.SanPham.TenSP
+                })
+                .Select(g => new
+                {
+                    MaSPCode = g.Key.MaSPCode,
+                    TenSanPham = g.Key.TenSP,
+                    SoLuongBan = g.Sum(ct => ct.SoLuongQuyDoi), // Dùng đơn vị cơ sở
+                    DoanhThu = g.Sum(ct => ct.SoLuong * ct.DonGia),
+                    ChiPhi = g.Sum(ct => ct.ThanhTienVon),
+                    LoiNhuan = g.Sum(ct => ct.SoLuong * ct.DonGia) - g.Sum(ct => ct.ThanhTienVon),
+                    TiSuat = g.Sum(ct => ct.SoLuong * ct.DonGia) > 0 
+                        ? ((g.Sum(ct => ct.SoLuong * ct.DonGia) - g.Sum(ct => ct.ThanhTienVon)) / g.Sum(ct => ct.SoLuong * ct.DonGia)) * 100
+                        : 0
+                });
+
+            // Sắp xếp theo doanh thu, số lượng, lợi nhuận, tỷ suất
+            var sortedQuery = sortBy.ToLower() switch
+            {
+                "revenue" => order.ToLower() == "asc" 
+                    ? query.OrderBy(p => p.DoanhThu)
+                    : query.OrderByDescending(p => p.DoanhThu),
+                "quantity" => order.ToLower() == "asc"
+                    ? query.OrderBy(p => p.SoLuongBan)
+                    : query.OrderByDescending(p => p.SoLuongBan),
+                "margin" => order.ToLower() == "asc"
+                    ? query.OrderBy(p => p.TiSuat)
+                    : query.OrderByDescending(p => p.TiSuat),
+                _ => order.ToLower() == "asc" // default: profit
+                    ? query.OrderBy(p => p.LoiNhuan)
+                    : query.OrderByDescending(p => p.LoiNhuan)
+            };
+
+            // Đếm tổng số sản phẩm
+            var totalItems = await sortedQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / limit);
+
+            // Áp dụng phân trang
+            var data = await sortedQuery
+                .Skip((page - 1) * limit)
+                .Take(limit)
+                .Select(p => new LoiNhuanSanPhamItemResponse
+                {
+                    MaSPCode = p.MaSPCode,
+                    TenSanPham = p.TenSanPham,
+                    SoLuongBan = p.SoLuongBan,
+                    DoanhThu = p.DoanhThu,
+                    ChiPhi = p.ChiPhi,
+                    LoiNhuan = p.LoiNhuan,
+                    TiSuat = Math.Round(p.TiSuat, 2)
+                })
+                .ToListAsync();
+
+            return new LoiNhuanSanPhamResponse
+            {
+                Data = data ?? new List<LoiNhuanSanPhamItemResponse>(), 
+                Meta = new PaginationMeta
+                {
+                    Page = page,
+                    Limit = limit,
+                    Total_Items = totalItems,
+                    Total_Pages = totalPages
+                }
+            };
+        }
     }
 }

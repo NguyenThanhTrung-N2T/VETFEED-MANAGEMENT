@@ -12,5 +12,8 @@ namespace VETFEED.Backend.API.Services
 
         //Lấy phân tích lợi nhuận theo khoảng thời gian
         Task<LoiNhuanPhanTichResponse> GetLoiNhuanPhanTichAsync(DateTime from, DateTime to);
+
+        //Lấy danh sách lợi nhuận theo sản phẩm với phân trang và sắp xếp
+        Task<LoiNhuanSanPhamResponse> GetLoiNhuanSanPhamAsync(DateTime from, DateTime to, int page, int limit, string sortBy, string order);
     }
 }

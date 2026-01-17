@@ -76,5 +76,41 @@ namespace VETFEED.Backend.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        //GET api/baocaos/loinhuan/sanpham?from=2026-01-09&to=2026-01-16&page=1&limit=20&sort_by=profit&order=desc : Lấy danh sách lợi nhuận theo sản phẩm
+        [HttpGet("loinhuan/sanpham")]
+        [ProducesResponseType(typeof(LoiNhuanSanPhamResponse), StatusCodes.Status200OK)]
+        public async Task<ActionResult<LoiNhuanSanPhamResponse>> GetLoiNhuanSanPham(
+            [FromQuery] DateTime from,
+            [FromQuery] DateTime to,
+            [FromQuery] int page = 1,
+            [FromQuery] int limit = 20,
+            [FromQuery] string sort_by = "profit",
+            [FromQuery] string order = "desc")
+        {
+            try
+            {
+                // Kiểm tra tham số phân trang
+                if (page < 1) page = 1;
+                if (limit < 1) limit = 20;
+                if (limit > 100) limit = 100;
+
+                // Kiểm tra tham số sắp xếp
+                var validSortFields = new[] { "profit", "revenue", "quantity", "margin" };
+                if (!validSortFields.Contains(sort_by.ToLower()))
+                    sort_by = "profit";
+
+                // Kiểm tra tham số thứ tự
+                if (order.ToLower() != "asc" && order.ToLower() != "desc")
+                    order = "desc";
+
+                var result = await _baoCaoService.GetLoiNhuanSanPhamAsync(from, to, page, limit, sort_by, order);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
