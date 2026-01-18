@@ -77,7 +77,7 @@ CREATE TABLE KhachHang (
     MaKH UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),    -- Khóa chính KH
     MaKHCode NVARCHAR(50) NOT NULL UNIQUE,                -- Mã khách hàng
     TenKH NVARCHAR(255) NOT NULL,                          -- Tên khách hàng
-    SoDienThoai NVARCHAR(20) NOT NULL,                       -- SĐT khách hàng
+    SoDienThoai NVARCHAR(20) UNIQUE,                       -- SĐT khách hàng
     DiaChi NVARCHAR(500),                                 -- Địa chỉ
     LoaiKhachHang NVARCHAR(20)                             -- Phân loại KH
         CHECK (LoaiKhachHang IN ('CA_NHAN','TRANG_TRAI','DAI_LY')),
