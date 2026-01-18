@@ -37,15 +37,15 @@ namespace VETFEED.Backend.API.Controllers
 
         // POST : api/congnos : tao cong no moi
         [HttpPost]
-        public async Task<IActionResult> CreateCongNoAsync([FromBody] CreateCongNoRequest request)
-        {
-            try
-            {
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CreateCongNoAsync([FromBody] CreateCongNoRequest request) {
+            try {
                 await _congNoService.CreateCongNoAsync(request);
-                return CreatedAtAction(nameof(GetCongNoHistory), new { maDoiTuong = request.MaDoiTuong }, request);
+
+                return StatusCode(StatusCodes.Status201Created);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 return BadRequest(ex.Message);
             }
         }

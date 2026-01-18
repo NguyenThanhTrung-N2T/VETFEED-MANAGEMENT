@@ -53,14 +53,21 @@ CREATE TABLE KhoHang (
 CREATE TABLE NhaCungCap (
     MaNCC UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),   -- Khóa chính NCC
     MaNCCCode NVARCHAR(50) NOT NULL UNIQUE,               -- Mã NCC
-    TenNCC NVARCHAR(255) NOT NULL,                         -- Tên NCC
-    SoDienThoai NVARCHAR(20) NOT NULL UNIQUE,              -- SĐT liên hệ
+    TenNCC NVARCHAR(255) NOT NULL,                        -- Tên NCC
+    SoDienThoai NVARCHAR(20) NOT NULL,                    -- SĐT liên hệ
     DiaChi NVARCHAR(500),                                 -- Địa chỉ NCC
     TrangThai NVARCHAR(20)                                -- Trạng thái hoạt động
         CHECK (TrangThai IN ('HOAT_DONG','NGUNG_HOAT_DONG')),
     GhiChu NVARCHAR(500),                                 -- Ghi chú
-    NgayTao DATETIME2 DEFAULT SYSDATETIME()                -- Ngày tạo
+    NgayTao DATETIME2 DEFAULT SYSDATETIME(),               -- Ngày tạo
+    IsDeleted BIT NOT NULL DEFAULT 0,                      -- Soft delete: 0 = chưa xóa, 1 = đã xóa
+    NgayXoa DATETIME2 NULL                                 -- Thời điểm xóa (NULL nếu chưa xóa)
 );
+
+-- Filtered unique indexes (chỉ check unique khi chưa xóa)
+CREATE UNIQUE INDEX UQ_NhaCungCap_SoDienThoai
+ON NhaCungCap(SoDienThoai)
+WHERE IsDeleted = 0;
 
 -- =========================================
 -- Bảng KhachHang

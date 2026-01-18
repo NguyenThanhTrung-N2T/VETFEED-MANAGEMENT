@@ -58,10 +58,10 @@ namespace VETFEED.Backend.API.Repositories
                     };
                 });
 
-            // NCC
+            // NCC (lọc bỏ NCC đã soft delete)
             var nccQuery = congNoList
                 .Where(cn => cn.LoaiDoiTuong == LoaiDoiTuongCongNoEnum.NHA_CUNG_CAP)
-                .Join(_context.NhaCungCaps, cn => cn.MaDoiTuong, ncc => ncc.MaNCC, (cn, ncc) => new { cn, ncc })
+                .Join(_context.NhaCungCaps.Where(ncc => !ncc.IsDeleted), cn => cn.MaDoiTuong, ncc => ncc.MaNCC, (cn, ncc) => new { cn, ncc })
                 .GroupBy(x => new { x.ncc.MaNCC, x.ncc.MaNCCCode, x.ncc.TenNCC })
                 .Select(g =>
                 {

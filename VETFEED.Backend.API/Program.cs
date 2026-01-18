@@ -68,6 +68,10 @@ builder.Services.AddScoped<ICongNoService, CongNoService>();
 builder.Services.AddScoped<IBaoCaoRepository, BaoCaoRepository>();
 builder.Services.AddScoped<IBaoCaoService, BaoCaoService>();
 
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+builder.Services.AddScoped<IDashBoardService, DashBoardService>();
+
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
