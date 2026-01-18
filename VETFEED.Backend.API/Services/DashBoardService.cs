@@ -13,68 +13,53 @@ namespace VETFEED.Backend.API.Services
             _dashboardRepository = dashboardRepository;
         }
 
-        /// <summary>
-        /// Lấy doanh thu hôm nay (chỉ tính đơn đã thanh toán) và trend so với hôm qua
-        /// </summary>
-        public async Task<TodayRevenueResponse> GetTodayRevenueAsync()
+        /// <inheritdoc />
+        public async Task<DashboardSummaryResponse> GetDashboardSummaryAsync()
         {
             var today = DateTime.Today;
             var yesterday = today.AddDays(-1);
 
-            // Lấy dữ liệu từ repository
-            var todayRevenue = await _dashboardRepository.GetRevenueByDateAsync(today);
-            var yesterdayRevenue = await _dashboardRepository.GetRevenueByDateAsync(yesterday);
+            // Lấy dữ liệu từ repository (chạy song song để tối ưu hiệu năng)
+            var todayRevenueTask = _dashboardRepository.GetRevenueByDateAsync(today);
+            var yesterdayRevenueTask = _dashboardRepository.GetRevenueByDateAsync(yesterday);
+            var todayOrdersTask = _dashboardRepository.GetOrderCountByDateAsync(today);
+            var yesterdayOrdersTask = _dashboardRepository.GetOrderCountByDateAsync(yesterday);
+            var totalInventoryTask = _dashboardRepository.GetTotalInventoryAsync();
+
+            await Task.WhenAll(todayRevenueTask, yesterdayRevenueTask, todayOrdersTask, yesterdayOrdersTask, totalInventoryTask);
+
+            var todayRevenue = todayRevenueTask.Result;
+            var yesterdayRevenue = yesterdayRevenueTask.Result;
+            var todayOrders = todayOrdersTask.Result;
+            var yesterdayOrders = yesterdayOrdersTask.Result;
+            var totalInventory = totalInventoryTask.Result;
 
             // Tính trend (business logic)
-            var (trendPercent, isIncrease) = CalculateTrend(todayRevenue, yesterdayRevenue);
+            var (revenueTrendPercent, revenueIsIncrease) = CalculateTrend(todayRevenue, yesterdayRevenue);
+            var (ordersTrendPercent, ordersIsIncrease) = CalculateTrend(todayOrders, yesterdayOrders);
 
-            return new TodayRevenueResponse
+            return new DashboardSummaryResponse
             {
-                Revenue = todayRevenue,
-                TrendPercent = trendPercent,
-                IsIncrease = isIncrease
+                TodayRevenue = new TodayRevenueResponse
+                {
+                    Revenue = todayRevenue,
+                    TrendPercent = revenueTrendPercent,
+                    IsIncrease = revenueIsIncrease
+                },
+                TodayOrders = new TodayOrdersResponse
+                {
+                    OrderCount = todayOrders,
+                    TrendPercent = ordersTrendPercent,
+                    IsIncrease = ordersIsIncrease
+                },
+                TotalInventory = new TotalInventoryResponse
+                {
+                    TotalQuantity = totalInventory
+                }
             };
         }
 
-        /// <summary>
-        /// Lấy số đơn hàng hôm nay và trend so với hôm qua
-        /// </summary>
-        public async Task<TodayOrdersResponse> GetTodayOrdersAsync()
-        {
-            var today = DateTime.Today;
-            var yesterday = today.AddDays(-1);
-
-            // Lấy dữ liệu từ repository
-            var todayOrders = await _dashboardRepository.GetOrderCountByDateAsync(today);
-            var yesterdayOrders = await _dashboardRepository.GetOrderCountByDateAsync(yesterday);
-
-            // Tính trend (business logic)
-            var (trendPercent, isIncrease) = CalculateTrend(todayOrders, yesterdayOrders);
-
-            return new TodayOrdersResponse
-            {
-                OrderCount = todayOrders,
-                TrendPercent = trendPercent,
-                IsIncrease = isIncrease
-            };
-        }
-
-        /// <summary>
-        /// Lấy tổng số lượng tồn kho
-        /// </summary>
-        public async Task<TotalInventoryResponse> GetTotalInventoryAsync()
-        {
-            var totalQuantity = await _dashboardRepository.GetTotalInventoryAsync();
-
-            return new TotalInventoryResponse
-            {
-                TotalQuantity = totalQuantity
-            };
-        }
-
-        /// <summary>
-        /// Lấy doanh thu theo tháng trong năm (chỉ tính đơn đã thanh toán)
-        /// </summary>
+        /// <inheritdoc />
         public async Task<MonthlyRevenueResponse> GetMonthlyRevenueAsync(int year)
         {
             var monthlyData = await _dashboardRepository.GetMonthlyRevenueAsync(year);
@@ -94,9 +79,7 @@ namespace VETFEED.Backend.API.Services
             };
         }
 
-        /// <summary>
-        /// Lấy danh sách sản phẩm sắp hết hạn
-        /// </summary>
+        /// <inheritdoc />
         public async Task<IEnumerable<ExpiringProductResponse>> GetExpiringProductsAsync(int limit = 5, int daysThreshold = 30)
         {
             var thresholdDate = DateTime.Today.AddDays(daysThreshold);
