@@ -1,3 +1,5 @@
+using VETFEED.Backend.API.DTOs.Dashboard;
+
 namespace VETFEED.Backend.API.Repositories
 {
     /// <summary>
@@ -29,18 +31,5 @@ namespace VETFEED.Backend.API.Repositories
         /// Lấy danh sách lô hàng sắp hết hạn với thông tin sản phẩm
         /// </summary>
         Task<List<ExpiringBatchInfo>> GetExpiringBatchesAsync(DateTime thresholdDate, int limit);
-    }
-
-    /// <summary>
-    /// DTO for expiring batch information from repository
-    /// </summary>
-    public class ExpiringBatchInfo
-    {
-        public Guid MaLo { get; set; }
-        public string? MaLoCode { get; set; }
-        public string? TenSanPham { get; set; }
-        public int LoaiSanPham { get; set; }
-        public DateTime HanSuDung { get; set; }
-        public decimal SoLuongTon { get; set; }
     }
 }

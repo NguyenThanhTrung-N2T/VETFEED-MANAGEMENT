@@ -59,7 +59,9 @@ CREATE TABLE NhaCungCap (
     TrangThai NVARCHAR(20)                                -- Trạng thái hoạt động
         CHECK (TrangThai IN ('HOAT_DONG','NGUNG_HOAT_DONG')),
     GhiChu NVARCHAR(500),                                 -- Ghi chú
-    NgayTao DATETIME2 DEFAULT SYSDATETIME()                -- Ngày tạo
+    NgayTao DATETIME2 DEFAULT SYSDATETIME(),               -- Ngày tạo
+    IsDeleted BIT NOT NULL DEFAULT 0,                      -- Soft delete: 0 = chưa xóa, 1 = đã xóa
+    NgayXoa DATETIME2 NULL                                 -- Thời điểm xóa (NULL nếu chưa xóa)
 );
 
 -- =========================================

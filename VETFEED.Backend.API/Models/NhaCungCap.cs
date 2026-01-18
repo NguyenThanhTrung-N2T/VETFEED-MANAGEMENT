@@ -19,6 +19,10 @@ namespace VETFEED.Backend.API.Models
         public TrangThaiNhaCungCapEnum TrangThai { get; set; }
         public string? GhiChu { get; set; }
         public DateTime NgayTao { get; set; }
+        
+        // Soft delete
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? NgayXoa { get; set; }
 
         // Navigation
         public ICollection<NhaCungCapSanPham>? NhaCungCapSanPhams { get; set; }

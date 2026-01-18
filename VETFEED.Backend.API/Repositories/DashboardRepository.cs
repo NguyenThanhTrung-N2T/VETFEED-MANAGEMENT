@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VETFEED.Backend.API.Data;
+using VETFEED.Backend.API.DTOs.Dashboard;
 using VETFEED.Backend.API.Enums;
 
 namespace VETFEED.Backend.API.Repositories
@@ -70,7 +71,7 @@ namespace VETFEED.Backend.API.Repositories
                     MaLo = lh.MaLo,
                     MaLoCode = lh.MaLoCode,
                     TenSanPham = sp.TenSP,
-                    LoaiSanPham = (int)sp.LoaiSanPham,
+                    LoaiSanPham = sp.LoaiSanPham.ToString(),
                     HanSuDung = lh.HanSuDung,
                     SoLuongTon = tongSoLuong
                 }
