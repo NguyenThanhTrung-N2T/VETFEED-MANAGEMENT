@@ -70,7 +70,7 @@ namespace VETFEED.Backend.API.Repositories
                     MaLo = lh.MaLo,
                     MaLoCode = lh.MaLoCode,
                     TenSanPham = sp.TenSP,
-                    LoaiSanPham = (int)sp.LoaiSanPham,
+                    LoaiSanPham = sp.LoaiSanPham.ToString(),
                     HanSuDung = lh.HanSuDung,
                     SoLuongTon = tongSoLuong
                 }

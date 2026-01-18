@@ -19,20 +19,12 @@ namespace VETFEED.Backend.API.Services
             var today = DateTime.Today;
             var yesterday = today.AddDays(-1);
 
-            // Lấy dữ liệu từ repository (chạy song song để tối ưu hiệu năng)
-            var todayRevenueTask = _dashboardRepository.GetRevenueByDateAsync(today);
-            var yesterdayRevenueTask = _dashboardRepository.GetRevenueByDateAsync(yesterday);
-            var todayOrdersTask = _dashboardRepository.GetOrderCountByDateAsync(today);
-            var yesterdayOrdersTask = _dashboardRepository.GetOrderCountByDateAsync(yesterday);
-            var totalInventoryTask = _dashboardRepository.GetTotalInventoryAsync();
-
-            await Task.WhenAll(todayRevenueTask, yesterdayRevenueTask, todayOrdersTask, yesterdayOrdersTask, totalInventoryTask);
-
-            var todayRevenue = todayRevenueTask.Result;
-            var yesterdayRevenue = yesterdayRevenueTask.Result;
-            var todayOrders = todayOrdersTask.Result;
-            var yesterdayOrders = yesterdayOrdersTask.Result;
-            var totalInventory = totalInventoryTask.Result;
+            // Lấy dữ liệu từ repository (chạy tuần tự vì DbContext không thread-safe)
+            var todayRevenue = await _dashboardRepository.GetRevenueByDateAsync(today);
+            var yesterdayRevenue = await _dashboardRepository.GetRevenueByDateAsync(yesterday);
+            var todayOrders = await _dashboardRepository.GetOrderCountByDateAsync(today);
+            var yesterdayOrders = await _dashboardRepository.GetOrderCountByDateAsync(yesterday);
+            var totalInventory = await _dashboardRepository.GetTotalInventoryAsync();
 
             // Tính trend (business logic)
             var (revenueTrendPercent, revenueIsIncrease) = CalculateTrend(todayRevenue, yesterdayRevenue);
@@ -92,7 +84,7 @@ namespace VETFEED.Backend.API.Services
                 MaLo = batch.MaLo,
                 MaLoCode = batch.MaLoCode,
                 TenSanPham = batch.TenSanPham,
-                LoaiSanPham = batch.LoaiSanPham == (int)LoaiSanPhamEnum.THUOC_THU_Y ? "Thuốc thú y" : "Thức ăn chăn nuôi",
+                LoaiSanPham = batch.LoaiSanPham == nameof(LoaiSanPhamEnum.THUOC_THU_Y) ? "Thuốc thú y" : "Thức ăn chăn nuôi",
                 HanSuDung = batch.HanSuDung,
                 SoNgayConLai = (batch.HanSuDung.Date - DateTime.Today).Days,
                 SoLuongTon = batch.SoLuongTon
