@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VETFEED.Backend.API.Data;
+using VETFEED.Backend.API.DTOs.Dashboard;
 using VETFEED.Backend.API.Enums;
 
 namespace VETFEED.Backend.API.Repositories
