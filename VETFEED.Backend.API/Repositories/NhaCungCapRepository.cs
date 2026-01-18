@@ -15,28 +15,30 @@ namespace VETFEED.Backend.API.Repositories
             _context = context;
         }
 
-        // Lấy tất cả nhà cung cấp
+        // Lấy tất cả nhà cung cấp (lọc bỏ các NCC đã soft delete)
         public async Task<IEnumerable<NhaCungCapResponse>> GetAllNhaCungCapsAsync()
         {
-            return await _context.NhaCungCaps.Select(n => new NhaCungCapResponse
-            {
-                MaNCC = n.MaNCC,
-                MaNCCCode = n.MaNCCCode,
-                TenNCC = n.TenNCC,
-                SoDienThoai = n.SoDienThoai,
-                DiaChi = n.DiaChi,
-                TrangThai = n.TrangThai.ToString(),
-                GhiChu = n.GhiChu,
-                NgayTao = n.NgayTao,
-                SanPhamCount = _context.NhaCungCapSanPhams.Count(sp => sp.MaNCC == n.MaNCC)
-            }).ToListAsync();
+            return await _context.NhaCungCaps
+                .Where(n => !n.IsDeleted)  // Lọc bỏ NCC đã xóa
+                .Select(n => new NhaCungCapResponse
+                {
+                    MaNCC = n.MaNCC,
+                    MaNCCCode = n.MaNCCCode,
+                    TenNCC = n.TenNCC,
+                    SoDienThoai = n.SoDienThoai,
+                    DiaChi = n.DiaChi,
+                    TrangThai = n.TrangThai.ToString(),
+                    GhiChu = n.GhiChu,
+                    NgayTao = n.NgayTao,
+                    SanPhamCount = _context.NhaCungCapSanPhams.Count(sp => sp.MaNCC == n.MaNCC)
+                }).ToListAsync();
         }
 
         // Lấy nhà cung cấp theo ID
         public async Task<NhaCungCapResponse?> GetNhaCungCapByIdAsync(Guid id)
         {
             var n = await _context.NhaCungCaps.FindAsync(id);
-            if (n == null) return null;
+            if (n == null || n.IsDeleted) return null;  // Kiểm tra soft delete
 
             return new NhaCungCapResponse
             {
@@ -109,13 +111,16 @@ namespace VETFEED.Backend.API.Repositories
             };
         }
 
-        // Xóa nhà cung cấp
+        // Xóa nhà cung cấp (Soft Delete)
         public async Task<bool> DeleteNhaCungCapAsync(Guid id)
         {
             var entity = await _context.NhaCungCaps.FindAsync(id);
-            if (entity == null) return false;
+            if (entity == null || entity.IsDeleted) return false;
 
-            _context.NhaCungCaps.Remove(entity);
+            // Soft delete thay vì hard delete
+            entity.IsDeleted = true;
+            entity.NgayXoa = DateTime.Now;
+            
             await _context.SaveChangesAsync();
             return true;
         }

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using VETFEED.Backend.API.Data;
 using VETFEED.Backend.API.DTOs.CTPhieuNhap;
 using VETFEED.Backend.API.DTOs.LoHang;
@@ -83,6 +84,12 @@ namespace VETFEED.Backend.API.Services
                 throw new ArgumentException("Mã nhà cung cấp không hợp lệ.");
             if (request.MaKho == Guid.Empty)
                 throw new ArgumentException("Mã kho không hợp lệ.");
+            
+            // Kiểm tra NCC không bị soft delete
+            var nhaCungCap = await _context.NhaCungCaps.FirstOrDefaultAsync(n => n.MaNCC == request.MaNCC);
+            if (nhaCungCap == null || nhaCungCap.IsDeleted)
+                throw new ArgumentException("Nhà cung cấp không tồn tại hoặc đã bị xóa.");
+            
             if (request.DanhSachChiTiet == null || !request.DanhSachChiTiet.Any())
                 throw new ArgumentException("Danh sách chi tiết phiếu nhập không được để trống.");
 
@@ -218,6 +225,12 @@ namespace VETFEED.Backend.API.Services
                 throw new ArgumentException("Mã nhà cung cấp không hợp lệ.");
             if (request.MaKho == Guid.Empty)
                 throw new ArgumentException("Mã kho không hợp lệ.");
+            
+            // Kiểm tra NCC không bị soft delete
+            var nhaCungCap = await _context.NhaCungCaps.FirstOrDefaultAsync(n => n.MaNCC == request.MaNCC);
+            if (nhaCungCap == null || nhaCungCap.IsDeleted)
+                throw new ArgumentException("Nhà cung cấp không tồn tại hoặc đã bị xóa.");
+            
             if (request.DanhSachChiTiet == null || !request.DanhSachChiTiet.Any())
                 throw new ArgumentException("Danh sách chi tiết phiếu nhập không được để trống.");
 

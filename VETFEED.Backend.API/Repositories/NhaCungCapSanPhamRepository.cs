@@ -76,13 +76,13 @@ namespace VETFEED.Backend.API.Repositories
                 }).ToListAsync();
         }
 
-        // Lấy theo sản phẩm
+        // Lấy theo sản phẩm (lọc bỏ NCC đã soft delete)
         public async Task<IEnumerable<NhaCungCapSanPhamResponse>> GetBySanPhamAsync(Guid maSP)
         {
             return await _context.NhaCungCapSanPhams
                 .Include(x => x.NhaCungCap)
                 .Include(x => x.SanPham)
-                .Where(x => x.MaSP == maSP)
+                .Where(x => x.MaSP == maSP && (x.NhaCungCap == null || !x.NhaCungCap.IsDeleted))  // Lọc NCC đã xóa
                 .Select(x => new NhaCungCapSanPhamResponse
                 {
                     MaNCSP = x.MaNCSP,
