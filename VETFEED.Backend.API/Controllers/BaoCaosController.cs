@@ -112,5 +112,21 @@ namespace VETFEED.Backend.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        //GET api/baocaos/tonkho/phantich?maKho={guid} : Lấy phân tích tồn kho theo kho
+        [HttpGet("tonkho/phantich")]
+        [ProducesResponseType(typeof(TonKhoPhanTichResponse), StatusCodes.Status200OK)]
+        public async Task<ActionResult<TonKhoPhanTichResponse>> GetTonKhoPhanTich([FromQuery] Guid maKho)
+        {
+            try
+            {
+                var result = await _baoCaoService.GetTonKhoPhanTichAsync(maKho);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

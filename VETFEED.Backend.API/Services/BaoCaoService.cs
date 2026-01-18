@@ -35,5 +35,11 @@ namespace VETFEED.Backend.API.Services
         {
             return await _baoCaoRepository.GetLoiNhuanSanPhamAsync(from, to, page, limit, sortBy, order);
         }
+
+        // Lấy phân tích tồn kho theo kho
+        public async Task<TonKhoPhanTichResponse> GetTonKhoPhanTichAsync(Guid maKho)
+        {
+            return await _baoCaoRepository.GetTonKhoPhanTichAsync(maKho);
+        }
     }
 }

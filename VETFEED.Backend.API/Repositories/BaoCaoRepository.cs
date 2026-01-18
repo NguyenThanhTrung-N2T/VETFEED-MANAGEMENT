@@ -227,5 +227,116 @@ namespace VETFEED.Backend.API.Repositories
                 }
             };
         }
+
+        // Lấy phân tích tồn kho theo kho
+        public async Task<TonKhoPhanTichResponse> GetTonKhoPhanTichAsync(Guid maKho)
+        {
+            // Query tồn kho theo kho với null safety
+            var tonKhoData = await _context.TonKhos
+                .Include(tk => tk.LoHang)
+                    .ThenInclude(lh => lh!.SanPham)
+                .Where(tk => tk.MaKho == maKho && tk.SoLuongCoSo > 0)
+                .Where(tk => tk.LoHang != null && tk.LoHang.SanPham != null) // Null safety
+                .ToListAsync();
+
+            // Kiểm tra tồn kho
+            if (!tonKhoData.Any())
+            {
+                return new TonKhoPhanTichResponse
+                {
+                    TongQuan = new TonKhoTongQuanResponse
+                    {
+                        TongSanPhamCount = 0,
+                        TongSoLuong = 0,
+                        SoLuongSapHetHan = 0
+                    },
+                    SoLuongChart = new List<SoLuongChartItemResponse>()
+                };
+            }
+
+            // Tính tổng quan
+            var tongSanPhamCount = tonKhoData
+                .Select(tk => tk.LoHang!.SanPham!.MaSP)
+                .Distinct()
+                .Count();
+
+            var tongSoLuong = tonKhoData.Sum(tk => tk.SoLuongCoSo);
+
+            // Số lượng sắp hết hạn (< 30 ngày, chưa hết hạn)
+            var today = DateTime.Now.Date;
+            var expiringDate = today.AddDays(30);
+            var soLuongSapHetHan = tonKhoData
+                .Where(tk =>
+                    tk.LoHang!.HanSuDung >= today &&
+                    tk.LoHang.HanSuDung < expiringDate
+                )
+                .Select(tk => tk.LoHang!.SanPham!.MaSP)
+                .Distinct()
+                .Count();
+
+            // Group by sản phẩm để tạo pie chart
+            var productQuantities = tonKhoData
+                .GroupBy(tk => new
+                {
+                    MaSP = tk.LoHang!.SanPham!.MaSP,
+                    TenSP = tk.LoHang.SanPham.TenSP
+                })
+                .Select(g => new
+                {
+                    TenSanPham = g.Key.TenSP,
+                    SoLuong = g.Sum(tk => tk.SoLuongCoSo)
+                })
+                .OrderByDescending(p => p.SoLuong)
+                .ToList();
+
+            // Logic pie chart: Top 7 + "Khác"
+            List<SoLuongChartItemResponse> soLuongChart;
+
+            if (productQuantities.Count > 7)
+            {
+                // Lấy top 7
+                var top7 = productQuantities.Take(7)
+                    .Select(p => new SoLuongChartItemResponse
+                    {
+                        TenSanPham = p.TenSanPham,
+                        SoLuong = p.SoLuong
+                    })
+                    .ToList();
+
+                // Tính tổng các sản phẩm còn lại
+                var othersTotal = productQuantities.Skip(7).Sum(p => p.SoLuong);
+
+                // Thêm slice "Khác"
+                top7.Add(new SoLuongChartItemResponse
+                {
+                    TenSanPham = "Khác",
+                    SoLuong = othersTotal
+                });
+
+                soLuongChart = top7;
+            }
+            else
+            {
+                // Nếu <= 7 sản phẩm, hiển thị tất cả
+                soLuongChart = productQuantities
+                    .Select(p => new SoLuongChartItemResponse
+                    {
+                        TenSanPham = p.TenSanPham,
+                        SoLuong = p.SoLuong
+                    })
+                    .ToList();
+            }
+
+            return new TonKhoPhanTichResponse
+            {
+                TongQuan = new TonKhoTongQuanResponse
+                {
+                    TongSanPhamCount = tongSanPhamCount,
+                    TongSoLuong = tongSoLuong,
+                    SoLuongSapHetHan = soLuongSapHetHan
+                },
+                SoLuongChart = soLuongChart ?? new List<SoLuongChartItemResponse>() // Null safety
+            };
+        }
     }
 }
