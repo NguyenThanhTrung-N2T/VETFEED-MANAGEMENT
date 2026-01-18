@@ -41,5 +41,11 @@ namespace VETFEED.Backend.API.Services
         {
             return await _baoCaoRepository.GetTonKhoPhanTichAsync(maKho);
         }
+
+        // Lấy danh sách tồn kho sản phẩm với phân trang và lọc theo trạng thái
+        public async Task<TonKhoSanPhamResponse> GetTonKhoSanPhamAsync(Guid maKho, int page, int limit, string trangThai)
+        {
+            return await _baoCaoRepository.GetTonKhoSanPhamAsync(maKho, page, limit, trangThai);
+        }
     }
 }

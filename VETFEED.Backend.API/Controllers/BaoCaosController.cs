@@ -128,5 +128,35 @@ namespace VETFEED.Backend.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        //GET api/baocaos/tonkho/sanpham?maKho={guid}&page=1&limit=20&trangThai=All : Lấy danh sách tồn kho sản phẩm
+        [HttpGet("tonkho/sanpham")]
+        [ProducesResponseType(typeof(TonKhoSanPhamResponse), StatusCodes.Status200OK)]
+        public async Task<ActionResult<TonKhoSanPhamResponse>> GetTonKhoSanPham(
+            [FromQuery] Guid maKho,
+            [FromQuery] int page = 1,
+            [FromQuery] int limit = 20,
+            [FromQuery] string trangThai = "All")
+        {
+            try
+            {
+                // Validate pagination parameters
+                if (page < 1) page = 1;
+                if (limit < 1) limit = 20;
+                if (limit > 100) limit = 100;
+
+                // Validate status parameter
+                var validStatuses = new[] { "All", "ConHan", "SapHetHan", "HetHan" };
+                if (!validStatuses.Contains(trangThai, StringComparer.OrdinalIgnoreCase))
+                    trangThai = "All";
+
+                var result = await _baoCaoService.GetTonKhoSanPhamAsync(maKho, page, limit, trangThai);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

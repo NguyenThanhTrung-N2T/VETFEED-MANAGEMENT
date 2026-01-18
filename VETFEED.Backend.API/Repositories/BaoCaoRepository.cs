@@ -338,5 +338,84 @@ namespace VETFEED.Backend.API.Repositories
                 SoLuongChart = soLuongChart ?? new List<SoLuongChartItemResponse>() // Null safety
             };
         }
+
+        // Lấy danh sách tồn kho sản phẩm với phân trang và lọc theo trạng thái
+        public async Task<TonKhoSanPhamResponse> GetTonKhoSanPhamAsync(Guid maKho, int page, int limit, string trangThai)
+        {
+            var today = DateTime.Now.Date;
+            var expiringDate = today.AddDays(30);
+
+            // Query tồn kho với tính toán trạng thái
+            var query = _context.TonKhos
+                .Include(tk => tk.LoHang)
+                    .ThenInclude(lh => lh!.SanPham)
+                .Where(tk => tk.MaKho == maKho && tk.SoLuongCoSo > 0)
+                .Where(tk => tk.LoHang != null && tk.LoHang.SanPham != null) // Null safety
+                .Select(tk => new
+                {
+                    MaSP = tk.LoHang!.SanPham!.MaSP,
+                    MaSPCode = tk.LoHang.SanPham.MaSPCode,
+                    TenSanPham = tk.LoHang.SanPham.TenSP,
+                    MaLoCode = tk.LoHang.MaLoCode,
+                    SoLuong = tk.SoLuongCoSo,
+                    DonVi = tk.LoHang.SanPham.DonViCoSo,
+                    NgayHetHan = tk.LoHang.HanSuDung,
+                    SoNgayDenKhiHetHan = (tk.LoHang.HanSuDung.Date - today).Days,
+                    // Tính trạng thái
+                    TrangThai = tk.LoHang.HanSuDung < today ? "HET_HAN"
+                        : tk.LoHang.HanSuDung < expiringDate ? "SAP_HET_HAN"
+                        : "CON_HAN"
+                });
+
+            // Apply status filter
+            if (!string.IsNullOrEmpty(trangThai) && trangThai.ToUpper() != "ALL")
+            {
+                var statusFilter = trangThai.ToUpper() switch
+                {
+                    "CONHAN" => "CON_HAN",
+                    "SAPHETHAN" => "SAP_HET_HAN",
+                    "HETHAN" => "HET_HAN",
+                    _ => trangThai.ToUpper()
+                };
+                query = query.Where(x => x.TrangThai == statusFilter);
+            }
+
+            // Sort by expiration date (soonest first)
+            var sortedQuery = query.OrderBy(x => x.NgayHetHan);
+
+            // Count total items before pagination
+            var totalItems = await sortedQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / limit);
+
+            // Apply pagination at database level
+            var data = await sortedQuery
+                .Skip((page - 1) * limit)
+                .Take(limit)
+                .Select(x => new TonKhoSanPhamItemResponse
+                {
+                    MaSP = x.MaSP,
+                    MaSPCode = x.MaSPCode,
+                    TenSanPham = x.TenSanPham,
+                    MaLoCode = x.MaLoCode,
+                    SoLuong = x.SoLuong,
+                    DonVi = x.DonVi,
+                    NgayHetHan = x.NgayHetHan,
+                    TrangThai = x.TrangThai,
+                    SoNgayDenKhiHetHan = x.SoNgayDenKhiHetHan
+                })
+                .ToListAsync();
+
+            return new TonKhoSanPhamResponse
+            {
+                Data = data ?? new List<TonKhoSanPhamItemResponse>(), // Null safety
+                Meta = new PaginationMeta
+                {
+                    Page = page,
+                    Limit = limit,
+                    Total_Items = totalItems,
+                    Total_Pages = totalPages
+                }
+            };
+        }
     }
 }

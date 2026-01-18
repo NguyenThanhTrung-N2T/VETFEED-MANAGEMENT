@@ -18,5 +18,8 @@ namespace VETFEED.Backend.API.Repositories
 
         // Lấy phân tích tồn kho theo kho
         Task<TonKhoPhanTichResponse> GetTonKhoPhanTichAsync(Guid maKho);
+
+        // Lấy danh sách tồn kho sản phẩm với phân trang và lọc theo trạng thái
+        Task<TonKhoSanPhamResponse> GetTonKhoSanPhamAsync(Guid maKho, int page, int limit, string trangThai);
     }
 }
