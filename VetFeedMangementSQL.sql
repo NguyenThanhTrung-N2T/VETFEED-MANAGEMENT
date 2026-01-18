@@ -52,7 +52,7 @@ CREATE TABLE KhoHang (
 -- =========================================
 CREATE TABLE NhaCungCap (
     MaNCC UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),   -- Khóa chính NCC
-    MaNCCCode NVARCHAR(50) NOT NULL,                      -- Mã NCC
+    MaNCCCode NVARCHAR(50) NOT NULL UNIQUE,               -- Mã NCC
     TenNCC NVARCHAR(255) NOT NULL,                        -- Tên NCC
     SoDienThoai NVARCHAR(20) NOT NULL,                    -- SĐT liên hệ
     DiaChi NVARCHAR(500),                                 -- Địa chỉ NCC
@@ -65,9 +65,6 @@ CREATE TABLE NhaCungCap (
 );
 
 -- Filtered unique indexes (chỉ check unique khi chưa xóa)
-CREATE UNIQUE INDEX UQ_NhaCungCap_MaNCCCode
-ON NhaCungCap(MaNCCCode)
-WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UQ_NhaCungCap_SoDienThoai
 ON NhaCungCap(SoDienThoai)
 WHERE IsDeleted = 0;
