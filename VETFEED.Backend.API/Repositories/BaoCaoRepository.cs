@@ -16,9 +16,10 @@ namespace VETFEED.Backend.API.Repositories
         // doanh thu từ ngày from đến ngày to
         public async Task<DoanhThuPhanTichResponse> GetDoanhThuPhanTichAsync(DateTime from, DateTime to)
         {
-            // Lấy danh sách phiếu bán trong khoảng thời gian
+            // Lấy danh sách phiếu bán trong khoảng thời gian (toDate bao gồm cả 23:59:59)
+            var toDateEndOfDay = to.Date.AddDays(1);
             var phieuBans = await _context.PhieuBans
-                .Where(pb => pb.NgayBan >= from && pb.NgayBan <= to)
+                .Where(pb => pb.NgayBan >= from && pb.NgayBan < toDateEndOfDay)
                 .Include(pb => pb.CTPhieuBans)
                 .ToListAsync();
 
@@ -56,13 +57,14 @@ namespace VETFEED.Backend.API.Repositories
         //Lấy danh sách chi tiết đơn hàng doanh thu với phân trang
         public async Task<DoanhThuDonHangResponse> GetDoanhThuDonHangAsync(DateTime from, DateTime to, int page, int limit)
         {
-            // Query chi tiết phiếu bán với các join cần thiết
+            // Query chi tiết phiếu bán với các join cần thiết (toDate bao gồm cả 23:59:59)
+            var toDateEndOfDay = to.Date.AddDays(1);
             var query = _context.CTPhieuBans
                 .Include(ct => ct.PhieuBan)
                     .ThenInclude(pb => pb!.KhachHang)
                 .Include(ct => ct.LoHang)
                     .ThenInclude(lh => lh!.SanPham)
-                .Where(ct => ct.PhieuBan!.NgayBan >= from && ct.PhieuBan.NgayBan <= to)
+                .Where(ct => ct.PhieuBan!.NgayBan >= from && ct.PhieuBan.NgayBan < toDateEndOfDay)
                 .OrderByDescending(ct => ct.PhieuBan!.NgayBan);
 
             // Đếm tổng số items
@@ -102,15 +104,16 @@ namespace VETFEED.Backend.API.Repositories
         }
 
         // Lấy phân tích lợi nhuận theo khoảng thời gian
-        public async Task<LoiNhuanPhanTichResponse> GetLoiNhuanPhanTichAsync(DateTime fromDate, DateTime toDate)
+        public async Task<LoiNhuanPhanTichResponse> GetLoiNhuanPhanTichAsync(DateTime fromDate, DateTime to)
         {
-            // Query using direct joins to avoid navigation property NULL issues
+            // Query chi tiết phiếu bán trong khoảng thời gian (toDate bao gồm cả 23:59:59)
+            var toDateEndOfDay = to.Date.AddDays(1);
             var chiTietPhieuBans = await (
                 from ct in _context.CTPhieuBans
                 join pb in _context.PhieuBans on ct.MaPB equals pb.MaPB
                 join lh in _context.LoHangs on ct.MaLo equals lh.MaLo
                 join sp in _context.SanPhams on lh.MaSP equals sp.MaSP
-                where pb.NgayBan >= fromDate && pb.NgayBan <= toDate
+                where pb.NgayBan >= fromDate && pb.NgayBan < toDateEndOfDay
                 select new
                 {
                     ct.SoLuong,
@@ -161,12 +164,13 @@ namespace VETFEED.Backend.API.Repositories
         // Lấy danh sách lợi nhuận theo sản phẩm với phân trang và sắp xếp
         public async Task<LoiNhuanSanPhamResponse> GetLoiNhuanSanPhamAsync(DateTime from, DateTime to, int page, int limit, string sortBy, string order)
         {
-            // Query và group by sản phẩm
+            // Query và group by sản phẩm (toDate bao gồm cả 23:59:59)
+            var toDateEndOfDay = to.Date.AddDays(1);
             var query = _context.CTPhieuBans
                 .Include(ct => ct.PhieuBan)
                 .Include(ct => ct.LoHang)
                     .ThenInclude(lh => lh!.SanPham)
-                .Where(ct => ct.PhieuBan != null && ct.PhieuBan.NgayBan >= from && ct.PhieuBan.NgayBan <= to)
+                .Where(ct => ct.PhieuBan != null && ct.PhieuBan.NgayBan >= from && ct.PhieuBan.NgayBan < toDateEndOfDay)
                 .Where(ct => ct.LoHang != null && ct.LoHang.SanPham != null) // Null safety
                 .GroupBy(ct => new
                 {
@@ -240,13 +244,20 @@ namespace VETFEED.Backend.API.Repositories
         // Lấy phân tích tồn kho theo kho
         public async Task<TonKhoPhanTichResponse> GetTonKhoPhanTichAsync(Guid maKho)
         {
-            // Query tồn kho theo kho với null safety
-            var tonKhoData = await _context.TonKhos
-                .Include(tk => tk.LoHang)
-                    .ThenInclude(lh => lh!.SanPham)
-                .Where(tk => tk.MaKho == maKho && tk.SoLuongCoSo > 0)
-                .Where(tk => tk.LoHang != null && tk.LoHang.SanPham != null) // Null safety
-                .ToListAsync();
+            // Query using direct joins to avoid navigation property NULL issues
+            var tonKhoData = await (
+                from tk in _context.TonKhos
+                join lh in _context.LoHangs on tk.MaLo equals lh.MaLo
+                join sp in _context.SanPhams on lh.MaSP equals sp.MaSP
+                where tk.MaKho == maKho && tk.SoLuongCoSo > 0
+                select new
+                {
+                    tk.SoLuongCoSo,
+                    lh.HanSuDung,
+                    sp.MaSP,
+                    sp.TenSP
+                }
+            ).ToListAsync();
 
             // Kiểm tra tồn kho
             if (!tonKhoData.Any())
@@ -265,7 +276,7 @@ namespace VETFEED.Backend.API.Repositories
 
             // Tính tổng quan
             var tongSanPhamCount = tonKhoData
-                .Select(tk => tk.LoHang!.SanPham!.MaSP)
+                .Select(tk => tk.MaSP)
                 .Distinct()
                 .Count();
 
@@ -276,10 +287,10 @@ namespace VETFEED.Backend.API.Repositories
             var expiringDate = today.AddDays(30);
             var soLuongSapHetHan = tonKhoData
                 .Where(tk =>
-                    tk.LoHang!.HanSuDung >= today &&
-                    tk.LoHang.HanSuDung < expiringDate
+                    tk.HanSuDung >= today &&
+                    tk.HanSuDung < expiringDate
                 )
-                .Select(tk => tk.LoHang!.SanPham!.MaSP)
+                .Select(tk => tk.MaSP)
                 .Distinct()
                 .Count();
 
@@ -287,8 +298,8 @@ namespace VETFEED.Backend.API.Repositories
             var productQuantities = tonKhoData
                 .GroupBy(tk => new
                 {
-                    MaSP = tk.LoHang!.SanPham!.MaSP,
-                    TenSP = tk.LoHang.SanPham.TenSP
+                    tk.MaSP,
+                    tk.TenSP
                 })
                 .Select(g => new
                 {
