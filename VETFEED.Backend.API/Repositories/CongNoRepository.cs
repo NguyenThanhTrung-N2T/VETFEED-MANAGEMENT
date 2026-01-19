@@ -30,7 +30,7 @@ namespace VETFEED.Backend.API.Repositories
             var khQuery = congNoList
                 .Where(cn => cn.LoaiDoiTuong == LoaiDoiTuongCongNoEnum.KHACH_HANG)
                 .Join(_context.KhachHangs, cn => cn.MaDoiTuong, kh => kh.MaKH, (cn, kh) => new { cn, kh })
-                .GroupBy(x => new { x.kh.MaKH, x.kh.MaKHCode, x.kh.TenKH })
+                .GroupBy(x => new { x.kh.MaKH, x.kh.MaKHCode, x.kh.TenKH, x.kh.HanMucCongNo })
                 .Select(g =>
                 {
                     var tongPhatSinh = g.Where(x => x.cn.SoTien > 0).Sum(x => x.cn.SoTien);
@@ -53,6 +53,7 @@ namespace VETFEED.Backend.API.Repositories
                         TongPhatSinh = tongPhatSinh,
                         DaThanhToan = daThanhToan,
                         DuNo = duNo < 0 ? 0 : duNo,
+                        HanMucCongNo = g.Key.HanMucCongNo ?? 0,
                         HanThanhToanGanNhat = hanGanNhat,
                         CoQuaHan = duNo > 0 && hanGanNhat != null && hanGanNhat < today
                     };
@@ -85,6 +86,7 @@ namespace VETFEED.Backend.API.Repositories
                         TongPhatSinh = tongPhatSinh,
                         DaThanhToan = daThanhToan,
                         DuNo = duNo < 0 ? 0 : duNo,
+                        HanMucCongNo = 0, // NCC không có hạn mức công nợ
                         HanThanhToanGanNhat = hanGanNhat,
                         CoQuaHan = duNo > 0 && hanGanNhat != null && hanGanNhat < today
                     };
