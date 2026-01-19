@@ -102,15 +102,24 @@ namespace VETFEED.Backend.API.Repositories
         }
 
         // Lấy phân tích lợi nhuận theo khoảng thời gian
-        public async Task<LoiNhuanPhanTichResponse> GetLoiNhuanPhanTichAsync(DateTime from, DateTime to)
+        public async Task<LoiNhuanPhanTichResponse> GetLoiNhuanPhanTichAsync(DateTime fromDate, DateTime toDate)
         {
-            // Query chi tiết phiếu bán với các join cần thiết
-            var chiTietPhieuBans = await _context.CTPhieuBans
-                .Include(ct => ct.PhieuBan)
-                .Include(ct => ct.LoHang)
-                    .ThenInclude(lh => lh!.SanPham)
-                .Where(ct => ct.PhieuBan!.NgayBan >= from && ct.PhieuBan.NgayBan <= to)
-                .ToListAsync();
+            // Query using direct joins to avoid navigation property NULL issues
+            var chiTietPhieuBans = await (
+                from ct in _context.CTPhieuBans
+                join pb in _context.PhieuBans on ct.MaPB equals pb.MaPB
+                join lh in _context.LoHangs on ct.MaLo equals lh.MaLo
+                join sp in _context.SanPhams on lh.MaSP equals sp.MaSP
+                where pb.NgayBan >= fromDate && pb.NgayBan <= toDate
+                select new
+                {
+                    ct.SoLuong,
+                    ct.DonGia,
+                    ct.ThanhTienVon,
+                    sp.MaSP,
+                    sp.TenSP
+                }
+            ).ToListAsync();
 
             // Tính tổng quan
             var tongDoanhThu = chiTietPhieuBans.Sum(ct => ct.SoLuong * ct.DonGia);
@@ -122,12 +131,12 @@ namespace VETFEED.Backend.API.Repositories
             var topSanPham = chiTietPhieuBans
                 .GroupBy(ct => new
                 {
-                    MaSP = ct.LoHang!.SanPham!.MaSP,
-                    TenSP = ct.LoHang.SanPham.TenSP
+                    ct.MaSP,
+                    ct.TenSP
                 })
                 .Select(g => new TopSanPhamLoiNhuanResponse
                 {
-                    TenSanPham = g.Key.TenSP,
+                    TenSanPham = g.Key.TenSP ?? "Unknown",
                     DoanhThu = g.Sum(ct => ct.SoLuong * ct.DonGia),
                     ChiPhi = g.Sum(ct => ct.ThanhTienVon),
                     LoiNhuan = g.Sum(ct => ct.SoLuong * ct.DonGia) - g.Sum(ct => ct.ThanhTienVon)
@@ -145,7 +154,7 @@ namespace VETFEED.Backend.API.Repositories
                     LoiNhuan = tongLoiNhuan,
                     TiSuat = tiSuat
                 },
-                TopSanPhamChart = topSanPham
+                TopSanPhamChart = topSanPham ?? new List<TopSanPhamLoiNhuanResponse>()
             };
         }
 
@@ -283,7 +292,7 @@ namespace VETFEED.Backend.API.Repositories
                 })
                 .Select(g => new
                 {
-                    TenSanPham = g.Key.TenSP,
+                    TenSanPham = g.Key.TenSP ?? "Unknown",
                     SoLuong = g.Sum(tk => tk.SoLuongCoSo)
                 })
                 .OrderByDescending(p => p.SoLuong)
