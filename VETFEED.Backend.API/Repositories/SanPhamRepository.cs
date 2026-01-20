@@ -72,6 +72,7 @@ namespace VETFEED.Backend.API.Repositories
                 TenSP = x.TenSP,
                 LoaiSanPham = x.LoaiSanPham.ToString(),
                 DonViCoSo = x.DonViCoSo,
+                AnhSanPham = x.AnhSanPham,
                 GhiChu = x.GhiChu,
                 NgayTao = x.NgayTao,
                 DonGia = _context.GiaBans
@@ -110,6 +111,7 @@ namespace VETFEED.Backend.API.Repositories
                 TenSP = x.TenSP,
                 LoaiSanPham = x.LoaiSanPham.ToString(),
                 DonViCoSo = x.DonViCoSo,
+                AnhSanPham = x.AnhSanPham,
                 GhiChu = x.GhiChu,
                 NgayTao = x.NgayTao,
                 DonGia = _context.GiaBans
@@ -188,6 +190,7 @@ namespace VETFEED.Backend.API.Repositories
                     TenSP = x.TenSP,
                     LoaiSanPham = x.LoaiSanPham.ToString(),
                     DonViCoSo = x.DonViCoSo,
+                    AnhSanPham = x.AnhSanPham,
                     GhiChu = x.GhiChu,
                     NgayTao = x.NgayTao,
                     DonGia = _context.GiaBans

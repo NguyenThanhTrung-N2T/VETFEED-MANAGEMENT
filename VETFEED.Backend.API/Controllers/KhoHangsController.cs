@@ -17,7 +17,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET: api/khohangs  : lấy tất cả kho hàng 
-        //[Authorize]
+        [Authorize]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<KhoHangResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllKhoHangsAsync()
@@ -29,7 +29,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET : api/khohangs/{maKho} : lấy kho hàng theo mã kho
-        //[Authorize]
+        [Authorize]
         [HttpGet("{maKho}", Name = "GetKhoHangById")]
         [ProducesResponseType(typeof(KhoHangResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -46,7 +46,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // POST : api/khohangs : thêm kho hàng
-        //[Authorize]
+        [Authorize(Roles = "QUAN_LY")]
         [HttpPost]
         [ProducesResponseType(typeof(KhoHangResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -64,7 +64,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // PUT : api/khohangs/{maKho} : cập nhật kho hàng 
-        //[Authorize]
+        [Authorize(Roles = "QUAN_LY")]
         [HttpPut("{maKho}")]
         [ProducesResponseType(typeof(KhoHangResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -88,7 +88,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // DELETE : api/khohangs/{maKho} : xóa kho hàng 
-        //[Authorize]
+        [Authorize(Roles = "QUAN_LY")]
         [HttpDelete("{maKho}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -106,7 +106,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // POST : api/khohangs/search
-        //[Authorize]
+        [Authorize]
         [HttpPost("search")]
         [ProducesResponseType(typeof(IEnumerable<KhoHangResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> SearchKhoHangAsync([FromBody] SearchKhoHangRequest request)

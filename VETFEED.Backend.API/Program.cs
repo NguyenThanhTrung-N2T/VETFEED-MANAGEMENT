@@ -155,6 +155,35 @@ builder.Services.AddAuthentication(options =>
                 context.Token = context.Request.Cookies["AccessToken"];
             }
             return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            // Bỏ qua response mặc định của JWT
+            context.HandleResponse();
+            
+            context.Response.StatusCode = 401;
+            context.Response.ContentType = "application/json";
+            
+            var result = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                statusCode = 401,
+                message = "Unauthorized - Bạn chưa đăng nhập hoặc token không hợp lệ"
+            });
+            
+            return context.Response.WriteAsync(result);
+        },
+        OnForbidden = context =>
+        {
+            context.Response.StatusCode = 403;
+            context.Response.ContentType = "application/json";
+            
+            var result = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                statusCode = 403,
+                message = "Forbidden - Bạn không có quyền truy cập tài nguyên này"
+            });
+            
+            return context.Response.WriteAsync(result);
         }
     }; 
 });

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.QuyDoiDonVi;
 using VETFEED.Backend.API.Services;
@@ -17,6 +18,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         /// <summary>Danh sách cấu hình quy đổi của 1 sản phẩm</summary>
+        [Authorize]
         [HttpGet("by-product/{maSP:guid}")]
         public async Task<IActionResult> GetByProduct(Guid maSP)
         {
@@ -32,6 +34,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         /// <summary>Thêm 1 cấu hình quy đổi cho sản phẩm</summary>
+        [Authorize]
         [HttpPost("by-product/{maSP:guid}")]
         public async Task<IActionResult> Create(Guid maSP, [FromBody] QuyDoiDonViCreateRequest request)
         {
@@ -47,6 +50,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         /// <summary>Cập nhật 1 cấu hình quy đổi</summary>
+        [Authorize]
         [HttpPut("{maQD:guid}")]
         public async Task<IActionResult> Update(Guid maQD, [FromBody] QuyDoiDonViUpdateRequest request)
         {
@@ -63,6 +67,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         /// <summary>Xoá cấu hình quy đổi</summary>
+        [Authorize]
         [HttpDelete("{maQD:guid}")]
         public async Task<IActionResult> Delete(Guid maQD)
         {
@@ -72,6 +77,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         /// <summary>Lấy danh sách đơn vị nhập + đơn vị cơ sở của sản phẩm</summary>
+        [Authorize]
         [HttpGet("units/{maSP:guid}")]
         public async Task<IActionResult> GetUnits(Guid maSP)
         {

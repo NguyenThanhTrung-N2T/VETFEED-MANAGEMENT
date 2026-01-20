@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.BaoCao;
 using VETFEED.Backend.API.Services;
@@ -17,6 +18,7 @@ namespace VETFEED.Backend.API.Controllers
 
 
         //GET api/baocaos/doanhthu/phantich?from=2026-01-09&to=2026-01-16 : Lấy phân tích doanh thu theo khoảng thời gian
+        [Authorize(Roles = "QUAN_LY")]
         [HttpGet("doanhthu/phantich")]
         [ProducesResponseType(typeof(DoanhThuPhanTichResponse), StatusCodes.Status200OK)]
         public async Task<ActionResult<DoanhThuPhanTichResponse>> GetDoanhThuPhanTich(
@@ -35,6 +37,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         //GET api/baocaos/doanhthu/donhang?from=2026-01-09&to=2026-01-16&page=1&limit=20 : Lấy danh sách chi tiết đơn hàng doanh thu với phân trang
+        [Authorize(Roles = "QUAN_LY")]
         [HttpGet("doanhthu/donhang")]
         [ProducesResponseType(typeof(DoanhThuDonHangResponse), StatusCodes.Status200OK)]
         public async Task<ActionResult<DoanhThuDonHangResponse>> GetDoanhThuDonHang(
@@ -60,6 +63,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         //GET api/baocaos/loinhuan/phantich?from=2026-01-09&to=2026-01-16 : Lấy phân tích lợi nhuận theo khoảng thời gian
+        [Authorize(Roles = "QUAN_LY")]
         [HttpGet("loinhuan/phantich")]
         [ProducesResponseType(typeof(LoiNhuanPhanTichResponse), StatusCodes.Status200OK)]
         public async Task<ActionResult<LoiNhuanPhanTichResponse>> GetLoiNhuanPhanTich(
@@ -78,6 +82,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         //GET api/baocaos/loinhuan/sanpham?from=2026-01-09&to=2026-01-16&page=1&limit=20&sort_by=profit&order=desc : Lấy danh sách lợi nhuận theo sản phẩm
+        [Authorize(Roles = "QUAN_LY")]
         [HttpGet("loinhuan/sanpham")]
         [ProducesResponseType(typeof(LoiNhuanSanPhamResponse), StatusCodes.Status200OK)]
         public async Task<ActionResult<LoiNhuanSanPhamResponse>> GetLoiNhuanSanPham(
@@ -114,6 +119,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         //GET api/baocaos/tonkho/phantich?maKho={guid} : Lấy phân tích tồn kho theo kho
+        [Authorize(Roles = "QUAN_LY")]
         [HttpGet("tonkho/phantich")]
         [ProducesResponseType(typeof(TonKhoPhanTichResponse), StatusCodes.Status200OK)]
         public async Task<ActionResult<TonKhoPhanTichResponse>> GetTonKhoPhanTich([FromQuery] Guid maKho)
@@ -130,6 +136,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         //GET api/baocaos/tonkho/sanpham?maKho={guid}&page=1&limit=20&trangThai=All : Lấy danh sách tồn kho sản phẩm
+        [Authorize(Roles = "QUAN_LY")]
         [HttpGet("tonkho/sanpham")]
         [ProducesResponseType(typeof(TonKhoSanPhamResponse), StatusCodes.Status200OK)]
         public async Task<ActionResult<TonKhoSanPhamResponse>> GetTonKhoSanPham(

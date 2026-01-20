@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.CTChuyenKho;
@@ -18,6 +19,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET : api/phieuchuyenkhos : lay danh sach phieu chuyen kho 
+        [Authorize]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<PhieuChuyenKhoResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetDanhSachPhieuChuyenKho()
@@ -29,6 +31,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET : api/phieuchuyenkhos/{maCK} : lay chi tiet phieu chuyen kho 
+        [Authorize]
         [HttpGet("{maCK}")]
         [ProducesResponseType(typeof(ChiTietPhieuChuyenKhoResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -43,6 +46,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // POST : api/phieuchuyenkhos : tao phieu chuyen kho
+        [Authorize]
         [HttpPost]
         [ProducesResponseType(typeof(PhieuChuyenKhoResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -58,6 +62,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // PUT : api/phieuchuyenkhos/{maCK} : cap nhat phieu chuyen kho
+        [Authorize(Roles = "QUAN_LY")]
         [HttpPut("{maCK}")]
         [ProducesResponseType(typeof(PhieuChuyenKhoResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -76,6 +81,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // PUT : api/phieuchuyenkhos/chitiet/{maCTCK}/trangthai : cap nhat trang thai chi tiet chuyen kho
+        [Authorize(Roles = "QUAN_LY")]
         [HttpPut("chitiet/{maCTCK}/trangthai")]
         [ProducesResponseType(typeof(ChiTietPhieuChuyenKhoResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -96,6 +102,8 @@ namespace VETFEED.Backend.API.Controllers
             return Ok(result);
         }
 
+        // DELETE : api/phieuchuyenkhos/{maCK} : xoa phieu chuyen kho
+        [Authorize(Roles = "QUAN_LY")]
         [HttpDelete("{maCK}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

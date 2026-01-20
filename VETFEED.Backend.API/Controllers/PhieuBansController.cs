@@ -17,6 +17,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET: api/phieubans
+        [Authorize]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<PhieuBanResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -34,6 +35,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET: api/phieubans/{maPB}
+        [Authorize]
         [HttpGet("{maPB}")]
         [ProducesResponseType(typeof(PhieuBanDetailResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -54,6 +56,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // POST: api/phieubans
+        [Authorize]
         [HttpPost]
         [ProducesResponseType(typeof(PhieuBanResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -79,6 +82,7 @@ namespace VETFEED.Backend.API.Controllers
 
 
         // DELETE: api/phieubans/{maPB}
+        [Authorize(Roles = "QUAN_LY")]
         [HttpDelete("{maPB}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

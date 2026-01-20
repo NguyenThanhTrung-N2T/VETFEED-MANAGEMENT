@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.KhachHang;
 using VETFEED.Backend.API.Services;
 using VETFEED.Backend.API.DTOs.Common;
+using Microsoft.AspNetCore.Authorization;
 namespace VETFEED.Backend.API.Controllers
 {
     [Route("api/[controller]")]
@@ -14,12 +15,15 @@ namespace VETFEED.Backend.API.Controllers
             _service = service;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<PagedResult<KhachHangResponse>>> Search([FromQuery] KhachHangQuery query)
         {
             var result = await _service.SearchAsync(query);
             return Ok(result);
         }
+
+        [Authorize]
         [HttpGet("by-code/{maKHCode}")]
         public async Task<ActionResult<KhachHangResponse>> GetByCode(string maKHCode)
         {
@@ -28,6 +32,7 @@ namespace VETFEED.Backend.API.Controllers
             return Ok(kh);
         }
 
+        [Authorize]
         [HttpGet("by-phone")]
         public async Task<ActionResult<KhachHangResponse>> GetByPhone([FromQuery] string phone)
         {
@@ -35,6 +40,8 @@ namespace VETFEED.Backend.API.Controllers
             if (kh == null) return NotFound("Không tìm thấy khách hàng.");
             return Ok(kh);
         }
+
+        [Authorize]
         [HttpGet("{maKH:guid}")]
         public async Task<ActionResult<KhachHangResponse>> GetById(Guid maKH)
         {
@@ -43,6 +50,7 @@ namespace VETFEED.Backend.API.Controllers
             return Ok(kh);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<KhachHangResponse>> Create([FromBody] KhachHangCreateRequest request)
         {
@@ -57,6 +65,7 @@ namespace VETFEED.Backend.API.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("{maKH:guid}")]
         public async Task<ActionResult<KhachHangResponse>> Update(Guid maKH, [FromBody] KhachHangUpdateRequest request)
         {
@@ -72,6 +81,7 @@ namespace VETFEED.Backend.API.Controllers
             }
         }
 
+        [Authorize(Roles = "QUAN_LY")]
         [HttpDelete("{maKH:guid}")]
         public async Task<ActionResult> Delete(Guid maKH)
         {

@@ -39,6 +39,7 @@ namespace VETFEED.Backend.API.Services
                 TenSP = request.TenSP.Trim(),
                 LoaiSanPham = loai,
                 DonViCoSo = request.DonViTinh,
+                AnhSanPham = request.AnhSanPham,
                 GhiChu = request.GhiChu,
                 NgayTao = now,
                 TrangThai = TrangThaiSanPhamEnum.HoatDong 
@@ -103,6 +104,7 @@ namespace VETFEED.Backend.API.Services
             {
                 spEntity.LoaiSanPham = loai;
                 spEntity.DonViCoSo = request.DonViTinh;
+                spEntity.AnhSanPham = request.AnhSanPham;
 
                 await _context.SaveChangesAsync();
             }

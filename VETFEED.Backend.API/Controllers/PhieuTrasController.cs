@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.PhieuTra;
 using VETFEED.Backend.API.Services;
@@ -21,6 +22,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         //Trả về danh sách phiếu trả được sắp xếp theo ngày trả (mới nhất trước).
+        [Authorize]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<PhieuTraListResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -39,6 +41,7 @@ namespace VETFEED.Backend.API.Controllers
 
 
         //Trả về thông tin phiếu trả kèm theo danh sách chi tiết sản phẩm được trả.
+        [Authorize]
         [HttpGet("{maPT}")]
         [ProducesResponseType(typeof(PhieuTraDetailResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -60,6 +63,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         //Tạo mới phiếu trả hàng
+        [Authorize]
         [HttpPost]
         [ProducesResponseType(typeof(PhieuTraDetailResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -85,6 +89,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         //Xóa phiếu trả hàng
+        [Authorize(Roles = "QUAN_LY")]
         [HttpDelete("{maPT}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -126,6 +131,7 @@ namespace VETFEED.Backend.API.Controllers
         /// <response code="200">Trả về true/false</response>
         /// <response code="400">Dữ liệu không hợp lệ</response>
         /// <response code="500">Lỗi server</response>
+        [Authorize]
         [HttpPost("check-returnable")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

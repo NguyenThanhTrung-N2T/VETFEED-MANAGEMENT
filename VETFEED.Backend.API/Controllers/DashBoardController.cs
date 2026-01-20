@@ -37,6 +37,7 @@ namespace VETFEED.Backend.API.Controllers
         /// </remarks>
         /// <returns>Thống kê tổng quan Dashboard</returns>
         /// <response code="200">Trả về thống kê tổng quan thành công</response>
+        [Authorize]
         [HttpGet("summary")]
         [ProducesResponseType(typeof(DashboardSummaryResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetDashboardSummary()
@@ -65,6 +66,7 @@ namespace VETFEED.Backend.API.Controllers
         /// <param name="year">Năm cần thống kê (mặc định: năm hiện tại)</param>
         /// <returns>Doanh thu 12 tháng trong năm</returns>
         /// <response code="200">Trả về doanh thu theo tháng thành công</response>
+        [Authorize]
         [HttpGet("revenue/monthly")]
         [ProducesResponseType(typeof(MonthlyRevenueResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetMonthlyRevenue([FromQuery] int? year)
@@ -97,6 +99,7 @@ namespace VETFEED.Backend.API.Controllers
         /// <param name="daysThreshold">Số ngày còn lại trước khi hết hạn (mặc định: 30)</param>
         /// <returns>Danh sách lô hàng sắp hết hạn</returns>
         /// <response code="200">Trả về danh sách sản phẩm sắp hết hạn thành công</response>
+        [Authorize]
         [HttpGet("products/expiring")]
         [ProducesResponseType(typeof(IEnumerable<ExpiringProductResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetExpiringProducts(

@@ -102,6 +102,7 @@ CREATE TABLE SanPham (
     LoaiSanPham NVARCHAR(30)                              -- Phân loại SP
         CHECK (LoaiSanPham IN ('THUOC_THU_Y','THUC_AN_CHAN_NUOI')),
     DonViCoSo NVARCHAR(20) NOT NULL,                      -- Đơn vị cơ sở (base unit: viên, kg, lít)
+	AnhSanPham NVARCHAR(500),
     GhiChu NVARCHAR(500),                                 -- Ghi chú
 	TrangThai INT NOT NULL DEFAULT 1
         CHECK (TrangThai IN (0, 1)),    -- 0 = ACTIVE, 1 = DELETED

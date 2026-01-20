@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.TonKho;
 using VETFEED.Backend.API.Services;
@@ -16,6 +17,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET : api/tonkhos : lay danh sanh ton kho 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetTonKhoByKhoAsync()
         {
@@ -25,6 +27,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // PUT : api/tonkhos/{maKho}/{maLo} : cap nhat so luong ton kho 
+        [Authorize]
         [HttpPut("{maKho}/{maLo}")]
         public async Task<IActionResult> UpdateTonKho(Guid maKho, Guid maLo, [FromBody] UpdateTonKhoRequest request)
         {
@@ -35,7 +38,8 @@ namespace VETFEED.Backend.API.Controllers
             return Ok("Cập nhật tồn kho thành công");
         }
 
-        // POST : api/tonkhos/check : kiem tra ton kho theo ma kho va ma lo 
+        // POST : api/tonkhos/check : kiem tra ton kho theo ma kho va ma lo
+        [Authorize]
         [HttpPost("check")]
         public async Task<IActionResult> CheckTonKhoAsync(CheckTonKhoRequest request)
         {
@@ -54,6 +58,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // POST : api/tonkhos/checkallkho : kiem tra ton kho theo ma lo tai tat ca cac kho
+        [Authorize]
         [HttpPost("checkallkho")]
         public async Task<IActionResult> CheckTonKhoAllKhoAsync(CheckAllKhoRequest request)
         {

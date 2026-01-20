@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.SanPham;
 using VETFEED.Backend.API.Services;
 using VETFEED.Backend.API.DTOs.Common;
+using Microsoft.AspNetCore.Authorization;
 namespace VETFEED.Backend.API.Controllers {
     [Route("api/[controller]")]
     [ApiController]
@@ -21,6 +22,7 @@ namespace VETFEED.Backend.API.Controllers {
         }
 
         // GET: api/SanPhams/by-code/{maSPCode}
+        [Authorize]
         [HttpGet("by-code/{maSPCode}")]
         public async Task<ActionResult<SanPhamResponse>> GetByCode(string maSPCode) {
             var sp = await _service.GetByCodeAsync(maSPCode);
@@ -31,6 +33,7 @@ namespace VETFEED.Backend.API.Controllers {
         }
 
         // GET: api/SanPhams/{maSP}
+        [Authorize]
         [HttpGet("{maSP:guid}")]
         public async Task<ActionResult<SanPhamResponse>> GetById(Guid maSP) {
             var sp = await _service.GetByIdAsync(maSP);
@@ -41,6 +44,7 @@ namespace VETFEED.Backend.API.Controllers {
         }
 
         // POST: api/SanPhams
+        [Authorize(Roles = "QUAN_LY")]
         [HttpPost]
         public async Task<ActionResult<SanPhamResponse>> Create(
             [FromBody] SanPhamCreateRequest request) {
@@ -54,6 +58,7 @@ namespace VETFEED.Backend.API.Controllers {
         }
 
         // PUT: api/SanPhams/{maSP}
+        [Authorize(Roles = "QUAN_LY")]
         [HttpPut("{maSP:guid}")]
         public async Task<ActionResult<SanPhamResponse>> Update(
             Guid maSP,
@@ -71,6 +76,7 @@ namespace VETFEED.Backend.API.Controllers {
         }
 
         // DELETE: api/SanPhams/{maSP}
+        [Authorize(Roles = "QUAN_LY")]
         [HttpDelete("{maSP:guid}")]
         public async Task<ActionResult<string>> Delete(Guid maSP) {
             var (ok, error) = await _service.DeleteAsync(maSP);

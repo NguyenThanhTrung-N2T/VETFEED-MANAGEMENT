@@ -11,6 +11,7 @@ namespace VETFEED.Backend.API.DTOs.SanPham
         public string LoaiSanPham { get; set; } = null!; // THUOC_THU_Y | THUC_AN_CHAN_NUOI
 
         public string? DonViTinh { get; set; }
+        public string? AnhSanPham { get; set; }
         public string? GhiChu { get; set; }
         public decimal? GiaBanDau { get; set; }
         public List<DonViQuyDoiItem> DonViQuyDoi { get; set; } = new();

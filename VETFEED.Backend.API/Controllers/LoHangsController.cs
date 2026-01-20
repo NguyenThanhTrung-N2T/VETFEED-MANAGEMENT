@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.LoHang;
 using VETFEED.Backend.API.Services;
@@ -24,6 +25,7 @@ namespace VETFEED.Backend.API.Controllers
         /// </summary>
         /// <returns>Danh sách lô hàng</returns>
         /// <response code="200">Trả về danh sách lô hàng</response>
+        [Authorize]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<LoHangResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll()
@@ -39,6 +41,7 @@ namespace VETFEED.Backend.API.Controllers
         /// <returns>Thông tin lô hàng</returns>
         /// <response code="200">Trả về thông tin lô hàng</response>
         /// <response code="404">Không tìm thấy lô hàng</response>
+        [Authorize]
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(LoHangResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -56,6 +59,7 @@ namespace VETFEED.Backend.API.Controllers
         /// <param name="maSP">Mã sản phẩm (GUID)</param>
         /// <returns>Danh sách lô hàng của sản phẩm</returns>
         /// <response code="200">Trả về danh sách lô hàng</response>
+        [Authorize]
         [HttpGet("bysanpham/{maSP}")]
         [ProducesResponseType(typeof(IEnumerable<LoHangResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetBySanPham(Guid maSP)
@@ -71,6 +75,7 @@ namespace VETFEED.Backend.API.Controllers
         /// <returns>Lô hàng vừa được tạo</returns>
         /// <response code="201">Tạo lô hàng thành công</response>
         /// <response code="400">Dữ liệu không hợp lệ</response>
+        [Authorize]
         [HttpPost]
         [ProducesResponseType(typeof(LoHangResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -96,6 +101,7 @@ namespace VETFEED.Backend.API.Controllers
         /// <response code="200">Cập nhật thành công</response>
         /// <response code="400">Dữ liệu không hợp lệ</response>
         /// <response code="404">Không tìm thấy lô hàng</response>
+        [Authorize]
         [HttpPut("{id}")]
         [ProducesResponseType(typeof(LoHangResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -122,6 +128,7 @@ namespace VETFEED.Backend.API.Controllers
         /// <returns>Không có nội dung trả về</returns>
         /// <response code="204">Xóa thành công</response>
         /// <response code="404">Không tìm thấy lô hàng</response>
+        [Authorize(Roles = "QUAN_LY")]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -138,6 +145,7 @@ namespace VETFEED.Backend.API.Controllers
         /// </summary>
         /// <returns>Danh sách lô hàng hết hạn (nếu có)</returns>
         /// <response code="200">Danh sách lô hàng</response>
+        [Authorize]
         [HttpGet("outdated")]
         [ProducesResponseType(typeof(LoHangResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetOutDatedLoHangs()

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.GiaBan;
 using VETFEED.Backend.API.Services;
@@ -14,6 +15,7 @@ namespace VETFEED.Backend.API.Controllers
             _service = service;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> Search([FromQuery] GiaBanQuery query)
         {
@@ -21,6 +23,8 @@ namespace VETFEED.Backend.API.Controllers
             return Ok(result);
         }
 
+
+        [Authorize]
         [HttpGet("{maGia:guid}")]
         public async Task<IActionResult> GetById(Guid maGia)
         {
@@ -29,6 +33,7 @@ namespace VETFEED.Backend.API.Controllers
             return Ok(gb);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] GiaBanCreateRequest request)
         {
@@ -43,6 +48,7 @@ namespace VETFEED.Backend.API.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("{maGia:guid}")]
         public async Task<IActionResult> Update(Guid maGia, [FromBody] GiaBanUpdateRequest request)
         {
@@ -58,6 +64,7 @@ namespace VETFEED.Backend.API.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("{maGia:guid}")]
         public async Task<IActionResult> Delete(Guid maGia)
         {

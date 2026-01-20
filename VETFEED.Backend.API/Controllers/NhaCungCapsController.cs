@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.NhaCungCap;
 using VETFEED.Backend.API.Services;
@@ -39,6 +40,7 @@ namespace VETFEED.Backend.API.Controllers
         /// <returns>Thông tin chi tiết nhà cung cấp</returns>
         /// <response code="200">Trả về thông tin nhà cung cấp</response>
         /// <response code="404">Không tìm thấy nhà cung cấp</response>
+        [Authorize]
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(NhaCungCapDetailedResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -64,6 +66,7 @@ namespace VETFEED.Backend.API.Controllers
         /// </remarks>
         /// <response code="201">Tạo nhà cung cấp thành công</response>
         /// <response code="400">Dữ liệu không hợp lệ</response>
+        [Authorize(Roles = "QUAN_LY")]
         [HttpPost]
         [ProducesResponseType(typeof(NhaCungCapDetailedResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -99,6 +102,7 @@ namespace VETFEED.Backend.API.Controllers
         /// <response code="200">Cập nhật thành công</response>
         /// <response code="400">Dữ liệu không hợp lệ</response>
         /// <response code="404">Không tìm thấy nhà cung cấp</response>
+        [Authorize(Roles = "QUAN_LY")]
         [HttpPut("{id}")]
         [ProducesResponseType(typeof(NhaCungCapDetailedResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -130,6 +134,7 @@ namespace VETFEED.Backend.API.Controllers
         /// </remarks>
         /// <response code="204">Xóa thành công</response>
         /// <response code="404">Không tìm thấy nhà cung cấp</response>
+        [Authorize(Roles = "QUAN_LY")]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

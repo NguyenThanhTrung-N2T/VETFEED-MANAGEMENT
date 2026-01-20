@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VETFEED.Backend.API.DTOs.CongNo;
 using VETFEED.Backend.API.Services;
@@ -15,6 +16,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET : api/congnos/summary : lay cong no tong hop cua tat ca doi tuong
+        [Authorize]
         [HttpGet("summary")]
         [ProducesResponseType(typeof(List<CongNoTongHopResponse>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<CongNoTongHopResponse>>> GetTongHopCongNo()
@@ -26,6 +28,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // GET : api/congnos/{maDoiTuong}/detail
+        [Authorize]
         [HttpGet("{maDoiTuong}/detail")]
         public async Task<ActionResult<List<CongNoHistoryResponse>>> GetCongNoHistory(Guid maDoiTuong)
         {
@@ -36,6 +39,7 @@ namespace VETFEED.Backend.API.Controllers
         }
 
         // POST : api/congnos : tao cong no moi
+        [Authorize]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
