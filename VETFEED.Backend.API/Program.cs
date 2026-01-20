@@ -9,6 +9,18 @@ using VETFEED.Backend.API.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Cấu hình CORS để cho phép Frontend gọi API
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "http://26.97.88.26:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Cho phép gửi cookies
+    });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<EmailService>();
@@ -216,9 +228,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    // Chỉ bật HTTPS redirection trong production
+    app.UseHttpsRedirection();
+}
 
-app.UseHttpsRedirection();
+// Bật CORS - phải đặt trước Authentication và Authorization
+app.UseCors("AllowFrontend");
 
+app.UseAuthentication(); 
 app.UseAuthorization();
 app.MapControllers();
 
