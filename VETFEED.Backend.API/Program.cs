@@ -124,6 +124,18 @@ builder.Services.AddSwaggerGen(c =>
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+// Cấu hình CORS để cho phép Frontend gọi API
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "http://26.97.88.26:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Cho phép gửi cookies
+    });
+});
+
 // Đăng ký DbContext với SQL Server
 builder.Services.AddDbContext<VetFeedManagementContext>(options => options.UseSqlServer(connectionString));
 
