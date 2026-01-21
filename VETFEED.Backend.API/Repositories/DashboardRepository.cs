@@ -69,9 +69,9 @@ namespace VETFEED.Backend.API.Repositories
                 select new ExpiringBatchInfo
                 {
                     MaLo = lh.MaLo,
-                    MaLoCode = lh.MaLoCode,
-                    TenSanPham = sp.TenSP,
-                    LoaiSanPham = sp.LoaiSanPham.ToString(),
+                    MaLoCode = lh.MaLoCode ?? "N/A",
+                    TenSanPham = sp.TenSP ?? "N/A",
+                    LoaiSanPham = sp.LoaiSanPham != null ? sp.LoaiSanPham.ToString() : "N/A",
                     HanSuDung = lh.HanSuDung,
                     SoLuongTon = tongSoLuong
                 }
