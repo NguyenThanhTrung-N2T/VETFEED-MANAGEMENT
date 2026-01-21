@@ -27,6 +27,7 @@ namespace VETFEED.Backend.API.Repositories
                     .Join(_context.SanPhams, x => x.lo.MaSP, sp => sp.MaSP, (x, sp) => new TonKhoItemResponse
                     {
                         MaLo = x.lo.MaLo,
+                        MaSP = x.lo.MaSP,
                         TenSP = sp.TenSP!,
                         MaPNCode = _context.CTPhieuNhaps
                             .Where(ct => ct.MaLo == x.lo.MaLo)
