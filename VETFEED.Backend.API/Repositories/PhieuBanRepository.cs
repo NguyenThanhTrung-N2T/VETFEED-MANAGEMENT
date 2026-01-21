@@ -134,6 +134,12 @@ namespace VETFEED.Backend.API.Repositories
                 var khachHang = await _context.KhachHangs.FindAsync(request.MaKH)
                     ?? throw new Exception("Khách hàng không tồn tại!");
 
+                // KIỂM TRA TRẠNG THÁI KHÁCH HÀNG
+                if (khachHang.TrangThai == TrangThaiKhachHangEnum.KHOA)
+                {
+                    throw new Exception($"Khách hàng '{khachHang.TenKH}' đã bị khóa, không thể tạo phiếu bán!");
+                }
+
                 if (request.HinhThucThanhToan != HinhThucThanhToanEnum.CONG_NO)
                 {
                     if (request.TienCoc > 0)
@@ -143,6 +149,12 @@ namespace VETFEED.Backend.API.Repositories
                 {
                     if (request.HanTra == null)
                         throw new Exception("Bán công nợ bắt buộc phải có hạn trả");
+                    
+                    // KIỂM TRA NGÀY BÁN PHẢI NHỎ HƠN HẠN TRẢ
+                    if (request.NgayBan.Date >= request.HanTra.Value.Date)
+                    {
+                        throw new Exception("Ngày bán phải nhỏ hơn hạn trả!");
+                    }
                 }
 
 
