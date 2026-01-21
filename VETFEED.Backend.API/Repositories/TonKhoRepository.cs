@@ -37,7 +37,8 @@ namespace VETFEED.Backend.API.Repositories
                                 .FirstOrDefault())
                             .FirstOrDefault(),
                         DonGia = x.tk.GiaVonBinhQuan,
-                        SoLuong = x.tk.SoLuongCoSo
+                        SoLuong = x.tk.SoLuongCoSo,
+                        HanSuDung = x.lo.HanSuDung
                     })
                     .ToList()
             }).ToListAsync();

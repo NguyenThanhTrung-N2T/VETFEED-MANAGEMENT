@@ -8,5 +8,6 @@
         public string? MaPNCode { get; set; } // Ma Code Cua phieu nhap 
         public decimal? DonGia { get; set; }
         public decimal SoLuong { get; set; }
+        public DateTime? HanSuDung { get; set; }
     }
 }
