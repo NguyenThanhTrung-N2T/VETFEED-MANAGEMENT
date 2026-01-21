@@ -90,6 +90,26 @@ namespace VETFEED.Backend.API.Repositories
         {
             try
             {
+                // KIỂM TRA KHO XUẤT
+                var isKhoXuat = await _context.KhoHangs.FindAsync(request.MaKhoXuat);
+                if (isKhoXuat == null)
+                    throw new Exception("Kho xuất không tồn tại!");
+
+                if (isKhoXuat.TrangThai == TrangThaiKhoEnum.NGUNG_HOAT_DONG)
+                    throw new Exception($"Kho xuất '{isKhoXuat.TenKho}' đã bị khóa, không thể chuyển kho!");
+
+                // KIỂM TRA KHO NHẬN
+                var isKhoNhan = await _context.KhoHangs.FindAsync(request.MaKhoNhan);
+                if (isKhoNhan == null)
+                    throw new Exception("Kho nhận không tồn tại!");
+
+                if (isKhoNhan.TrangThai == TrangThaiKhoEnum.NGUNG_HOAT_DONG)
+                    throw new Exception($"Kho nhận '{isKhoNhan.TenKho}' đã bị khóa, không thể chuyển kho!");
+
+                // KIỂM TRA KHÔNG CHUYỂN VÀO CHÍNH KHO ĐÓ
+                if (request.MaKhoXuat == request.MaKhoNhan)
+                    throw new Exception("Không thể chuyển hàng vào chính kho đó!");
+
                 // tao phieu chuyen kho
                 var phieu = new PhieuChuyenKho
                 {
