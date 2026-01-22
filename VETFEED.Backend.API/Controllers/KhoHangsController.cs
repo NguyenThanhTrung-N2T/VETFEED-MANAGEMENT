@@ -39,7 +39,7 @@ namespace VETFEED.Backend.API.Controllers
             var khohang = await _khoHangService.GetKhoHangByIdAsync(maKho);
             if (khohang == null)
             {
-                return NotFound("Không tìm thấy kho hàng !");
+                return NotFound(new { error = "Không tìm thấy kho hàng !" });
             }
             // trả về client
             return Ok(khohang);
@@ -52,15 +52,22 @@ namespace VETFEED.Backend.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AddKhoHangAsync([FromBody] CreateKhoHangRequest request)
         {
-            // kiểm tra đầu vào 
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest("Giá trị các thuộc tính chưa đủ hoặc không đúng chuẩn !");
+                // kiểm tra đầu vào 
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { error = "Giá trị các thuộc tính chưa đủ hoặc không đúng chuẩn !" });
+                }
+                // thêm kho hàng 
+                var khoHang = await _khoHangService.AddKhoHangAsync(request);
+                // trả về client 201 
+                return CreatedAtRoute("GetKhoHangById", new { maKho = khoHang.MaKho }, khoHang);
             }
-            // thêm kho hàng 
-            var khoHang = await _khoHangService.AddKhoHangAsync(request);
-            // trả về client 201 
-            return CreatedAtRoute("GetKhoHangById", new { maKho = khoHang.MaKho }, khoHang);
+            catch (Exception)
+            {
+                return BadRequest(new { error = "Xảy ra lỗi khi thêm kho hàng. Vui lòng thử lại sau." });
+            }
         }
 
         // PUT : api/khohangs/{maKho} : cập nhật kho hàng 
@@ -70,21 +77,28 @@ namespace VETFEED.Backend.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateKhoHangAsync(Guid maKho, [FromBody] UpdateKhoHangRequest request)
         {
-            // kiểm tra đầu vào 
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest("Giá trị các thuộc tính chưa đủ hoặc không đúng chuẩn !");
-            }
+                // kiểm tra đầu vào 
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { error = "Giá trị các thuộc tính chưa đủ hoặc không đúng chuẩn !" });
+                }
 
-            // cập nhật kho hàng 
-            var khoHang = await _khoHangService.UpdateKhoHangAsync(maKho, request);
-            if(khoHang == null)
+                // cập nhật kho hàng 
+                var khoHang = await _khoHangService.UpdateKhoHangAsync(maKho, request);
+                if(khoHang == null)
+                {
+                    return NotFound(new { error = "Kho hàng không tồn tại !" });
+                }
+
+                // trả về client 
+                return Ok(khoHang);
+            }
+            catch (Exception)
             {
-                return NotFound("Kho hàng không tồn tại !");
+                return BadRequest(new { error = "Xảy ra lỗi khi cập nhật kho hàng. Vui lòng thử lại sau." });
             }
-
-            // trả về client 
-            return Ok(khoHang);
         }
 
         // DELETE : api/khohangs/{maKho} : xóa kho hàng 
@@ -101,7 +115,7 @@ namespace VETFEED.Backend.API.Controllers
                 var result = await _khoHangService.DeleteKhoHangAsync(maKho);
                 if (!result)
                 {
-                    return NotFound("Kho hàng không tồn tại !");
+                    return NotFound(new { error = "Kho hàng không tồn tại !" });
                 }
 
                 // trả về client
