@@ -24,6 +24,12 @@ namespace VETFEED.Backend.API.Repositories
         // lay phieu nhap theo ma phieu nhap code
         Task<PhieuNhap?> GetPhieuNhapByCodeAsync(string maPNCode);
 
+        // lay phieu ban theo ma phieu ban ID
+        Task<PhieuBan?> GetPhieuBanByIdAsync(Guid maPB);
+
+        // lay phieu nhap theo ma phieu nhap ID
+        Task<PhieuNhap?> GetPhieuNhapByIdAsync(Guid maPN);
+
         // tinh tong cong no theo phieu
         Task<decimal> GetTongCongNoTheoPhieuAsync(Guid maPhieu);
 

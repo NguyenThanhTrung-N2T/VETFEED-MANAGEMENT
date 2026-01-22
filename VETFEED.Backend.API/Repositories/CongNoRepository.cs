@@ -173,6 +173,21 @@ namespace VETFEED.Backend.API.Repositories
             return await _context.PhieuNhaps
                 .FirstOrDefaultAsync(x => x.MaPNCode == maPNCode);
         }
+
+        // lay phieu ban theo ma ID
+        public async Task<PhieuBan?> GetPhieuBanByIdAsync(Guid maPB)
+        {
+            return await _context.PhieuBans
+                .FirstOrDefaultAsync(x => x.MaPB == maPB);
+        }
+
+        // lay phieu nhap theo ma ID
+        public async Task<PhieuNhap?> GetPhieuNhapByIdAsync(Guid maPN)
+        {
+            return await _context.PhieuNhaps
+                .FirstOrDefaultAsync(x => x.MaPN == maPN);
+        }
+
         // tinh tong cong no theeo phieu 
         public async Task<decimal> GetTongCongNoTheoPhieuAsync(Guid maPhieu)
         {

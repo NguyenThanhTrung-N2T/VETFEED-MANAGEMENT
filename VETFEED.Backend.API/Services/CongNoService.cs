@@ -149,8 +149,26 @@ namespace VETFEED.Backend.API.Services
                         if (soTienCanTra > noConLai)
                             throw new Exception("Số tiền trả vượt quá số nợ của phiếu");
 
-                        if (soTienCanTra == noConLai)
+                        // Lưu giao dịch thanh toán TRƯỚC
+                        await _congNoRepository.AddCongNoAsync(new CongNo
+                        {
+                            MaCongNo = Guid.NewGuid(),
+                            MaDoiTuong = request.MaDoiTuong,
+                            MaPhieu = maPhieu,
+                            SoTien = -soTienCanTra,
+                            LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
+                            NgayPhatSinh = request.NgayPhatSinh,
+                            GhiChu = request.GhiChu
+                        });
+
+                        // SAU ĐÓ tính lại nợ còn lại
+                        var noConLaiSauKhiTra = await _congNoRepository.GetTongCongNoTheoPhieuAsync(maPhieu);
+                        
+                        // Nếu đã trả hết nợ thì cập nhật trạng thái
+                        if (noConLaiSauKhiTra <= 0.01m && phieuBan.TrangThaiThanhToan == TrangThaiThanhToanEnum.CHUA_THANH_TOAN)
+                        {
                             phieuBan.TrangThaiThanhToan = TrangThaiThanhToanEnum.DA_THANH_TOAN;
+                        }
                     }
                     else // NCC
                     {
@@ -163,18 +181,19 @@ namespace VETFEED.Backend.API.Services
                         var noConLai = await _congNoRepository.GetTongCongNoTheoPhieuAsync(maPhieu);
                         if (soTienCanTra > noConLai)
                             throw new Exception("Số tiền trả vượt quá số nợ của phiếu");
-                    }
 
-                    await _congNoRepository.AddCongNoAsync(new CongNo
-                    {
-                        MaCongNo = Guid.NewGuid(),
-                        MaDoiTuong = request.MaDoiTuong,
-                        MaPhieu = maPhieu,
-                        SoTien = -soTienCanTra,
-                        LoaiDoiTuong = isKhachHang ? LoaiDoiTuongCongNoEnum.KHACH_HANG : LoaiDoiTuongCongNoEnum.NHA_CUNG_CAP,
-                        NgayPhatSinh = request.NgayPhatSinh,
-                        GhiChu = request.GhiChu
-                    });
+                        // Lưu giao dịch thanh toán
+                        await _congNoRepository.AddCongNoAsync(new CongNo
+                        {
+                            MaCongNo = Guid.NewGuid(),
+                            MaDoiTuong = request.MaDoiTuong,
+                            MaPhieu = maPhieu,
+                            SoTien = -soTienCanTra,
+                            LoaiDoiTuong = LoaiDoiTuongCongNoEnum.NHA_CUNG_CAP,
+                            NgayPhatSinh = request.NgayPhatSinh,
+                            GhiChu = request.GhiChu
+                        });
+                    }
 
                     tongThucTeDaTra = soTienCanTra;
                 }
@@ -206,6 +225,27 @@ namespace VETFEED.Backend.API.Services
 
                         soTienCanTra -= soTru;
                         tongThucTeDaTra += soTru;
+                        
+                        // KIỂM TRA VÀ CẬP NHẬT TRẠNG THÁI PHIẾU NẾU ĐÃ TRẢ HẾT
+                        if (cn.MaPhieu.HasValue)
+                        {
+                            // Tính lại tổng công nợ của phiếu SAU KHI đã thêm bản ghi thanh toán
+                            var noConLaiCuaPhieu = await _congNoRepository.GetTongCongNoTheoPhieuAsync(cn.MaPhieu.Value);
+                            
+                            // Nếu đã trả hết nợ của phiếu này (nợ còn lại <= 0)
+                            if (noConLaiCuaPhieu <= 0.01m) // Dùng epsilon để tránh lỗi làm tròn
+                            {
+                                if (isKhachHang)
+                                {
+                                    var phieuBan = await _congNoRepository.GetPhieuBanByIdAsync(cn.MaPhieu.Value);
+                                    // Chỉ cập nhật nếu phiếu ban đầu thanh toán bằng công nợ
+                                    if (phieuBan != null && phieuBan.TrangThaiThanhToan == TrangThaiThanhToanEnum.CHUA_THANH_TOAN)
+                                    {
+                                        phieuBan.TrangThaiThanhToan = TrangThaiThanhToanEnum.DA_THANH_TOAN;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
