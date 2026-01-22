@@ -271,6 +271,20 @@ namespace VETFEED.Backend.API.Repositories
                         if (khachHang.CongNoHienTai < 0)
                             khachHang.CongNoHienTai = 0;
                     }
+                    
+                    // KIỂM TRA RIÊNG CHO PHIẾU BÁN NÀY ĐÃ TRẢ HẾT CHƯA
+                    // Tính tổng tiền đã trả cho phiếu bán này (bao gồm cả phiếu trả hiện tại)
+                    var tongTienDaTra = await _context.PhieuTras
+                        .Where(pt => pt.MaPB == phieuBanGoc.MaPB)
+                        .SumAsync(pt => pt.ThanhTien);
+                    
+                    // Nếu tổng tiền trả >= tiền nợ ban đầu của phiếu bán
+                    // => Cập nhật trạng thái thành ĐÃ THANH TOÁN
+                    if (tongTienDaTra >= phieuBanGoc.TienNo && 
+                        phieuBanGoc.TrangThaiThanhToan == TrangThaiThanhToanEnum.CHUA_THANH_TOAN)
+                    {
+                        phieuBanGoc.TrangThaiThanhToan = TrangThaiThanhToanEnum.DA_THANH_TOAN;
+                    }
                 }
 
                 //  Rollback tổng mua
