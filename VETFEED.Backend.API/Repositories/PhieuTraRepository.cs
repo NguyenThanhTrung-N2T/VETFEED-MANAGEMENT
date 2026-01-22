@@ -226,13 +226,22 @@ namespace VETFEED.Backend.API.Repositories
                 // CHỈ TẠO CÔNG NỢ NẾU PHIẾU BÁN GỐC LÀ CÔNG NỢ
                 if (phieuBanGoc.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO)
                 {
-                    // Trường hợp 1: Tiền trả > Công nợ hiện tại
-                    if (tongTienTra > khachHang.CongNoHienTai)
+                    // Tính tiền nợ còn lại của PHIẾU BÁN NÀY (không phải tổng nợ khách hàng)
+                    var tongTienDaTraTruocDo = await _context.PhieuTras
+                        .Where(pt => pt.MaPB == phieuBanGoc.MaPB)
+                        .SumAsync(pt => pt.ThanhTien);
+                    
+                    var tienNoConLaiCuaPhieuBan = phieuBanGoc.TienNo - tongTienDaTraTruocDo;
+                    if (tienNoConLaiCuaPhieuBan < 0)
+                        tienNoConLaiCuaPhieuBan = 0;
+
+                    // Trường hợp 1: Tiền trả > Tiền nợ còn lại của phiếu bán này
+                    if (tongTienTra > tienNoConLaiCuaPhieuBan)
                     {
-                        var tienTraNo = khachHang.CongNoHienTai;
+                        var tienTraNo = tienNoConLaiCuaPhieuBan;
                         var tienHoanThem = tongTienTra - tienTraNo;
 
-                        // Trả hết nợ
+                        // Tạo công nợ GIẢM NỢ (trả đúng phần nợ còn lại)
                         if (tienTraNo > 0)
                         {
                             _context.CongNos.Add(new CongNo
@@ -245,15 +254,28 @@ namespace VETFEED.Backend.API.Repositories
                                 NgayPhatSinh = DateTime.Now,
                                 GhiChu = $"GIAM NO: Phiếu trả {phieuTra.MaPTCode}"
                             });
+                            
+                            khachHang.CongNoHienTai -= tienTraNo;
                         }
 
-                        // Hoàn tiền thừa (không tạo công nợ, chỉ ghi nhận hoàn tiền)
-                        // Phần này có thể log hoặc xử lý theo nghiệp vụ
-                        // Ví dụ: Tạo phiếu chi hoàn tiền
-
-                        khachHang.CongNoHienTai = 0;
+                        // Tạo công nợ HOÀN TIỀN (phần thừa)
+                        if (tienHoanThem > 0)
+                        {
+                            _context.CongNos.Add(new CongNo
+                            {
+                                MaCongNo = Guid.NewGuid(),
+                                LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
+                                MaDoiTuong = khachHang.MaKH,
+                                MaPhieu = phieuTra.MaPT,
+                                SoTien = -tienHoanThem,
+                                NgayPhatSinh = DateTime.Now,
+                                GhiChu = $"HOAN TIEN: Phiếu trả {phieuTra.MaPTCode}"
+                            });
+                            
+                            khachHang.CongNoHienTai -= tienHoanThem;
+                        }
                     }
-                    // Trường hợp 2: Tiền trả <= Công nợ hiện tại
+                    // Trường hợp 2: Tiền trả <= Tiền nợ còn lại của phiếu bán này
                     else
                     {
                         _context.CongNos.Add(new CongNo
@@ -268,15 +290,15 @@ namespace VETFEED.Backend.API.Repositories
                         });
 
                         khachHang.CongNoHienTai -= tongTienTra;
-                        if (khachHang.CongNoHienTai < 0)
-                            khachHang.CongNoHienTai = 0;
                     }
                     
-                    // KIỂM TRA RIÊNG CHO PHIẾU BÁN NÀY ĐÃ TRẢ HẾT CHƯA
-                    // Tính tổng tiền đã trả cho phiếu bán này (bao gồm cả phiếu trả hiện tại)
-                    var tongTienDaTra = await _context.PhieuTras
-                        .Where(pt => pt.MaPB == phieuBanGoc.MaPB)
-                        .SumAsync(pt => pt.ThanhTien);
+                    // Đảm bảo công nợ không âm
+                    if (khachHang.CongNoHienTai < 0)
+                        khachHang.CongNoHienTai = 0;
+                    
+                    // KIỂM TRA TRẠNG THÁI PHIẾU BÁN
+                    // Tổng tiền đã trả = tiền trả trước đó + tiền trả lần này
+                    var tongTienDaTra = tongTienDaTraTruocDo + tongTienTra;
                     
                     // Nếu tổng tiền trả >= tiền nợ ban đầu của phiếu bán
                     // => Cập nhật trạng thái thành ĐÃ THANH TOÁN
