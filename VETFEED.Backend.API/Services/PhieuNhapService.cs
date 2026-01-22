@@ -16,6 +16,8 @@ namespace VETFEED.Backend.API.Services
         private readonly ILoHangRepository _loHangRepo;
         private readonly ITonKhoRepository _tonKhoRepo;
         private readonly IQuyDoiDonViRepository _quyDoiDonViRepo;
+        private readonly IKhoHangRepository _khoHangRepo;
+
 
         public PhieuNhapService(
             VetFeedManagementContext context,
@@ -23,7 +25,8 @@ namespace VETFEED.Backend.API.Services
             ICTPhieuNhapRepository ctPhieuNhapRepo,
             ILoHangRepository loHangRepo,
             ITonKhoRepository tonKhoRepo,
-            IQuyDoiDonViRepository quyDoiDonViRepo)
+            IQuyDoiDonViRepository quyDoiDonViRepo,
+            IKhoHangRepository khoHangRepo)
         {
             _context = context;
             _phieuNhapRepo = phieuNhapRepo;
@@ -31,6 +34,7 @@ namespace VETFEED.Backend.API.Services
             _loHangRepo = loHangRepo;
             _tonKhoRepo = tonKhoRepo;
             _quyDoiDonViRepo = quyDoiDonViRepo;
+            _khoHangRepo = khoHangRepo;
         }
 
         /// <summary>
@@ -105,6 +109,12 @@ namespace VETFEED.Backend.API.Services
             
             if (request.DanhSachChiTiet == null || !request.DanhSachChiTiet.Any())
                 throw new ArgumentException("Danh sách chi tiết phiếu nhập không được để trống.");
+
+            var khohang = await _khoHangRepo.GetKhoHangByIdAsync(request.MaKho);
+            if(khohang == null)
+                throw new ArgumentException("Kho hàng không tồn tại.");
+            if(khohang.TrangThai == TrangThaiKhoEnum.NGUNG_HOAT_DONG.ToString())
+                throw new ArgumentException("Kho hàng đang ở trạng thái Không hoạt động, không thể nhập hàng vào kho này.");
 
             // Sử dụng transaction để đảm bảo tính nhất quán dữ liệu
             using var transaction = await _context.Database.BeginTransactionAsync();
