@@ -140,6 +140,14 @@ namespace VETFEED.Backend.API.Services
                         var chiTiet = chiTietList[i];
                         var soThuTu = i + 1; // Số thứ tự 1-based cho user
 
+                        // Validate: SoLuong phải lớn hơn 0
+                        if (chiTiet.SoLuong <= 0)
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Số lượng phải lớn hơn 0.");
+                        
+                        // Validate: DonGia không được âm
+                        if (chiTiet.DonGia.HasValue && chiTiet.DonGia.Value < 0)
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Đơn giá không được âm.");
+                        
                         // Validate: HanSuDung phải trong tương lai
                         if (chiTiet.HanSuDung <= DateTime.Now)
                             throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Hạn sử dụng phải là ngày trong tương lai.");
@@ -257,6 +265,13 @@ namespace VETFEED.Backend.API.Services
             if (nhaCungCap == null || nhaCungCap.IsDeleted)
                 throw new ArgumentException("Nhà cung cấp không tồn tại hoặc đã bị xóa.");
             
+            // Kiểm tra kho hàng tồn tại và trạng thái
+            var khohang = await _khoHangRepo.GetKhoHangByIdAsync(request.MaKho);
+            if (khohang == null)
+                throw new ArgumentException("Kho hàng không tồn tại.");
+            if (khohang.TrangThai == TrangThaiKhoEnum.NGUNG_HOAT_DONG.ToString())
+                throw new ArgumentException("Kho hàng đang ở trạng thái Không hoạt động, không thể nhập hàng vào kho này.");
+            
             if (request.DanhSachChiTiet == null || !request.DanhSachChiTiet.Any())
                 throw new ArgumentException("Danh sách chi tiết phiếu nhập không được để trống.");
 
@@ -328,6 +343,14 @@ namespace VETFEED.Backend.API.Services
                         if (!ctUpdate.HanSuDung.HasValue)
                             throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Hạn sử dụng là bắt buộc khi thêm mới chi tiết phiếu nhập.");
                         
+                        // Validate: SoLuong phải lớn hơn 0
+                        if (ctUpdate.SoLuong <= 0)
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Số lượng phải lớn hơn 0.");
+                        
+                        // Validate: DonGia không được âm
+                        if (ctUpdate.DonGia.HasValue && ctUpdate.DonGia.Value < 0)
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Đơn giá không được âm.");
+                        
                         // Validate: HanSuDung phải trong tương lai
                         if (ctUpdate.HanSuDung.Value <= DateTime.Now)
                             throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Hạn sử dụng phải là ngày trong tương lai.");
@@ -394,6 +417,14 @@ namespace VETFEED.Backend.API.Services
                             }
                         }
 
+                        // Validate: SoLuong phải lớn hơn 0
+                        if (ctUpdate.SoLuong <= 0)
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Số lượng phải lớn hơn 0.");
+                        
+                        // Validate: DonGia không được âm
+                        if (ctUpdate.DonGia.HasValue && ctUpdate.DonGia.Value < 0)
+                            throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Đơn giá không được âm.");
+                        
                         // Cập nhật SoLuong, DonGia, DonViNhap cho CTPN
                         var updated = await _ctPhieuNhapRepo.UpdateCTPhieuNhapAsync(
                             ctUpdate.MaCTPN,
