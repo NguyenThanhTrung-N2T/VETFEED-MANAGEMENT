@@ -222,13 +222,39 @@ namespace VETFEED.Backend.API.Repositories
                 // Cập nhật tổng tiền phiếu trả
                 phieuTra.ThanhTien = tongTienTra;
 
-                // Xử lý công nợ + hoàn tiền
-                if (tongTienTra > khachHang.CongNoHienTai)
+                // ===== XỬ LÝ CÔNG NỢ VÀ HOÀN TIỀN =====
+                // CHỈ TẠO CÔNG NỢ NẾU PHIẾU BÁN GỐC LÀ CÔNG NỢ
+                if (phieuBanGoc.HinhThucThanhToan == HinhThucThanhToanEnum.CONG_NO)
                 {
-                    var tienTraNo = khachHang.CongNoHienTai;
-                    var tienHoanThem = tongTienTra - tienTraNo;
+                    // Trường hợp 1: Tiền trả > Công nợ hiện tại
+                    if (tongTienTra > khachHang.CongNoHienTai)
+                    {
+                        var tienTraNo = khachHang.CongNoHienTai;
+                        var tienHoanThem = tongTienTra - tienTraNo;
 
-                    if (tienTraNo > 0)
+                        // Trả hết nợ
+                        if (tienTraNo > 0)
+                        {
+                            _context.CongNos.Add(new CongNo
+                            {
+                                MaCongNo = Guid.NewGuid(),
+                                LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
+                                MaDoiTuong = khachHang.MaKH,
+                                MaPhieu = phieuTra.MaPT,
+                                SoTien = -tienTraNo,
+                                NgayPhatSinh = DateTime.Now,
+                                GhiChu = $"GIAM NO: Phiếu trả {phieuTra.MaPTCode}"
+                            });
+                        }
+
+                        // Hoàn tiền thừa (không tạo công nợ, chỉ ghi nhận hoàn tiền)
+                        // Phần này có thể log hoặc xử lý theo nghiệp vụ
+                        // Ví dụ: Tạo phiếu chi hoàn tiền
+
+                        khachHang.CongNoHienTai = 0;
+                    }
+                    // Trường hợp 2: Tiền trả <= Công nợ hiện tại
+                    else
                     {
                         _context.CongNos.Add(new CongNo
                         {
@@ -236,44 +262,15 @@ namespace VETFEED.Backend.API.Repositories
                             LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
                             MaDoiTuong = khachHang.MaKH,
                             MaPhieu = phieuTra.MaPT,
-                            SoTien = -tienTraNo,
+                            SoTien = -tongTienTra,
                             NgayPhatSinh = DateTime.Now,
                             GhiChu = $"GIAM NO: Phiếu trả {phieuTra.MaPTCode}"
                         });
+
+                        khachHang.CongNoHienTai -= tongTienTra;
+                        if (khachHang.CongNoHienTai < 0)
+                            khachHang.CongNoHienTai = 0;
                     }
-
-                    if (tienHoanThem > 0)
-                    {
-                        _context.CongNos.Add(new CongNo
-                        {
-                            MaCongNo = Guid.NewGuid(),
-                            LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
-                            MaDoiTuong = khachHang.MaKH,
-                            MaPhieu = phieuTra.MaPT,
-                            SoTien = -tienHoanThem,
-                            NgayPhatSinh = DateTime.Now,
-                            GhiChu = $"HOAN TIEN: Phiếu trả {phieuTra.MaPTCode}"
-                        });
-                    }
-
-                    khachHang.CongNoHienTai = 0;
-                }
-                else
-                {
-                    _context.CongNos.Add(new CongNo
-                    {
-                        MaCongNo = Guid.NewGuid(),
-                        LoaiDoiTuong = LoaiDoiTuongCongNoEnum.KHACH_HANG,
-                        MaDoiTuong = khachHang.MaKH,
-                        MaPhieu = phieuTra.MaPT,
-                        SoTien = -tongTienTra,
-                        NgayPhatSinh = DateTime.Now,
-                        GhiChu = $"GIAM NO: Phiếu trả {phieuTra.MaPTCode}"
-                    });
-
-                    khachHang.CongNoHienTai -= tongTienTra;
-                    if (khachHang.CongNoHienTai < 0)
-                        khachHang.CongNoHienTai = 0;
                 }
 
                 //  Rollback tổng mua
