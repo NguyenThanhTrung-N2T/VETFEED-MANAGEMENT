@@ -379,3 +379,8 @@ secrets.json
 .env.*
 # Visual Studio user files
 *.slnx
+
+# ============================
+# Docker files
+# ============================
+docker-compose.yml

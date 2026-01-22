@@ -1,0 +1,21 @@
+services:
+  # Backend API only - connects to local SQL Server
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vetfeed-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Connect to host machine's SQL Server using host.docker.internal
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=VetFeedManagement;User Id=sa;Password=<YOUR_LOCAL_SQL_PASSWORD>;TrustServerCertificate=True;
+      - Jwt__Issuer=VETFEED
+      - Jwt__Audience=VETFEED.Client
+      - Jwt__Key=<YOUR_JWT_SECRET_KEY_HERE>
+      - Jwt__ExpireMinutes=480
+    ports:
+      - "5186:8080"
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

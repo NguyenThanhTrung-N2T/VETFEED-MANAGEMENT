@@ -318,6 +318,9 @@ namespace VETFEED.Backend.API.Repositories
                 if (phieuBan == null)
                     throw new InvalidOperationException("Phiếu bán không tồn tại.");
 
+                if(phieuBan.TrangThaiThanhToan == TrangThaiThanhToanEnum.DA_THANH_TOAN)
+                    throw new InvalidOperationException("Phiếu bán đã thanh toán, không thể xóa.");
+
                 // Không cho xóa nếu đã có phiếu trả
                 bool hasReturn = await _context.PhieuTras
                     .AnyAsync(pt => pt.MaPB == maPB);
