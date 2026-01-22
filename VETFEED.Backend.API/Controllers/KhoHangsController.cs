@@ -66,7 +66,7 @@ namespace VETFEED.Backend.API.Controllers
             }
             catch (Exception)
             {
-                return BadRequest(new { error = "Xảy ra lỗi khi thêm kho hàng. Vui lòng thử lại sau." });
+                return BadRequest(new { error = "Xảy ra lỗi khi thêm kho hàng." });
             }
         }
 
@@ -97,7 +97,7 @@ namespace VETFEED.Backend.API.Controllers
             }
             catch (Exception)
             {
-                return BadRequest(new { error = "Xảy ra lỗi khi cập nhật kho hàng. Vui lòng thử lại sau." });
+                return BadRequest(new { error = "Xảy ra lỗi khi cập nhật kho hàng." });
             }
         }
 
@@ -123,14 +123,17 @@ namespace VETFEED.Backend.API.Controllers
             }
             catch (Exception ex)
             {
+                // Lấy message từ exception gốc hoặc InnerException
+                var errorMessage = ex.InnerException?.Message ?? ex.Message;
+
                 // Kiểm tra nếu là lỗi ràng buộc khóa ngoại (FK constraint)
-                if (ex.InnerException != null && ex.InnerException.Message.Contains("REFERENCE constraint"))
+                if (errorMessage.Contains("REFERENCE constraint"))
                 {
                     return BadRequest(new { error = "Không thể xóa kho hàng vì vẫn còn phiếu nhập hoặc phiếu chuyển kho liên quan." });
                 }
                 
                 // Trả về lỗi chung
-                return BadRequest(new { error = "Xảy ra lỗi khi xóa kho hàng. Vui lòng thử lại sau." });
+                return BadRequest(new { error = "Xảy ra lỗi khi xóa kho hàng." });
             }
         }
 

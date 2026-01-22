@@ -68,21 +68,15 @@ namespace VETFEED.Backend.API.Services
         // Xóa kho hàng
         public async Task<bool> DeleteKhoHangAsync(Guid maKho)
         {
-            try
+            // kiểm tra kho hàng tồn tại 
+            var isExist = await _khoHangRepo.IsKhoHangExist(maKho);
+            if (!isExist)
             {
-                // kiểm tra kho hàng tồn tại 
-                var isExist = await _khoHangRepo.IsKhoHangExist(maKho);
-                if (!isExist)
-                {
-                    return false;
-                }
-
-                // xóa kho hàng trong db 
-                return await _khoHangRepo.DeleteKhoHangAsync(maKho);
-            } catch (Exception ex)
-            {
-                throw new Exception("Xảy ra lỗi khi xóa kho hàng !", ex);
+                return false;
             }
+
+            // xóa kho hàng trong db - để exception tự propagate lên controller
+            return await _khoHangRepo.DeleteKhoHangAsync(maKho);
         }
 
 
