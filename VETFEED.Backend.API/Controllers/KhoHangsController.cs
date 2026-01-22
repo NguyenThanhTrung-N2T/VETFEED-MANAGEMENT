@@ -92,17 +92,32 @@ namespace VETFEED.Backend.API.Controllers
         [HttpDelete("{maKho}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> DeleteKhoHangAsync(Guid maKho)
         {
-            // kết quả xóa kho hàng
-            var result = await _khoHangService.DeleteKhoHangAsync(maKho);
-            if (!result)
+            try
             {
-                return NotFound("Kho hàng không tồn tại !");
-            }
+                // kết quả xóa kho hàng
+                var result = await _khoHangService.DeleteKhoHangAsync(maKho);
+                if (!result)
+                {
+                    return NotFound("Kho hàng không tồn tại !");
+                }
 
-            // trả về client
-            return NoContent();
+                // trả về client
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                // Kiểm tra nếu là lỗi ràng buộc khóa ngoại (FK constraint)
+                if (ex.InnerException != null && ex.InnerException.Message.Contains("REFERENCE constraint"))
+                {
+                    return BadRequest(new { error = "Không thể xóa kho hàng vì vẫn còn phiếu nhập hoặc phiếu chuyển kho liên quan." });
+                }
+                
+                // Trả về lỗi chung
+                return BadRequest(new { error = "Xảy ra lỗi khi xóa kho hàng. Vui lòng thử lại sau." });
+            }
         }
 
         // POST : api/khohangs/search
