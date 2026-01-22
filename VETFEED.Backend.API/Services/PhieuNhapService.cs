@@ -64,6 +64,19 @@ namespace VETFEED.Backend.API.Services
             }
         }
 
+        /// <summary>
+        /// Validate sản phẩm không ở trạng thái Không hoạt động
+        /// </summary>
+        private async Task ValidateSanPhamTrangThaiAsync(Guid maSP, int soThuTu)
+        {
+            var sanPham = await _context.SanPhams.FirstOrDefaultAsync(sp => sp.MaSP == maSP);
+            if (sanPham == null)
+                throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Không tìm thấy sản phẩm.");
+            
+            if (sanPham.TrangThai == TrangThaiSanPhamEnum.KhongHoatDong)
+                throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: Sản phẩm '{sanPham.TenSP}' đang ở trạng thái Không hoạt động, không thể nhập hàng.");
+        }
+
         // Lấy tất cả phiếu nhập
         public async Task<IEnumerable<PhieuNhapResponse>> GetAllPhieuNhapsAsync()
         {
@@ -134,6 +147,9 @@ namespace VETFEED.Backend.API.Services
                         {
                             throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: {ex.Message}");
                         }
+
+                        // Validate sản phẩm không ở trạng thái Không hoạt động
+                        await ValidateSanPhamTrangThaiAsync(chiTiet.MaSP, soThuTu);
 
                         // Tạo lô hàng mới
                         var loHangRequest = new LoHangRequest
@@ -319,6 +335,9 @@ namespace VETFEED.Backend.API.Services
                         {
                             throw new ArgumentException($"Chi tiết phiếu số {soThuTu} có lỗi: {ex.Message}");
                         }
+
+                        // Validate sản phẩm không ở trạng thái Không hoạt động
+                        await ValidateSanPhamTrangThaiAsync(ctUpdate.MaSP.Value, soThuTu);
 
                         // Tạo lô hàng mới
                         var loHangRequest = new LoHangRequest
