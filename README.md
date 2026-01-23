@@ -30,8 +30,12 @@ This project serves as both a production-ready backend system and an educational
 ### 👨‍🎓 Academic Information
 
 - **Student**: Nguyễn Thành Trung
-- **Institution**: University of Information Technology - Vietnam National University Ho Chi Minh City (UIT - VNU-HCM)
-- **Major**: Software Engineering
+- **Student ID**: 23521683
+- **University**: Trường Đại học Công nghệ Thông tin (University of Information Technology - UIT)
+- **Institution**: Đại học Quốc gia TP. Hồ Chí Minh (Vietnam National University - Ho Chi Minh City)
+- **Major**: Kỹ thuật Phần mềm (Software Engineering)
+- **Email**: nguyentrung191225@gmail.com
+- **GitHub**: [@NguyenThanhTrung-N2T](https://github.com/NguyenThanhTrung-N2T)
 - **Purpose**: Backend development practice, internship preparation, and portfolio building
 
 ---
@@ -220,7 +224,7 @@ Before you begin, ensure you have the following installed:
 #### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/VETFEED.Backend.git
+git clone https://github.com/NguyenThanhTrung-N2T/VETFEED.Backend.git
 cd VETFEED.Backend
 ```
 
@@ -545,7 +549,7 @@ We welcome contributions from the community! Whether you're fixing bugs, adding 
 
 ```bash
 # Fork the repository on GitHub, then clone your fork
-git clone https://github.com/<your-username>/VETFEED.Backend.git
+git clone https://github.com/NguyenThanhTrung-N2T/VETFEED.Backend.git
 cd VETFEED.Backend
 ```
 
@@ -836,8 +840,8 @@ We're listening! If you have feature requests, please:
 ### Getting Help
 
 - **Documentation**: Start with this README and [DOCKER_README.md](DOCKER_README.md)
-- **Issues**: [GitHub Issues](https://github.com/<your-username>/VETFEED.Backend/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/<your-username>/VETFEED.Backend/discussions)
+- **Issues**: [GitHub Issues](https://github.com/NguyenThanhTrung-N2T/VETFEED.Backend/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/NguyenThanhTrung-N2T/VETFEED.Backend/discussions)
 
 ### Reporting Issues
 
@@ -852,8 +856,11 @@ When reporting issues, please include:
 ### Contact Information
 
 - **Developer**: Nguyễn Thành Trung
-- **Institution**: UIT - VNU-HCM
-- **GitHub**: [@your-username](https://github.com/<your-username>)
+- **Student ID**: 23521683
+- **University**: Trường Đại học Công nghệ Thông tin - ĐHQG TP.HCM (UIT - VNU-HCM)
+- **Major**: Kỹ thuật Phần mềm (Software Engineering)
+- **Email**: nguyentrung191225@gmail.com
+- **GitHub**: [@NguyenThanhTrung-N2T](https://github.com/NguyenThanhTrung-N2T)
 
 ---
 
