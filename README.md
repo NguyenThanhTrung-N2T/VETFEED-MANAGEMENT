@@ -892,8 +892,8 @@ Special thanks to:
 
 ### Related Projects
 
-- **VETFEED Frontend**: [Link to frontend repository]
-- **VETFEED Mobile**: [Link to mobile app repository]
+- **VETFEED Frontend**: [vuphan525/fe-vetfeed](https://github.com/vuphan525/fe-vetfeed.git)
+  - **Note**: This project is configured to run with the **`develop`** branch of the frontend.
 
 ### API Documentation
 
