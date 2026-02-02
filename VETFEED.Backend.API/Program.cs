@@ -14,7 +14,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://26.97.88.26:3000")
+        policy.WithOrigins("http://localhost:3000", "http://26.97.88.26:3000", "https://vetfeed-management-fe.vercel.app/")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials(); // Cho phép gửi cookies
