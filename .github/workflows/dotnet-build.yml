@@ -1,0 +1,36 @@
+name: .NET Build & Test
+
+on:
+  push:
+    branches: [main, develop, master]
+  pull_request:
+    branches: [main, develop, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: 📦 Restore dependencies
+        run: dotnet restore VETFEED.Backend.API/VETFEED.Backend.API.csproj
+
+      - name: 🔨 Build
+        run: dotnet build VETFEED.Backend.API/VETFEED.Backend.API.csproj --configuration Release --no-restore
+
+      - name: ✅ Build Success
+        if: success()
+        run: echo "✅ Build completed successfully!"
+
+      - name: ❌ Build Failed
+        if: failure()
+        run: |
+          echo "❌ Build failed! Please check the errors above."
+          exit 1
