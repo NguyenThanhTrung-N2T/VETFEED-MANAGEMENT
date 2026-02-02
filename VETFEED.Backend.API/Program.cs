@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:3000", 
             "http://26.97.88.26:3000", 
-            "https://undelineative-nodous-sasha.ngrok-free.dev", 
+            "https://undelineative-nodous-sasha.ngrok-free.dev",
             "https://vetfeed-management-fe.vercel.app"
         )
               .AllowAnyHeader()
