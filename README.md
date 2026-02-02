@@ -329,6 +329,79 @@ Once the application is running, verify the setup:
 
 ---
 
+## 🔄 CI/CD Pipeline
+
+This project uses **GitHub Actions** for automated continuous integration, ensuring code quality and build validation on every push and pull request.
+
+### GitHub Actions Workflows
+
+#### 1. .NET Build & Test
+
+[![.NET Build](https://github.com/NguyenThanhTrung-N2T/VETFEED-MANAGEMENT/actions/workflows/dotnet-build.yml/badge.svg)](https://github.com/NguyenThanhTrung-N2T/VETFEED-MANAGEMENT/actions/workflows/dotnet-build.yml)
+
+**File:** `.github/workflows/dotnet-build.yml`
+
+- **Triggers:** Push/PR to `main`, `develop`, `master`
+- **Actions:** Setup .NET 8.0, restore dependencies, build project
+- **Purpose:** Ensure code builds successfully
+
+#### 2. Docker Build Validation
+
+[![Docker Validation](https://github.com/NguyenThanhTrung-N2T/VETFEED-MANAGEMENT/actions/workflows/docker-validation.yml/badge.svg)](https://github.com/NguyenThanhTrung-N2T/VETFEED-MANAGEMENT/actions/workflows/docker-validation.yml)
+
+**File:** `.github/workflows/docker-validation.yml`
+
+- **Triggers:** Changes to `Dockerfile` or `VETFEED.Backend.API/`
+- **Actions:** Build Docker image, validate Dockerfile
+- **Purpose:** Verify Docker configuration
+- **Note:** Does NOT push images to registry
+
+#### 3. Code Quality Check
+
+[![Code Quality](https://github.com/NguyenThanhTrung-N2T/VETFEED-MANAGEMENT/actions/workflows/code-quality.yml/badge.svg)](https://github.com/NguyenThanhTrung-N2T/VETFEED-MANAGEMENT/actions/workflows/code-quality.yml)
+
+**File:** `.github/workflows/code-quality.yml`
+
+- **Triggers:** Push/PR to `main`, `develop`, `master`
+- **Actions:** Check code formatting, run linting
+- **Purpose:** Maintain code standards
+
+### How It Works
+
+```mermaid
+graph LR
+    A[Push Code] --> B[GitHub Actions]
+    B --> C[Build .NET]
+    B --> D[Validate Docker]
+    B --> E[Check Quality]
+
+    C --> F{All Pass?}
+    D --> F
+    E --> F
+
+    F -->|✅| G[Success]
+    F -->|❌| H[Email Alert]
+
+    style B fill:#7C3AED
+    style G fill:#00FF00
+    style H fill:#FF0000
+```
+
+### Viewing Results
+
+1. Go to [Actions tab](https://github.com/NguyenThanhTrung-N2T/VETFEED-MANAGEMENT/actions)
+2. View workflow runs and status
+3. Check badges above for quick status
+
+### Benefits
+
+- ✅ **Automated:** Runs on every push/PR
+- ✅ **Team Visibility:** Everyone sees build status
+- ✅ **Email Alerts:** Get notified of failures
+- ✅ **Free:** 2000 minutes/month on GitHub Free tier
+
+---
+
 ## ⚙️ Environment Configuration
 
 ### Configuration File Structure
@@ -892,7 +965,7 @@ Special thanks to:
 
 ### Related Projects
 
-- **VETFEED Frontend**: [vuphan525/fe-vetfeed](https://github.com/vuphan525/fe-vetfeed.git)
+- **VETFEED Frontend**: [NguyenThanhTrung-N2T/VETFEED-MANAGEMENT-FE](https://github.com/NguyenThanhTrung-N2T/VETFEED-MANAGEMENT-FE.git)
   - **Note**: This project is configured to run with the **`develop`** branch of the frontend.
 
 ### API Documentation
