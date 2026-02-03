@@ -8,9 +8,32 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[Features](#-key-features) • [Architecture](#-overall-architecture) • [Installation](#-installation) • [Documentation](#-folder-structure) • [Contributing](#-contribution-guidelines)
+[🌐 Live Demo](#-live-deployment) • [Features](#-key-features) • [Architecture](#-overall-architecture) • [Installation](#-installation) • [Documentation](#-folder-structure) • [Contributing](#-contribution-guidelines)
 
 </div>
+
+---
+
+## 🌐 Live Deployment
+
+### 🚀 Quick Access
+
+| Service                 | URL                                                                                  | Status       |
+| ----------------------- | ------------------------------------------------------------------------------------ | ------------ |
+| **Frontend (Vercel)**   | [https://vetfeed-management-fe.vercel.app](https://vetfeed-management-fe.vercel.app) | 🟢 Live      |
+| **Backend API (Ngrok)** | Check `docker-compose.yml` or http://localhost:4040                                  | 🟡 Dynamic   |
+| **Swagger Docs**        | `{ngrok-url}/swagger`                                                                | 📚 Available |
+
+### 📝 Deployment Notes
+
+- **Frontend**: Deployed on Vercel with automatic deployments from GitHub
+- **Backend**: Exposed via Ngrok tunnel for development/testing
+  - Ngrok URL changes on each restart
+  - View current URL at: http://localhost:4040 (when running)
+  - Update Frontend environment variable `NEXT_PUBLIC_API_URL` with new ngrok URL
+- **Database**: SQL Server running locally (not publicly accessible)
+
+> **⚠️ Important**: The ngrok URL is temporary and changes each time you restart the Docker containers. For production deployment, consider using a cloud platform like Azure, AWS, or Railway.
 
 ---
 
