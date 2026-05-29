@@ -1,4 +1,4 @@
-﻿using VETFEED.Backend.API.Data;
+using VETFEED.Backend.API.Data;
 using Microsoft.EntityFrameworkCore;
 using VETFEED.Backend.API.Repositories;
 using VETFEED.Backend.API.Services;
@@ -6,8 +6,16 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using VETFEED.Backend.API.Utils;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Cấu hình Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Cấu hình CORS để cho phép Frontend gọi API
 builder.Services.AddCors(options =>
@@ -89,6 +97,7 @@ builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IDashBoardService, DashBoardService>();
 
 
+builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -247,5 +256,6 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication(); 
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();
