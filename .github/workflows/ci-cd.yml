@@ -130,9 +130,9 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ==========================================
-  # Job 4: Railway Deployment Health Check
+  # Job 4: Staging Deployment Health Check
   # ==========================================
-  railway-deploy-health-check:
+  staging-deploy-health-check:
     runs-on: ubuntu-latest
     needs: docker-build-and-push
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
@@ -140,14 +140,14 @@ jobs:
     steps:
       - name: 🩺 Wait & Verify Staging URL
         env:
-          STAGING_URL: ${{ secrets.RAILWAY_STAGING_URL }}
+          STAGING_URL: ${{ secrets.STAGING_URL }}
         run: |
           if [ -z "$STAGING_URL" ]; then
-            echo "⚠️ RAILWAY_STAGING_URL secret is not configured. Skipping health check."
+            echo "⚠️ STAGING_URL secret is not configured. Skipping health check."
             exit 0
           fi
           
-          echo "⏳ Waiting for Railway auto-deploy to compile and start up (2 minutes)..."
+          echo "⏳ Waiting for Staging auto-deploy to compile and start up (2 minutes)..."
           sleep 120
           
           echo "🔍 Running health check against https://$STAGING_URL/health"
