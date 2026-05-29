@@ -218,7 +218,8 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-// Kiểm tra kết nối và log ra console
+// Kiểm tra kết nối và log ra console (Commented out to prevent blocking startup on cloud deployment)
+/*
 using (var scope = app.Services.CreateScope()) 
 { 
     var dbContext = scope.ServiceProvider.GetRequiredService<VetFeedManagementContext>(); 
@@ -237,6 +238,7 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"❌ Lỗi kết nối database: {ex.Message}"); 
     } 
 }
+*/
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
