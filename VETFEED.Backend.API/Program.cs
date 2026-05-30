@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using VETFEED.Backend.API.Utils;
 using Serilog;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -255,9 +256,13 @@ else
 // Bật CORS - phải đặt trước Authentication và Authorization
 app.UseCors("AllowFrontend");
 
+// Kích hoạt Prometheus HTTP metrics tracing
+app.UseHttpMetrics();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
+app.MapMetrics(); // Endpoint xuất metrics: /metrics
 
 app.Run();
