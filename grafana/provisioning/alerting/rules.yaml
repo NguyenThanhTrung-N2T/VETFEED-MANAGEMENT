@@ -1,0 +1,78 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: 'VetFeed Alerts'
+    folder: 'VetFeed'
+    interval: '10s'
+    rules:
+      - uid: 'api-down'
+        title: 'API Down Alert'
+        condition: 'C'
+        for: '30s'
+        data:
+          - refId: 'A'
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: 'prometheus-datasource'
+            model:
+              expr: 'up{job="vetfeed-api"}'
+              intervalMs: 10000
+              maxDataPoints: 43200
+              refId: 'A'
+          - refId: 'B'
+            datasourceUid: '__expr__'
+            model:
+              type: 'reduce'
+              expression: 'A'
+              reducer: 'last'
+              refId: 'B'
+          - refId: 'C'
+            datasourceUid: '__expr__'
+            model:
+              type: 'math'
+              expression: '$B == 0'
+              refId: 'C'
+        noDataState: 'Alerting' # If target disappears completely, B will be null, triggering math or no-data alert
+        execErrState: 'Alerting'
+        annotations:
+          summary: 'VetFeed API is down'
+          description: 'Prometheus cannot scrape the vetfeed-api target.'
+        labels:
+          severity: 'critical'
+      - uid: 'api-error-spike'
+        title: 'API 5xx Error Spike'
+        condition: 'C'
+        for: '10s'
+        data:
+          - refId: 'A'
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: 'prometheus-datasource'
+            model:
+              expr: 'sum(rate(http_requests_received_total{code=~"5.."}[1m])) or vector(0)'
+              intervalMs: 10000
+              maxDataPoints: 43200
+              refId: 'A'
+          - refId: 'B'
+            datasourceUid: '__expr__'
+            model:
+              type: 'reduce'
+              expression: 'A'
+              reducer: 'last'
+              refId: 'B'
+          - refId: 'C'
+            datasourceUid: '__expr__'
+            model:
+              type: 'math'
+              expression: '$B > 0'
+              refId: 'C'
+        noDataState: 'OK'
+        execErrState: 'Alerting'
+        annotations:
+          summary: 'VetFeed API is returning 5xx errors'
+          description: 'There are 5xx server errors detected on the API.'
+        labels:
+          severity: 'warning'
