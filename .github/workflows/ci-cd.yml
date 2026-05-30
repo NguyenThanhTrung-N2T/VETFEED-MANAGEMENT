@@ -27,17 +27,27 @@ jobs:
           dotnet-version: "8.0.x"
 
       - name: 📦 Restore dependencies
-        run: dotnet restore
+        run: dotnet restore VETFEED.Backend.slnx
 
       - name: 🎨 Check code formatting
         run: dotnet format VETFEED.Backend.API/VETFEED.Backend.API.csproj --verify-no-changes --verbosity diagnostic
-        continue-on-error: true
 
       - name: 🔨 Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build VETFEED.Backend.slnx --configuration Release --no-restore
 
-      - name: 🧪 Run Tests
-        run: dotnet test --configuration Release --no-build --verbosity normal
+      - name: 🧪 Run Tests with Coverage
+        run: |
+          dotnet test VETFEED.Backend.Tests/VETFEED.Backend.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --collect:"XPlat Code Coverage"
+
+      - name: 📤 Upload Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: "**/TestResults/**/coverage.cobertura.xml"
 
   # ==========================================
   # Job 2: DevSecOps Scans
@@ -56,7 +66,6 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
 
       - name: 🔧 Setup .NET
         uses: actions/setup-dotnet@v4
@@ -65,12 +74,11 @@ jobs:
 
       - name: 📦 Audit NuGet Packages
         run: dotnet list package --vulnerable
-        continue-on-error: true
 
   # ==========================================
-  # Job 3: Docker Build & Push to GHCR
+  # Job 3: Docker Build, Verify & Publish (CD)
   # ==========================================
-  docker-build-and-push:
+  docker-build-verify-publish:
     runs-on: ubuntu-latest
     needs: devsecops-scans
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
@@ -96,13 +104,15 @@ jobs:
           echo "IMAGE_NAME=$LOWER_IMAGE_NAME" >> $GITHUB_ENV
           echo "Set IMAGE_NAME to: $LOWER_IMAGE_NAME"
 
-      - name: 🔨 Build Docker Image
+      - name: 🔨 Build Docker Image (Local Load)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: false
-          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -112,65 +122,46 @@ jobs:
         with:
           image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           format: 'table'
-          exit-code: '0' # Don't break build for demonstration, but log all vulnerabilities
+          exit-code: '1' # Break the build if CRITICAL vulnerabilities are found
           ignore-unfixed: true
           vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
 
-      - name: 🚀 Push Docker Image to GHCR
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # ==========================================
-  # Job 4: Staging Deployment Health Check
-  # ==========================================
-  staging-deploy-health-check:
-    runs-on: ubuntu-latest
-    needs: docker-build-and-push
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-
-    steps:
-      - name: 🩺 Wait & Verify Staging URL
-        env:
-          STAGING_URL: ${{ secrets.STAGING_URL }}
+      - name: 🧪 Container Runtime Smoke Test
         run: |
-          if [ -z "$STAGING_URL" ]; then
-            echo "⚠️ STAGING_URL secret is not configured. Skipping health check."
-            exit 0
-          fi
+          echo "🚀 Starting container..."
+          docker run -d -p 8080:8080 \
+            -e ASPNETCORE_ENVIRONMENT=Production \
+            -e ASPNETCORE_URLS=http://+:8080 \
+            -e Jwt__Key="demo-key-for-ci-only-demo-key-for-ci-only" \
+            -e Jwt__Issuer="VETFEED" \
+            -e Jwt__Audience="VETFEED.Client" \
+            --name test-api \
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
           
-          echo "⏳ Waiting for Staging auto-deploy to compile and start up (2 minutes)..."
-          sleep 120
+          echo "⏳ Waiting 20 seconds for startup..."
+          sleep 20
           
-          echo "🔍 Running health check against https://$STAGING_URL/health"
-          max_attempts=6
-          attempt=1
-          success=false
+          echo "🔍 Calling health check endpoint..."
+          curl --fail --show-error http://localhost:8080/health
           
-          while [ $attempt -le $max_attempts ]; do
-            echo "Attempt $attempt of $max_attempts..."
-            response=$(curl -s -o /dev/null -w "%{http_code}" https://$STAGING_URL/health || true)
-            
-            if [ "$response" = "200" ]; then
-              echo "✅ Health check PASSED! Staging API is Healthy."
-              success=true
-              break
-            else
-              echo "❌ Health check failed with status code: $response. Retrying in 20 seconds..."
-              sleep 20
-              attempt=$((attempt+1))
-            fi
-          done
-          
-          if [ "$success" = false ]; then
-            echo "❌ Staging Health Check Failed."
-            exit 1
-          fi
+          echo "✅ Smoke test PASSED! Container is fully operational."
+
+      - name: ❌ Dump Container Logs on Failure
+        if: failure()
+        run: |
+          echo "⚠️ Dump logs from crashed container:"
+          docker logs test-api || true
+
+      - name: 🚀 Publish Docker Image to GHCR
+        run: |
+          echo "📤 Pushing images to registry..."
+          docker push ${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          echo "🎉 Image published successfully to GHCR!"
+
+      - name: 🧹 Cleanup Test Container
+        if: always()
+        run: |
+          echo "🧹 Cleaning up test container..."
+          docker rm -f test-api || true
