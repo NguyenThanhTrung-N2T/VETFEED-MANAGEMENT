@@ -248,8 +248,8 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    // Chỉ bật HTTPS redirection trong production
-    app.UseHttpsRedirection();
+    // Chỉ bật HTTPS redirection trong production (Commented out for cloud compatibility)
+    // app.UseHttpsRedirection();
 }
 
 // Bật CORS - phải đặt trước Authentication và Authorization
