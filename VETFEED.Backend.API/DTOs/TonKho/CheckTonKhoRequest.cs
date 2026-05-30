@@ -11,7 +11,7 @@ namespace VETFEED.Backend.API.DTOs.TonKho
         public Guid MaLo { get; set; }
 
         [Required(ErrorMessage = "Số lượng chuyển không được để trống !")]
-        [Range(1,double.MaxValue,ErrorMessage = "Số lượng chuyển phải lớn hơn 0 !")]
+        [Range(1, double.MaxValue, ErrorMessage = "Số lượng chuyển phải lớn hơn 0 !")]
         public decimal SoLuongChuyen { get; set; }
     }
 }

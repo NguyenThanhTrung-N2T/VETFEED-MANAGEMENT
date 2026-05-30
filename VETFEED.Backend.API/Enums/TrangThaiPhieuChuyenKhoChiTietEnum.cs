@@ -2,8 +2,8 @@
 {
     public enum TrangThaiPhieuChuyenKhoChiTietEnum
     {
-        TAO, 
-        DANG_CHUYEN, 
+        TAO,
+        DANG_CHUYEN,
         DA_NHAN
     }
 }

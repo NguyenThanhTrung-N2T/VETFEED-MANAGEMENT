@@ -14,7 +14,7 @@ namespace VETFEED.Backend.API.DTOs.PhieuNhap
         public string? TrangThai { get; set; }  // DA_DAT, DA_NHAN, DA_HUY
         public string? GhiChu { get; set; }
         public decimal ThanhTien { get; set; }  // Tổng tiền
-        
+
         /// <summary>
         /// Danh sách chi tiết phiếu nhập muốn giữ lại và cập nhật.
         /// Những chi tiết trong database mà KHÔNG có trong danh sách này sẽ bị xóa.

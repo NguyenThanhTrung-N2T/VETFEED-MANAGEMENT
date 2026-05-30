@@ -93,7 +93,7 @@ namespace VETFEED.Backend.API.Services
             entity.TyLe = request.TyLe;
 
             var updated = await _repo.UpdateAsync(entity);
-            if (updated == null) return null;     
+            if (updated == null) return null;
 
             var sp = await _context.SanPhams.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaSP == entity.MaSP);

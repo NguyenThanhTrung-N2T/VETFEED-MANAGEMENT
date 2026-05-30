@@ -25,8 +25,8 @@ namespace VETFEED.Backend.API.Services
 
         public async Task<KhachHangResponse> CreateAsync(KhachHangCreateRequest request)
         {
-        var loai = request.LoaiKhachHang;
-        var trangThai = request.TrangThai;
+            var loai = request.LoaiKhachHang;
+            var trangThai = request.TrangThai;
 
             if (!string.IsNullOrWhiteSpace(request.SoDienThoai))
             {

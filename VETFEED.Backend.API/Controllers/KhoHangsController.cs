@@ -87,7 +87,7 @@ namespace VETFEED.Backend.API.Controllers
 
                 // cập nhật kho hàng 
                 var khoHang = await _khoHangService.UpdateKhoHangAsync(maKho, request);
-                if(khoHang == null)
+                if (khoHang == null)
                 {
                     return NotFound(new { error = "Kho hàng không tồn tại !" });
                 }
@@ -131,7 +131,7 @@ namespace VETFEED.Backend.API.Controllers
                 {
                     return BadRequest(new { error = "Không thể xóa kho hàng vì vẫn còn phiếu nhập hoặc phiếu chuyển kho liên quan." });
                 }
-                
+
                 // Trả về lỗi chung
                 return BadRequest(new { error = "Xảy ra lỗi khi xóa kho hàng." });
             }

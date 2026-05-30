@@ -120,7 +120,7 @@ namespace VETFEED.Backend.API.Repositories
             // Soft delete thay vì hard delete
             entity.IsDeleted = true;
             entity.NgayXoa = DateTime.Now;
-            
+
             await _context.SaveChangesAsync();
             return true;
         }

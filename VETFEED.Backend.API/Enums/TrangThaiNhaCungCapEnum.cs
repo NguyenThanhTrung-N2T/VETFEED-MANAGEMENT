@@ -2,7 +2,7 @@
 {
     public enum TrangThaiNhaCungCapEnum
     {
-        HOAT_DONG, 
+        HOAT_DONG,
         NGUNG_HOAT_DONG
     }
 }

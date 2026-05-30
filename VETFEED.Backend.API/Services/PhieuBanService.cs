@@ -56,7 +56,8 @@ namespace VETFEED.Backend.API.Services
             try
             {
                 return await _phieuBanRepo.DeletePhieuBanAsync(maPB);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi xóa phiếu bán !", ex);
             }

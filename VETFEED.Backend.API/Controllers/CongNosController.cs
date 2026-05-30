@@ -43,13 +43,16 @@ namespace VETFEED.Backend.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateCongNoAsync([FromBody] CreateCongNoRequest request) {
-            try {
+        public async Task<IActionResult> CreateCongNoAsync([FromBody] CreateCongNoRequest request)
+        {
+            try
+            {
                 await _congNoService.CreateCongNoAsync(request);
 
                 return StatusCode(StatusCodes.Status201Created);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 return BadRequest(ex.Message);
             }
         }

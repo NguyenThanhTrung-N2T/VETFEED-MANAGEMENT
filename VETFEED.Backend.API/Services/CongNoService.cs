@@ -163,7 +163,7 @@ namespace VETFEED.Backend.API.Services
 
                         // SAU ĐÓ tính lại nợ còn lại
                         var noConLaiSauKhiTra = await _congNoRepository.GetTongCongNoTheoPhieuAsync(maPhieu);
-                        
+
                         // Nếu đã trả hết nợ thì cập nhật trạng thái
                         if (noConLaiSauKhiTra <= 0.01m && phieuBan.TrangThaiThanhToan == TrangThaiThanhToanEnum.CHUA_THANH_TOAN)
                         {
@@ -225,13 +225,13 @@ namespace VETFEED.Backend.API.Services
 
                         soTienCanTra -= soTru;
                         tongThucTeDaTra += soTru;
-                        
+
                         // KIỂM TRA VÀ CẬP NHẬT TRẠNG THÁI PHIẾU NẾU ĐÃ TRẢ HẾT
                         if (cn.MaPhieu.HasValue)
                         {
                             // Tính lại tổng công nợ của phiếu SAU KHI đã thêm bản ghi thanh toán
                             var noConLaiCuaPhieu = await _congNoRepository.GetTongCongNoTheoPhieuAsync(cn.MaPhieu.Value);
-                            
+
                             // Nếu đã trả hết nợ của phiếu này (nợ còn lại <= 0)
                             if (noConLaiCuaPhieu <= 0.01m) // Dùng epsilon để tránh lỗi làm tròn
                             {

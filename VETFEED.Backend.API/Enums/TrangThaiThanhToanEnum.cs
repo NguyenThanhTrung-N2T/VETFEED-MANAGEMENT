@@ -2,7 +2,7 @@
 {
     public enum TrangThaiThanhToanEnum
     {
-        CHUA_THANH_TOAN, 
+        CHUA_THANH_TOAN,
         DA_THANH_TOAN
     }
 }

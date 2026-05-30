@@ -2,7 +2,7 @@
 {
     public enum RoleEnum
     {
-        QUAN_LY, 
+        QUAN_LY,
         NHAN_VIEN
     }
 }

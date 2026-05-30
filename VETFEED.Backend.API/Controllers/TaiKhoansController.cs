@@ -31,7 +31,7 @@ namespace VETFEED.Backend.API.Controllers
             var taiKhoan = await _taiKhoanService.GetTaiKhoanByIdAsync(maTK);
             if (taiKhoan == null)
                 return NotFound(new { error = "Tài khoản không tồn tại!" });
-            
+
             return Ok(taiKhoan);
         }
 
@@ -45,7 +45,7 @@ namespace VETFEED.Backend.API.Controllers
             var taiKhoan = await _taiKhoanService.CreatTaiKhoanAsync(request);
             if (taiKhoan == null)
                 return Conflict(new { error = "Email đã tồn tại!" });
-            
+
             return CreatedAtRoute("GetTaiKhoanById", new { maTK = taiKhoan.MaTK }, taiKhoan);
         }
 
@@ -58,7 +58,7 @@ namespace VETFEED.Backend.API.Controllers
                 return BadRequest(new { error = "Thông tin tài khoản không hợp lệ!" });
 
             var result = await _taiKhoanService.UpdateTaiKhoanAsync(maTK, request);
-            
+
             if (result == null)
                 return NotFound(new { error = "Tài khoản không tồn tại!" });
 
@@ -80,12 +80,12 @@ namespace VETFEED.Backend.API.Controllers
             var token = _jwtService.GenerateToken(taikhoan);
             var expireMinutes = int.Parse(_config["Jwt:ExpireMinutes"]!);
 
-            Response.Cookies.Append("AccessToken", token, new CookieOptions 
-            { 
-                HttpOnly = true, 
-                Secure = true, 
-                SameSite = SameSiteMode.Strict, 
-                Expires = DateTimeOffset.UtcNow.AddMinutes(expireMinutes) 
+            Response.Cookies.Append("AccessToken", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(expireMinutes)
             });
 
             var response = new LoginResponse
@@ -101,7 +101,7 @@ namespace VETFEED.Backend.API.Controllers
             };
 
             return Ok(response);
-            
+
         }
 
         // POST : api/taikhoans/logout : đăng xuất
@@ -152,22 +152,22 @@ namespace VETFEED.Backend.API.Controllers
 
         // POST : api/taikhoans/forgot-password : quên mật khẩu
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword ([FromBody] ForgotPasswordRequest request)
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             // kiem tra email ton tai
-            var user = await _taiKhoanService.GetTaiKhoanByEmailAsync(request.Email!); 
-            if (user == null) 
-            { 
-                return NotFound("Email không tồn tại trong hệ thống!"); 
+            var user = await _taiKhoanService.GetTaiKhoanByEmailAsync(request.Email!);
+            if (user == null)
+            {
+                return NotFound("Email không tồn tại trong hệ thống!");
             }
 
             // sinh password 
             var newPassword = GenerateRandomPassword();
             // cap nhat mat khau
-            var updated = await _taiKhoanService.UpdatePasswordAsync(request.Email!, newPassword); 
-            if (!updated) 
-            { 
-                return StatusCode(500, "Không thể cập nhật mật khẩu!"); 
+            var updated = await _taiKhoanService.UpdatePasswordAsync(request.Email!, newPassword);
+            if (!updated)
+            {
+                return StatusCode(500, "Không thể cập nhật mật khẩu!");
             }
 
             // gui mat khau qua email

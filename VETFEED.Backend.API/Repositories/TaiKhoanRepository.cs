@@ -42,7 +42,7 @@ namespace VETFEED.Backend.API.Repositories
         public async Task<TaiKhoanResponse?> GetTaiKhoanByIdAsync(Guid maTK)
         {
             var taiKhoan = await _context.TaiKhoans.FindAsync(maTK);
-            if(taiKhoan == null)
+            if (taiKhoan == null)
             {
                 return null;
             }
@@ -69,8 +69,9 @@ namespace VETFEED.Backend.API.Repositories
                 _context.TaiKhoans.Add(taiKhoan);
                 await _context.SaveChangesAsync();
                 return MapToResponse(taiKhoan);
-                
-            } catch (Exception ex)
+
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi đăng ký tài khoản !", ex);
             }
@@ -114,7 +115,8 @@ namespace VETFEED.Backend.API.Repositories
 
                 return MapToResponse(taiKhoan);
 
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi cập nhật tài khoản !", ex);
             }
@@ -125,7 +127,7 @@ namespace VETFEED.Backend.API.Repositories
         {
             // lay tai khoan 
             var taiKhoan = await _context.TaiKhoans.FirstOrDefaultAsync(tk => tk.Email == request.Email);
-            if(taiKhoan == null)
+            if (taiKhoan == null)
             {
                 return false;
             }
@@ -159,7 +161,8 @@ namespace VETFEED.Backend.API.Repositories
                 taikhoan.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPass, workFactor: 12);
                 await _context.SaveChangesAsync();
                 return true;
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi cập nhật mật khẩu !", ex);
             }

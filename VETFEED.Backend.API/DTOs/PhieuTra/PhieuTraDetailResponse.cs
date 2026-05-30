@@ -23,19 +23,19 @@
         public Guid MaLo { get; set; }
         public string? MaLoCode { get; set; }
         public string? TenSanPham { get; set; }
-        
+
         public string? DonViCoSo { get; set; }
-        
+
         public string? DonViTra { get; set; }
-        
+
         public decimal SoLuongTra { get; set; }
-        
+
         public decimal DonGiaHoan { get; set; }
-        
+
         public decimal ThanhTienTra { get; set; }
-        
+
         public DateTime? HanSuDung { get; set; }
-        
+
         public string? GhiChu { get; set; }
     }
 }

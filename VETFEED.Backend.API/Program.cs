@@ -23,8 +23,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:3000", 
-            "http://26.97.88.26:3000", 
+            "http://localhost:3000",
+            "http://26.97.88.26:3000",
             "https://undelineative-nodous-sasha.ngrok-free.dev",
             "https://vetfeed-management-fe.vercel.app"
         )
@@ -144,35 +144,35 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<VetFeedManagementContext>(options => options.UseSqlServer(connectionString));
 
 // Đăng ký Authentication với JWT
-builder.Services.AddAuthentication(options => 
-{ 
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(options => 
-{ 
-    var jwtSettings = builder.Configuration.GetSection("Jwt"); 
+.AddJwtBearer(options =>
+{
+    var jwtSettings = builder.Configuration.GetSection("Jwt");
     var key = jwtSettings["Key"];
-    
+
     if (string.IsNullOrEmpty(key))
         throw new InvalidOperationException("JWT Key không được cấu hình!");
 
-    options.TokenValidationParameters = new TokenValidationParameters 
-    { 
-        ValidateIssuer = true, 
-        ValidateAudience = true, 
-        ValidateLifetime = true, 
-        ValidateIssuerSigningKey = true, 
-        ValidIssuer = jwtSettings["Issuer"], 
-        ValidAudience = jwtSettings["Audience"], 
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
         ClockSkew = TimeSpan.Zero
-    }; 
+    };
 
-    options.Events = new JwtBearerEvents 
-    { 
-        OnMessageReceived = context => 
-        { 
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
             var authorizationHeader = context.Request.Headers["Authorization"].ToString();
             if (!string.IsNullOrEmpty(authorizationHeader) && authorizationHeader.StartsWith("Bearer "))
             {
@@ -188,32 +188,32 @@ builder.Services.AddAuthentication(options =>
         {
             // Bỏ qua response mặc định của JWT
             context.HandleResponse();
-            
+
             context.Response.StatusCode = 401;
             context.Response.ContentType = "application/json";
-            
+
             var result = System.Text.Json.JsonSerializer.Serialize(new
             {
                 statusCode = 401,
                 message = "Unauthorized - Bạn chưa đăng nhập hoặc token không hợp lệ"
             });
-            
+
             return context.Response.WriteAsync(result);
         },
         OnForbidden = context =>
         {
             context.Response.StatusCode = 403;
             context.Response.ContentType = "application/json";
-            
+
             var result = System.Text.Json.JsonSerializer.Serialize(new
             {
                 statusCode = 403,
                 message = "Forbidden - Bạn không có quyền truy cập tài nguyên này"
             });
-            
+
             return context.Response.WriteAsync(result);
         }
-    }; 
+    };
 });
 
 var app = builder.Build();
@@ -255,7 +255,7 @@ else
 // Bật CORS - phải đặt trước Authentication và Authorization
 app.UseCors("AllowFrontend");
 
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");

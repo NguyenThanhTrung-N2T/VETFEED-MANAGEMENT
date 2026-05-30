@@ -186,7 +186,7 @@ namespace VETFEED.Backend.API.Repositories
                     DoanhThu = g.Sum(ct => ct.SoLuong * ct.DonGia),
                     ChiPhi = g.Sum(ct => ct.ThanhTienVon),
                     LoiNhuan = g.Sum(ct => ct.SoLuong * ct.DonGia) - g.Sum(ct => ct.ThanhTienVon),
-                    TiSuat = g.Sum(ct => ct.SoLuong * ct.DonGia) > 0 
+                    TiSuat = g.Sum(ct => ct.SoLuong * ct.DonGia) > 0
                         ? ((g.Sum(ct => ct.SoLuong * ct.DonGia) - g.Sum(ct => ct.ThanhTienVon)) / g.Sum(ct => ct.SoLuong * ct.DonGia)) * 100
                         : 0
                 });
@@ -194,7 +194,7 @@ namespace VETFEED.Backend.API.Repositories
             // Sắp xếp theo doanh thu, số lượng, lợi nhuận, tỷ suất
             var sortedQuery = sortBy.ToLower() switch
             {
-                "revenue" => order.ToLower() == "asc" 
+                "revenue" => order.ToLower() == "asc"
                     ? query.OrderBy(p => p.DoanhThu)
                     : query.OrderByDescending(p => p.DoanhThu),
                 "quantity" => order.ToLower() == "asc"
@@ -230,7 +230,7 @@ namespace VETFEED.Backend.API.Repositories
 
             return new LoiNhuanSanPhamResponse
             {
-                Data = data ?? new List<LoiNhuanSanPhamItemResponse>(), 
+                Data = data ?? new List<LoiNhuanSanPhamItemResponse>(),
                 Meta = new PaginationMeta
                 {
                     Page = page,

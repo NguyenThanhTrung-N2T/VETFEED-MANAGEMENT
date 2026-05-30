@@ -8,7 +8,7 @@ namespace VETFEED.Backend.API.Repositories
         /// Lấy danh sách quy đổi đơn vị theo mã sản phẩm
         /// </summary>
         Task<IEnumerable<QuyDoiDonVi>> GetByMaSPAsync(Guid maSP);
-        
+
         /// <summary>
         /// Lấy tỷ lệ quy đổi theo mã sản phẩm và đơn vị nhập
         /// Trả về TyLe nếu tìm thấy, null nếu không có

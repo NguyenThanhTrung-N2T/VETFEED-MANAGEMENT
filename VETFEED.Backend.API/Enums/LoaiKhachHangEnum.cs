@@ -2,8 +2,8 @@
 {
     public enum LoaiKhachHangEnum
     {
-        CA_NHAN, 
-        TRANG_TRAI, 
+        CA_NHAN,
+        TRANG_TRAI,
         DAI_LY
     }
 }

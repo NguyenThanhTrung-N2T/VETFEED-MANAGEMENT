@@ -30,7 +30,7 @@ namespace VETFEED.Backend.API.Repositories
         {
             // lấy thông tin kho hàng 
             var khoHang = await _context.KhoHangs.FindAsync(maKho);
-            if(khoHang == null)
+            if (khoHang == null)
             {
                 return null;
             }
@@ -60,7 +60,8 @@ namespace VETFEED.Backend.API.Repositories
                 // trả về kho hàng
                 return MapToResponse(khoHang);
 
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi thêm kho hàng !", ex);
             }
@@ -79,7 +80,7 @@ namespace VETFEED.Backend.API.Repositories
             {
                 // lất kho hàng trong db
                 var khoHang = await _context.KhoHangs.FindAsync(maKho);
-                if(khoHang == null)
+                if (khoHang == null)
                 {
                     return null!;
                 }
@@ -96,7 +97,8 @@ namespace VETFEED.Backend.API.Repositories
                 // trả về kho hàng sau cập nhật 
                 return MapToResponse(khoHang);
 
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi cập nhật thông tin kho hàng !", ex);
             }
@@ -107,7 +109,7 @@ namespace VETFEED.Backend.API.Repositories
         {
             // lấy kho hàng trong db
             var khoHang = await _context.KhoHangs.FindAsync(maKho);
-            if(khoHang == null)
+            if (khoHang == null)
             {
                 return false;
             }
@@ -129,7 +131,7 @@ namespace VETFEED.Backend.API.Repositories
                 if (string.IsNullOrWhiteSpace(dto.KeyWord))
                 {
                     // Không có thuộc tính lẫn từ khóa → trả về tất cả
-                    var result = await query.ToListAsync(); 
+                    var result = await query.ToListAsync();
                     return result.Select(k => MapToResponse(k)).ToList();
                 }
                 else
@@ -148,7 +150,7 @@ namespace VETFEED.Backend.API.Repositories
                 if (string.IsNullOrWhiteSpace(dto.KeyWord))
                 {
                     // Có thuộc tính nhưng không có từ khóa → không lọc gì, trả về tất cả
-                    var result = await query.ToListAsync(); 
+                    var result = await query.ToListAsync();
                     return result.Select(k => MapToResponse(k)).ToList();
                 }
                 else
@@ -173,22 +175,22 @@ namespace VETFEED.Backend.API.Repositories
             }
 
             // trả về danh sách 
-            var data = await query.ToListAsync(); 
+            var data = await query.ToListAsync();
             return data.Select(k => MapToResponse(k)).ToList();
         }
 
 
-        private KhoHangResponse MapToResponse(KhoHang khoHang) 
+        private KhoHangResponse MapToResponse(KhoHang khoHang)
         {
-            return new KhoHangResponse 
-            { 
-                MaKho = khoHang.MaKho, 
-                MaKhoCode = khoHang.MaKhoCode, 
-                TenKho = khoHang.TenKho, 
-                DiaChi = khoHang.DiaChi, 
-                TrangThai = khoHang.TrangThai.ToString(), 
-                GhiChu = khoHang.GhiChu 
-            }; 
+            return new KhoHangResponse
+            {
+                MaKho = khoHang.MaKho,
+                MaKhoCode = khoHang.MaKhoCode,
+                TenKho = khoHang.TenKho,
+                DiaChi = khoHang.DiaChi,
+                TrangThai = khoHang.TrangThai.ToString(),
+                GhiChu = khoHang.GhiChu
+            };
         }
     }
 }

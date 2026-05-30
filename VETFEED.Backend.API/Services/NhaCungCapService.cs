@@ -14,7 +14,7 @@ namespace VETFEED.Backend.API.Services
 
         public NhaCungCapService(
             VetFeedManagementContext context,
-            INhaCungCapRepository repo, 
+            INhaCungCapRepository repo,
             INhaCungCapSanPhamRepository sanPhamRepo)
         {
             _context = context;

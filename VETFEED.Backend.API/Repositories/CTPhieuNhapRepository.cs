@@ -117,7 +117,7 @@ namespace VETFEED.Backend.API.Repositories
             entity.DonViNhap = donViNhap;
             entity.SoLuongQuyDoi = soLuongQuyDoi;
             entity.DonGiaCoSo = donGiaCoSo;
-            
+
             await _context.SaveChangesAsync();
             return true;
         }

@@ -103,12 +103,12 @@ namespace VETFEED.Backend.API.Controllers
         [HttpGet("products/expiring")]
         [ProducesResponseType(typeof(IEnumerable<ExpiringProductResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetExpiringProducts(
-            [FromQuery] int limit = 30, 
+            [FromQuery] int limit = 30,
             [FromQuery] int daysThreshold = 30)
         {
             // Giới hạn limit tối đa là 100
             limit = Math.Min(limit, 100);
-            
+
             var result = await _dashBoardService.GetExpiringProductsAsync(limit, daysThreshold);
             return Ok(result);
         }

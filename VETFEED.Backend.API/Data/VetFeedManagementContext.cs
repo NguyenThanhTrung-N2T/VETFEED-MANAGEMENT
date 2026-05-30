@@ -32,35 +32,36 @@ namespace VETFEED.Backend.API.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Map tên bảng đúng với DB
-            modelBuilder.Entity<TaiKhoan>().ToTable("TaiKhoan"); 
-            modelBuilder.Entity<KhoHang>().ToTable("KhoHang"); 
-            modelBuilder.Entity<NhaCungCap>().ToTable("NhaCungCap"); 
-            modelBuilder.Entity<KhachHang>().ToTable("KhachHang"); 
-            modelBuilder.Entity<SanPham>().ToTable("SanPham"); 
-            modelBuilder.Entity<NhaCungCapSanPham>().ToTable("NhaCungCapSanPham"); 
-            modelBuilder.Entity<GiaBan>().ToTable("GiaBan"); 
-            modelBuilder.Entity<LoHang>().ToTable("LoHang"); 
-            modelBuilder.Entity<TonKho>().ToTable("TonKho"); 
-            modelBuilder.Entity<PhieuNhap>().ToTable("PhieuNhap"); 
-            modelBuilder.Entity<CTPhieuNhap>().ToTable("CTPhieuNhap"); 
-            modelBuilder.Entity<PhieuBan>().ToTable("PhieuBan"); 
-            modelBuilder.Entity<CTPhieuBan>().ToTable("CTPhieuBan"); 
+            modelBuilder.Entity<TaiKhoan>().ToTable("TaiKhoan");
+            modelBuilder.Entity<KhoHang>().ToTable("KhoHang");
+            modelBuilder.Entity<NhaCungCap>().ToTable("NhaCungCap");
+            modelBuilder.Entity<KhachHang>().ToTable("KhachHang");
+            modelBuilder.Entity<SanPham>().ToTable("SanPham");
+            modelBuilder.Entity<NhaCungCapSanPham>().ToTable("NhaCungCapSanPham");
+            modelBuilder.Entity<GiaBan>().ToTable("GiaBan");
+            modelBuilder.Entity<LoHang>().ToTable("LoHang");
+            modelBuilder.Entity<TonKho>().ToTable("TonKho");
+            modelBuilder.Entity<PhieuNhap>().ToTable("PhieuNhap");
+            modelBuilder.Entity<CTPhieuNhap>().ToTable("CTPhieuNhap");
+            modelBuilder.Entity<PhieuBan>().ToTable("PhieuBan");
+            modelBuilder.Entity<CTPhieuBan>().ToTable("CTPhieuBan");
             modelBuilder.Entity<PhieuChuyenKho>().ToTable("PhieuChuyenKho");
-            modelBuilder.Entity<CTPhieuChuyenKho>().ToTable("CTPhieuChuyenKho"); 
-            modelBuilder.Entity<PhieuTra>().ToTable("PhieuTra"); 
-            modelBuilder.Entity<CTPhieuTra>().ToTable("CTPhieuTra"); 
+            modelBuilder.Entity<CTPhieuChuyenKho>().ToTable("CTPhieuChuyenKho");
+            modelBuilder.Entity<PhieuTra>().ToTable("PhieuTra");
+            modelBuilder.Entity<CTPhieuTra>().ToTable("CTPhieuTra");
             modelBuilder.Entity<CongNo>().ToTable("CongNo");
             modelBuilder.Entity<QuyDoiDonVi>().ToTable("QuyDoiDonVi");
 
             // Áp dụng cho tất cả property kiểu decimal trong toàn bộ entity
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes()) 
-            { 
-                var decimalProps = entityType.GetProperties() 
-                    .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?)); 
-                foreach (var prop in decimalProps) { 
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var decimalProps = entityType.GetProperties()
+                    .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?));
+                foreach (var prop in decimalProps)
+                {
                     // Mặc định decimal(18,2)
-                    prop.SetPrecision(18); prop.SetScale(2); 
-                } 
+                    prop.SetPrecision(18); prop.SetScale(2);
+                }
             }
 
             // ===== Enum mapping (lưu dưới dạng string) =====

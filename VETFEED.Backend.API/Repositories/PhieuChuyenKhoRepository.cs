@@ -9,7 +9,7 @@ using VETFEED.Backend.API.Utils;
 
 namespace VETFEED.Backend.API.Repositories
 {
-    public class PhieuChuyenKhoRepository :IPhieuChuyenKhoRepository
+    public class PhieuChuyenKhoRepository : IPhieuChuyenKhoRepository
     {
         private readonly VetFeedManagementContext _context;
         public PhieuChuyenKhoRepository(VetFeedManagementContext context)
@@ -18,7 +18,7 @@ namespace VETFEED.Backend.API.Repositories
         }
 
         // lay danh sach phieu chuyen kho 
-        public async Task<IEnumerable<PhieuChuyenKhoResponse>> GetDanhSachPhieuChuyenKhoAsync() 
+        public async Task<IEnumerable<PhieuChuyenKhoResponse>> GetDanhSachPhieuChuyenKhoAsync()
         {
             // lay danh sach phieu chuyen kho
             var result = await _context.PhieuChuyenKhos.Select(pck => new PhieuChuyenKhoResponse
@@ -33,9 +33,9 @@ namespace VETFEED.Backend.API.Repositories
                 .Where(k => k.MaKho == pck.MaKhoNhan)
                 .Select(k => k.TenKho).FirstOrDefault(),
                 GhiChu = pck.GhiChu
-            }).OrderByDescending(p => p.NgayLap).ToListAsync();            
+            }).OrderByDescending(p => p.NgayLap).ToListAsync();
             // tra ve danh sach phieu chuyen
-            return result; 
+            return result;
         }
 
         // lay chi tiet phieu chuyen kho 
@@ -46,7 +46,7 @@ namespace VETFEED.Backend.API.Repositories
                 .Include(p => p.KhoXuat)
                 .Include(p => p.KhoNhan).FirstOrDefaultAsync(p => p.MaCK == maCK);
 
-            if(phieuCK == null)
+            if (phieuCK == null)
             {
                 return null;
             }
@@ -71,17 +71,17 @@ namespace VETFEED.Backend.API.Repositories
                     DonGia = _context.CTPhieuNhaps.Where(ctpn => ctpn.MaLo == ct.MaLo).Select(ctpn => ctpn.DonGia).FirstOrDefault()
                 }).ToListAsync();
 
-            return new ChiTietPhieuChuyenKhoResponse 
-            { 
-                MaCK = phieuCK.MaCK, 
-                MaCKCode = phieuCK.MaCKCode, 
-                NgayLap = phieuCK.NgayLap, 
-                TenKhoXuat = phieuCK.KhoXuat!.TenKho, 
-                TenKhoNhan = phieuCK.KhoNhan!.TenKho, 
-                GhiChu = phieuCK.GhiChu, 
-                MaKhoXuat = phieuCK.MaKhoXuat, 
-                MaKhoNhan = phieuCK.MaKhoNhan, 
-                DanhSachSanPham = chitiet 
+            return new ChiTietPhieuChuyenKhoResponse
+            {
+                MaCK = phieuCK.MaCK,
+                MaCKCode = phieuCK.MaCKCode,
+                NgayLap = phieuCK.NgayLap,
+                TenKhoXuat = phieuCK.KhoXuat!.TenKho,
+                TenKhoNhan = phieuCK.KhoNhan!.TenKho,
+                GhiChu = phieuCK.GhiChu,
+                MaKhoXuat = phieuCK.MaKhoXuat,
+                MaKhoNhan = phieuCK.MaKhoNhan,
+                DanhSachSanPham = chitiet
             };
         }
 
@@ -162,7 +162,7 @@ namespace VETFEED.Backend.API.Repositories
                         HanSuDung = lo.HanSuDung,
                         GhiChu = item.GhiChu,
                         TrangThai = item.TrangThai.ToString(),
-                        DonGia =  donGia
+                        DonGia = donGia
                     });
                 }
 
@@ -259,7 +259,7 @@ namespace VETFEED.Backend.API.Repositories
         }
 
         // cap nhat trang thai chi tiet chuyen kho 
-        public async Task<ChiTietPhieuChuyenKhoResponse?> UpdateTrangThaiChiTietAsync(Guid maCTCK,UpdateTrangThaiCTChuyenKho request)
+        public async Task<ChiTietPhieuChuyenKhoResponse?> UpdateTrangThaiChiTietAsync(Guid maCTCK, UpdateTrangThaiCTChuyenKho request)
         {
             var ct = await _context.CTPhieuChuyenKhos
                 .Include(c => c.PhieuChuyenKho)

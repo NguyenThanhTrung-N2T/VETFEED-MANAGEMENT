@@ -32,7 +32,8 @@ namespace VETFEED.Backend.API.Services
                 // tao tai khoan
                 return await _taiKhoanRepo.CreateTaiKhoanAsync(request);
 
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi đăng ký tài khoản !", ex);
             }
@@ -88,7 +89,8 @@ namespace VETFEED.Backend.API.Services
                 }
                 return updatedTaiKhoan;
 
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi cập nhật tài khoản !", ex);
             }
@@ -119,12 +121,13 @@ namespace VETFEED.Backend.API.Services
             try
             {
                 var taiKhoan = await _taiKhoanRepo.GetTaiKhoanByEmailAsync(email);
-                if(taiKhoan == null)
+                if (taiKhoan == null)
                 {
                     return false;
                 }
                 return await _taiKhoanRepo.UpdatePasswordAsync(email, newpass);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi cập nhật mật khẩu !", ex);
             }

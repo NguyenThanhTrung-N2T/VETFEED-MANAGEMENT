@@ -3,20 +3,24 @@ using VETFEED.Backend.API.DTOs.SanPham;
 using VETFEED.Backend.API.Services;
 using VETFEED.Backend.API.DTOs.Common;
 using Microsoft.AspNetCore.Authorization;
-namespace VETFEED.Backend.API.Controllers {
+namespace VETFEED.Backend.API.Controllers
+{
     [Route("api/[controller]")]
     [ApiController]
-    public class SanPhamsController : ControllerBase {
+    public class SanPhamsController : ControllerBase
+    {
         private readonly ISanPhamService _service;
 
-        public SanPhamsController(ISanPhamService service) {
+        public SanPhamsController(ISanPhamService service)
+        {
             _service = service;
         }
 
         // GET: api/SanPhams?...
         [HttpGet]
         public async Task<ActionResult<PagedResult<SanPhamResponse>>> Search(
-            [FromQuery] SanPhamQuery query) {
+            [FromQuery] SanPhamQuery query)
+        {
             var result = await _service.SearchAsync(query);
             return Ok(result);
         }
@@ -24,7 +28,8 @@ namespace VETFEED.Backend.API.Controllers {
         // GET: api/SanPhams/by-code/{maSPCode}
         [Authorize]
         [HttpGet("by-code/{maSPCode}")]
-        public async Task<ActionResult<SanPhamResponse>> GetByCode(string maSPCode) {
+        public async Task<ActionResult<SanPhamResponse>> GetByCode(string maSPCode)
+        {
             var sp = await _service.GetByCodeAsync(maSPCode);
             if (sp == null)
                 return NotFound("Không tìm thấy sản phẩm.");
@@ -35,7 +40,8 @@ namespace VETFEED.Backend.API.Controllers {
         // GET: api/SanPhams/{maSP}
         [Authorize]
         [HttpGet("{maSP:guid}")]
-        public async Task<ActionResult<SanPhamResponse>> GetById(Guid maSP) {
+        public async Task<ActionResult<SanPhamResponse>> GetById(Guid maSP)
+        {
             var sp = await _service.GetByIdAsync(maSP);
             if (sp == null)
                 return NotFound("Không tìm thấy sản phẩm.");
@@ -47,12 +53,15 @@ namespace VETFEED.Backend.API.Controllers {
         [Authorize(Roles = "QUAN_LY")]
         [HttpPost]
         public async Task<ActionResult<SanPhamResponse>> Create(
-            [FromBody] SanPhamCreateRequest request) {
-            try {
+            [FromBody] SanPhamCreateRequest request)
+        {
+            try
+            {
                 var created = await _service.CreateAsync(request);
                 return Ok(created);
             }
-            catch (ArgumentException ex) {
+            catch (ArgumentException ex)
+            {
                 return BadRequest(ex.Message);
             }
         }
@@ -62,15 +71,18 @@ namespace VETFEED.Backend.API.Controllers {
         [HttpPut("{maSP:guid}")]
         public async Task<ActionResult<SanPhamResponse>> Update(
             Guid maSP,
-            [FromBody] SanPhamUpdateRequest request) {
-            try {
+            [FromBody] SanPhamUpdateRequest request)
+        {
+            try
+            {
                 var updated = await _service.UpdateAsync(maSP, request);
                 if (updated == null)
                     return NotFound("Không tìm thấy sản phẩm.");
 
                 return Ok(updated);
             }
-            catch (ArgumentException ex) {
+            catch (ArgumentException ex)
+            {
                 return BadRequest(ex.Message);
             }
         }
@@ -78,7 +90,8 @@ namespace VETFEED.Backend.API.Controllers {
         // DELETE: api/SanPhams/{maSP}
         [Authorize(Roles = "QUAN_LY")]
         [HttpDelete("{maSP:guid}")]
-        public async Task<ActionResult<string>> Delete(Guid maSP) {
+        public async Task<ActionResult<string>> Delete(Guid maSP)
+        {
             var (ok, error) = await _service.DeleteAsync(maSP);
             if (!ok)
                 return BadRequest(error);

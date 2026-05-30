@@ -2,8 +2,8 @@
 {
     public enum HinhThucThanhToanEnum
     {
-        TIEN_MAT, 
-        CHUYEN_KHOAN, 
+        TIEN_MAT,
+        CHUYEN_KHOAN,
         CONG_NO
     }
 }

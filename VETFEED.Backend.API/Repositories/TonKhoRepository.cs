@@ -48,17 +48,17 @@ namespace VETFEED.Backend.API.Repositories
         }
 
         // cap nhat so luong ton kho 
-        public async Task<bool> UpdateTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong) 
-        { 
+        public async Task<bool> UpdateTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong)
+        {
             // lay ton kho trong db
-            var tonKho = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == maKho && tk.MaLo == maLo); 
-            if (tonKho == null) 
-                return false; 
+            var tonKho = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == maKho && tk.MaLo == maLo);
+            if (tonKho == null)
+                return false;
             // cap nhat so luong
-            tonKho.SoLuongCoSo = soLuong; 
-            tonKho.NgayCapNhat = DateTime.UtcNow; 
-            await _context.SaveChangesAsync(); 
-            return true; 
+            tonKho.SoLuongCoSo = soLuong;
+            tonKho.NgayCapNhat = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         // kiem tra ton kho 
@@ -82,29 +82,30 @@ namespace VETFEED.Backend.API.Repositories
         }
 
         // lay ton kho theo ma kho va ma lo 
-        public async Task<TonKhoChiTietResponse?> GetTonKhoAsync(Guid maKho, Guid maLo) 
+        public async Task<TonKhoChiTietResponse?> GetTonKhoAsync(Guid maKho, Guid maLo)
         {
             // lay ton kho 
-            var tonKho = await _context.TonKhos.FirstOrDefaultAsync(t => t.MaKho == maKho && t.MaLo == maLo); 
-            if (tonKho == null) 
-                return null; 
-            return new TonKhoChiTietResponse 
-            { 
-                MaTK = tonKho.MaTonKho, 
-                MaKho = tonKho.MaKho, 
-                MaLo = tonKho.MaLo, 
-                SoLuongTon = tonKho.SoLuongCoSo, 
-                NgayCapNhat = tonKho.NgayCapNhat 
-            }; 
+            var tonKho = await _context.TonKhos.FirstOrDefaultAsync(t => t.MaKho == maKho && t.MaLo == maLo);
+            if (tonKho == null)
+                return null;
+            return new TonKhoChiTietResponse
+            {
+                MaTK = tonKho.MaTonKho,
+                MaKho = tonKho.MaKho,
+                MaLo = tonKho.MaLo,
+                SoLuongTon = tonKho.SoLuongCoSo,
+                NgayCapNhat = tonKho.NgayCapNhat
+            };
         }
 
         // them ton kho 
-        public async Task<TonKhoChiTietResponse> AddTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong) 
+        public async Task<TonKhoChiTietResponse> AddTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong)
         {
             // kiem tra neu da ton tai
             var existing = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == maKho && tk.MaLo == maLo);
             if (existing != null)
-                return new TonKhoChiTietResponse{
+                return new TonKhoChiTietResponse
+                {
                     MaTK = existing.MaTonKho,
                     MaKho = existing.MaKho,
                     MaLo = existing.MaLo,
@@ -133,11 +134,12 @@ namespace VETFEED.Backend.API.Repositories
                     SoLuongTon = tonKho.SoLuongCoSo,
                     NgayCapNhat = tonKho.NgayCapNhat
                 };
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi thêm tồn kho !", ex);
             }
-            
+
         }
 
         // tang so luong ton kho 
@@ -145,7 +147,7 @@ namespace VETFEED.Backend.API.Repositories
         {
             // kiem tra ton kho 
             var tonKho = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == MaKho && tk.MaLo == MaLo);
-            if(tonKho == null)
+            if (tonKho == null)
             {
                 // them ton kho 
                 tonKho = new TonKho
@@ -189,7 +191,7 @@ namespace VETFEED.Backend.API.Repositories
         }
 
         // kiem tra ton kho cua lo tai toan bo cac kho 
-        public async Task<bool> KiemTraTonKhoTheoLoAsync(Guid maLo,decimal soLuongCan)
+        public async Task<bool> KiemTraTonKhoTheoLoAsync(Guid maLo, decimal soLuongCan)
         {
             var loHangTonTai = await _context.LoHangs
                 .AnyAsync(lh => lh.MaLo == maLo);
@@ -262,7 +264,7 @@ namespace VETFEED.Backend.API.Repositories
         public async Task<bool> AddOrUpdateTonKhoAsync(Guid maKho, Guid maLo, decimal soLuong, decimal donGiaCoSo)
         {
             var tonKho = await _context.TonKhos.FirstOrDefaultAsync(tk => tk.MaKho == maKho && tk.MaLo == maLo);
-            
+
             if (tonKho != null)
             {
                 // Tính giá vốn bình quân gia quyền
@@ -270,9 +272,9 @@ namespace VETFEED.Backend.API.Repositories
                 var tongGiaTriCu = tonKho.SoLuongCoSo * tonKho.GiaVonBinhQuan;
                 var tongGiaTriMoi = soLuong * donGiaCoSo;
                 var tongSoLuong = tonKho.SoLuongCoSo + soLuong;
-                
-                tonKho.GiaVonBinhQuan = tongSoLuong > 0 
-                    ? (tongGiaTriCu + tongGiaTriMoi) / tongSoLuong 
+
+                tonKho.GiaVonBinhQuan = tongSoLuong > 0
+                    ? (tongGiaTriCu + tongGiaTriMoi) / tongSoLuong
                     : 0;
                 tonKho.SoLuongCoSo = tongSoLuong;
                 tonKho.NgayCapNhat = DateTime.UtcNow;

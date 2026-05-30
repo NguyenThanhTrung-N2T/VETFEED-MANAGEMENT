@@ -2,7 +2,7 @@
 {
     public enum LoaiDoiTuongCongNoEnum
     {
-        KHACH_HANG, 
+        KHACH_HANG,
         NHA_CUNG_CAP
     }
 }

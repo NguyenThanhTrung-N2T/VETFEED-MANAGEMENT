@@ -9,7 +9,7 @@ namespace VETFEED.Backend.API.DTOs.CTPhieuNhap
         public Guid MaSP { get; set; }
         public DateTime? NgaySanXuat { get; set; }
         public DateTime HanSuDung { get; set; }
-        
+
         public decimal SoLuong { get; set; }
         public decimal? DonGia { get; set; }
         public string? DonViNhap { get; set; }  // Đơn vị giao dịch (Thùng/Hộp...)

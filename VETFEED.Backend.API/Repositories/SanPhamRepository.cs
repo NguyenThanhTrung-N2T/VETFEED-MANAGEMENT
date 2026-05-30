@@ -5,7 +5,7 @@ using VETFEED.Backend.API.DTOs.SanPham;
 using VETFEED.Backend.API.Models;
 using VETFEED.Backend.API.Enums;
 using System;
-using VETFEED.Backend.API.DTOs.QuyDoiDonVi; 
+using VETFEED.Backend.API.DTOs.QuyDoiDonVi;
 namespace VETFEED.Backend.API.Repositories
 {
     public class SanPhamRepository : ISanPhamRepository
@@ -29,7 +29,7 @@ namespace VETFEED.Backend.API.Repositories
                                  (x.TenSP != null && x.TenSP.Contains(kw)));
             }
 
-           if (!string.IsNullOrWhiteSpace(query.LoaiSanPham))
+            if (!string.IsNullOrWhiteSpace(query.LoaiSanPham))
             {
                 if (Enum.TryParse<LoaiSanPhamEnum>(query.LoaiSanPham.Trim(), true, out var loai))
                 {
@@ -101,32 +101,32 @@ namespace VETFEED.Backend.API.Repositories
 
         public async Task<SanPhamResponse?> GetByIdAsync(Guid maSP)
         {
-           return await _context.SanPhams.AsNoTracking()
-            .Include(x => x.QuyDoiDonVis)
-            .Where(x => x.MaSP == maSP && x.TrangThai == TrangThaiSanPhamEnum.HoatDong)
-            .Select(x => new SanPhamResponse
-            {
-                MaSP = x.MaSP,
-                MaSPCode = x.MaSPCode,
-                TenSP = x.TenSP,
-                LoaiSanPham = x.LoaiSanPham.ToString(),
-                DonViCoSo = x.DonViCoSo,
-                AnhSanPham = x.AnhSanPham,
-                GhiChu = x.GhiChu,
-                NgayTao = x.NgayTao,
-                DonGia = _context.GiaBans
-                    .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
-                    .OrderByDescending(g => g.TuNgay)
-                    .Select(g => (decimal?)g.DonGiaBan)
-                    .FirstOrDefault(),
-                DonViQuyDoi = x.QuyDoiDonVis
-                    .Select(q => new DonViQuyDoiItem
-                    {
-                        DonViNhap = q.DonViNhap ?? string.Empty,
-                        TyLe = q.TyLe
-                    }).ToList()
-            })
-            .FirstOrDefaultAsync();
+            return await _context.SanPhams.AsNoTracking()
+             .Include(x => x.QuyDoiDonVis)
+             .Where(x => x.MaSP == maSP && x.TrangThai == TrangThaiSanPhamEnum.HoatDong)
+             .Select(x => new SanPhamResponse
+             {
+                 MaSP = x.MaSP,
+                 MaSPCode = x.MaSPCode,
+                 TenSP = x.TenSP,
+                 LoaiSanPham = x.LoaiSanPham.ToString(),
+                 DonViCoSo = x.DonViCoSo,
+                 AnhSanPham = x.AnhSanPham,
+                 GhiChu = x.GhiChu,
+                 NgayTao = x.NgayTao,
+                 DonGia = _context.GiaBans
+                     .Where(g => g.MaSP == x.MaSP && g.DenNgay == null)
+                     .OrderByDescending(g => g.TuNgay)
+                     .Select(g => (decimal?)g.DonGiaBan)
+                     .FirstOrDefault(),
+                 DonViQuyDoi = x.QuyDoiDonVis
+                     .Select(q => new DonViQuyDoiItem
+                     {
+                         DonViNhap = q.DonViNhap ?? string.Empty,
+                         TyLe = q.TyLe
+                     }).ToList()
+             })
+             .FirstOrDefaultAsync();
 
         }
 
@@ -182,7 +182,7 @@ namespace VETFEED.Backend.API.Repositories
 
             return await _context.SanPhams.AsNoTracking()
                 .Include(x => x.QuyDoiDonVis)
-                .Where(x => x.MaSPCode == code && x.TrangThai == TrangThaiSanPhamEnum.HoatDong )
+                .Where(x => x.MaSPCode == code && x.TrangThai == TrangThaiSanPhamEnum.HoatDong)
                 .Select(x => new SanPhamResponse
                 {
                     MaSP = x.MaSP,

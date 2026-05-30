@@ -230,7 +230,7 @@ namespace VETFEED.Backend.API.Repositories
                     var tongTienDaTraTruocDo = await _context.PhieuTras
                         .Where(pt => pt.MaPB == phieuBanGoc.MaPB)
                         .SumAsync(pt => pt.ThanhTien);
-                    
+
                     var tienNoConLaiCuaPhieuBan = phieuBanGoc.TienNo - tongTienDaTraTruocDo;
                     if (tienNoConLaiCuaPhieuBan < 0)
                         tienNoConLaiCuaPhieuBan = 0;
@@ -254,7 +254,7 @@ namespace VETFEED.Backend.API.Repositories
                                 NgayPhatSinh = DateTime.Now,
                                 GhiChu = $"GIAM NO: Phiếu trả {phieuTra.MaPTCode}"
                             });
-                            
+
                             khachHang.CongNoHienTai -= tienTraNo;
                         }
 
@@ -271,7 +271,7 @@ namespace VETFEED.Backend.API.Repositories
                                 NgayPhatSinh = DateTime.Now,
                                 GhiChu = $"HOAN TIEN: Phiếu trả {phieuTra.MaPTCode}"
                             });
-                            
+
                             khachHang.CongNoHienTai -= tienHoanThem;
                         }
                     }
@@ -291,18 +291,18 @@ namespace VETFEED.Backend.API.Repositories
 
                         khachHang.CongNoHienTai -= tongTienTra;
                     }
-                    
+
                     // Đảm bảo công nợ không âm
                     if (khachHang.CongNoHienTai < 0)
                         khachHang.CongNoHienTai = 0;
-                    
+
                     // KIỂM TRA TRẠNG THÁI PHIẾU BÁN
                     // Tổng tiền đã trả = tiền trả trước đó + tiền trả lần này
                     var tongTienDaTra = tongTienDaTraTruocDo + tongTienTra;
-                    
+
                     // Nếu tổng tiền trả >= tiền nợ ban đầu của phiếu bán
                     // => Cập nhật trạng thái thành ĐÃ THANH TOÁN
-                    if (tongTienDaTra >= phieuBanGoc.TienNo && 
+                    if (tongTienDaTra >= phieuBanGoc.TienNo &&
                         phieuBanGoc.TrangThaiThanhToan == TrangThaiThanhToanEnum.CHUA_THANH_TOAN)
                     {
                         phieuBanGoc.TrangThaiThanhToan = TrangThaiThanhToanEnum.DA_THANH_TOAN;

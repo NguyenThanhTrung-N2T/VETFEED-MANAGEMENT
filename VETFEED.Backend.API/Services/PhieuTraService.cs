@@ -54,7 +54,8 @@ namespace VETFEED.Backend.API.Services
             try
             {
                 return await _phieuTraRepository.DeletePhieuTraAsync(maPT);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Lỗi khi xóa phiếu trả: " + ex.Message);
             }
@@ -66,8 +67,8 @@ namespace VETFEED.Backend.API.Services
         public async Task<bool> CheckReturnableAsync(CheckReturnableRequest request)
         {
             return await _phieuTraRepository.CheckReturnableAsync(
-                request.MaPB, 
-                request.MaLo, 
+                request.MaPB,
+                request.MaLo,
                 request.SoLuong);
         }
 

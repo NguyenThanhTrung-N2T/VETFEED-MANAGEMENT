@@ -25,7 +25,7 @@ namespace VETFEED.Backend.API.Services
         {
             // lấy kho hàng theo mã kho 
             var khoHang = await _khoHangRepo.GetKhoHangByIdAsync(maKho);
-            if(khoHang == null)
+            if (khoHang == null)
             {
                 return null;
             }
@@ -40,7 +40,8 @@ namespace VETFEED.Backend.API.Services
             {
                 // thêm kho hàng vào db
                 return await _khoHangRepo.AddKhoHangAsync(dto);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi thêm kho hàng !", ex);
             }
@@ -59,7 +60,8 @@ namespace VETFEED.Backend.API.Services
                 }
                 // cập nhật thông tin kho
                 return await _khoHangRepo.UpdateKhoHangAsync(maKho, dto);
-            } catch ( Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi cập nhật thông tin kho hàng !", ex);
             }

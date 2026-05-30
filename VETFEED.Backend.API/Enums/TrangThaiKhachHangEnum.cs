@@ -2,7 +2,7 @@
 {
     public enum TrangThaiKhachHangEnum
     {
-        HOAT_DONG, 
+        HOAT_DONG,
         KHOA
     }
 }

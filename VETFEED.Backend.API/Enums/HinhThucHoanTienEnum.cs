@@ -2,7 +2,7 @@
 {
     public enum HinhThucHoanTienEnum
     {
-        TIEN_MAT, 
+        TIEN_MAT,
         CHUYEN_KHOAN
     }
 }

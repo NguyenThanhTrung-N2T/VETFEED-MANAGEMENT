@@ -186,9 +186,9 @@ namespace VETFEED.Backend.API.Repositories
             var entities = await _context.NhaCungCapSanPhams
                 .Where(x => x.MaNCC == maNCC)
                 .ToListAsync();
-            
+
             if (!entities.Any()) return 0;
-            
+
             _context.NhaCungCapSanPhams.RemoveRange(entities);
             await _context.SaveChangesAsync();
             return entities.Count;

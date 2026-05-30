@@ -42,7 +42,7 @@ namespace VETFEED.Backend.API.Services
                 AnhSanPham = request.AnhSanPham,
                 GhiChu = request.GhiChu,
                 NgayTao = now,
-                TrangThai = TrangThaiSanPhamEnum.HoatDong 
+                TrangThai = TrangThaiSanPhamEnum.HoatDong
             };
 
             var created = await _repo.CreateAsync(entity);

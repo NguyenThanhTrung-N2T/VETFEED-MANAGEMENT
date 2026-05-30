@@ -83,8 +83,8 @@ namespace VETFEED.Backend.API.Services
             var ok = await _repo.DeleteAsync(maGia);
             return ok ? (true, null) : (false, "Xóa thất bại.");
         }
-            public Task<GiaBanResponse?> GetCurrentPriceAsync(Guid maSP, DateTime date)
-        => _repo.GetCurrentPriceAsync(maSP, date);
+        public Task<GiaBanResponse?> GetCurrentPriceAsync(Guid maSP, DateTime date)
+    => _repo.GetCurrentPriceAsync(maSP, date);
 
     }
 }

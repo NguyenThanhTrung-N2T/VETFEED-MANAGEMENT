@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using VETFEED.Backend.API.DTOs.QuyDoiDonVi;  
+using VETFEED.Backend.API.DTOs.QuyDoiDonVi;
 namespace VETFEED.Backend.API.DTOs.SanPham
 {
     public class SanPhamResponse

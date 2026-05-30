@@ -149,7 +149,7 @@ namespace VETFEED.Backend.API.Repositories
                 {
                     if (request.HanTra == null)
                         throw new Exception("Bán công nợ bắt buộc phải có hạn trả");
-                    
+
                     // KIỂM TRA NGÀY BÁN PHẢI NHỎ HƠN HẠN TRẢ
                     if (request.NgayBan.Date >= request.HanTra.Value.Date)
                     {
@@ -318,7 +318,7 @@ namespace VETFEED.Backend.API.Repositories
                 if (phieuBan == null)
                     throw new InvalidOperationException("Phiếu bán không tồn tại.");
 
-                if(phieuBan.TrangThaiThanhToan == TrangThaiThanhToanEnum.DA_THANH_TOAN)
+                if (phieuBan.TrangThaiThanhToan == TrangThaiThanhToanEnum.DA_THANH_TOAN)
                     throw new InvalidOperationException("Phiếu bán đã thanh toán, không thể xóa.");
 
                 // Không cho xóa nếu đã có phiếu trả

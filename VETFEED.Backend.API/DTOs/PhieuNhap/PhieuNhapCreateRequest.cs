@@ -11,7 +11,7 @@ namespace VETFEED.Backend.API.DTOs.PhieuNhap
         public Guid MaNCC { get; set; }
         public Guid MaKho { get; set; }
         public string? GhiChu { get; set; }
-        
+
         /// <summary>
         /// Danh sách chi tiết phiếu nhập (lô hàng + số lượng)
         /// </summary>

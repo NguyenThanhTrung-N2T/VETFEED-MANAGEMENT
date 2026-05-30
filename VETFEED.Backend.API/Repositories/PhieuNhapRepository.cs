@@ -157,7 +157,7 @@ namespace VETFEED.Backend.API.Repositories
             var entity = await _context.PhieuNhaps
                 .Include(p => p.CTPhieuNhaps)
                 .FirstOrDefaultAsync(p => p.MaPN == id);
-            
+
             if (entity == null) return false;
 
             // Xóa các chi tiết phiếu nhập trước

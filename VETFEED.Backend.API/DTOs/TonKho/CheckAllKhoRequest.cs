@@ -8,7 +8,7 @@ namespace VETFEED.Backend.API.DTOs.TonKho
         public Guid MaLo { get; set; }
 
         [Required(ErrorMessage = "Số lượng cần không được để trống !")]
-        [Range(0,double.MaxValue,ErrorMessage = "Số lượng cần không được là số âm !")]
+        [Range(0, double.MaxValue, ErrorMessage = "Số lượng cần không được là số âm !")]
         public decimal SoLuongCan { get; set; }
     }
 }

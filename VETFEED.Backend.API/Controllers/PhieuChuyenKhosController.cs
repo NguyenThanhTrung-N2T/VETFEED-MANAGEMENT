@@ -25,7 +25,7 @@ namespace VETFEED.Backend.API.Controllers
         public async Task<IActionResult> GetDanhSachPhieuChuyenKho()
         {
             // lay danh sach phieu chuyen kho 
-            var result = await _service.GetDanhSachPhieuChuyenKhoAsync(); 
+            var result = await _service.GetDanhSachPhieuChuyenKhoAsync();
             // tra ve client
             return Ok(result);
         }
@@ -35,14 +35,14 @@ namespace VETFEED.Backend.API.Controllers
         [HttpGet("{maCK}")]
         [ProducesResponseType(typeof(ChiTietPhieuChuyenKhoResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetChiTietPhieuChuyenKho(Guid maCK) 
-        { 
+        public async Task<IActionResult> GetChiTietPhieuChuyenKho(Guid maCK)
+        {
             // lay chi tiet phieu chuyen kho
-            var result = await _service.GetChiTietPhieuChuyenKhoAsync(maCK); 
-            if (result == null) 
-                return NotFound("Không tìm thấy phiếu chuyển kho"); 
+            var result = await _service.GetChiTietPhieuChuyenKhoAsync(maCK);
+            if (result == null)
+                return NotFound("Không tìm thấy phiếu chuyển kho");
             // tra ve chi tiet phieu
-            return Ok(result); 
+            return Ok(result);
         }
 
         // POST : api/phieuchuyenkhos : tao phieu chuyen kho
@@ -77,7 +77,7 @@ namespace VETFEED.Backend.API.Controllers
                 return NotFound("Không tìm thấy phiếu chuyển kho!");
 
             // tra ve phieu chuyen kho sau khi cap nhat
-            return Ok(result); 
+            return Ok(result);
         }
 
         // PUT : api/phieuchuyenkhos/chitiet/{maCTCK}/trangthai : cap nhat trang thai chi tiet chuyen kho
@@ -88,9 +88,9 @@ namespace VETFEED.Backend.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CapNhatTrangThaiChiTiet(Guid maCTCK, [FromBody] UpdateTrangThaiCTChuyenKho trangThai)
         {
-            if (!ModelState.IsValid || !trangThai.TrangThai.HasValue) 
-            { 
-                return BadRequest("Trạng thái chi tiết chuyển kho không được để trống hoặc không hợp lệ!"); 
+            if (!ModelState.IsValid || !trangThai.TrangThai.HasValue)
+            {
+                return BadRequest("Trạng thái chi tiết chuyển kho không được để trống hoặc không hợp lệ!");
             }
 
             // cap nhat trang thai

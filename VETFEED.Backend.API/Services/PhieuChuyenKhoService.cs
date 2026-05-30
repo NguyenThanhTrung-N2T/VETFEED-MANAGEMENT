@@ -24,9 +24,9 @@ namespace VETFEED.Backend.API.Services
         }
 
         // lay chi tiet phieu chuyen kho 
-        public async Task<ChiTietPhieuChuyenKhoResponse?> GetChiTietPhieuChuyenKhoAsync(Guid maCK) 
-        { 
-            return await _repository.GetChiTietPhieuChuyenKhoAsync(maCK); 
+        public async Task<ChiTietPhieuChuyenKhoResponse?> GetChiTietPhieuChuyenKhoAsync(Guid maCK)
+        {
+            return await _repository.GetChiTietPhieuChuyenKhoAsync(maCK);
         }
 
         // them phieu chuyen kho
@@ -50,7 +50,8 @@ namespace VETFEED.Backend.API.Services
                 // them phieu chuyen kho
                 return await _repository.AddPhieuChuyenKhoAsync(request);
 
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi tạo phiếu chuyển kho !", ex);
             }
@@ -71,12 +72,13 @@ namespace VETFEED.Backend.API.Services
         }
 
         // cap nhat trang thai chi tiet chuyen kho 
-        public async Task<ChiTietPhieuChuyenKhoResponse?> UpdateTrangThaiChiTietAsync(Guid maCTCK,UpdateTrangThaiCTChuyenKho request)
+        public async Task<ChiTietPhieuChuyenKhoResponse?> UpdateTrangThaiChiTietAsync(Guid maCTCK, UpdateTrangThaiCTChuyenKho request)
         {
             try
             {
                 return await _repository.UpdateTrangThaiChiTietAsync(maCTCK, request);
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi cập nhật chi tiết chuyển kho !", ex);
             }
@@ -88,7 +90,8 @@ namespace VETFEED.Backend.API.Services
             try
             {
                 return await _repository.XoaPhieuChuyenKhoAsync(maCK);
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Xảy ra lỗi khi xóa phiếu chuyển kho !", ex);
             }
