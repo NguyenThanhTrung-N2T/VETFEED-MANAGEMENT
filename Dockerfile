@@ -22,5 +22,10 @@ EXPOSE 8080
 EXPOSE 8081
 
 ENV ASPNETCORE_URLS=http://+:8080
+
+# Cập nhật hệ điều hành để vá các lỗ hổng bảo mật (như libgnutls30)
+USER root
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "VETFEED.Backend.API.dll"]
